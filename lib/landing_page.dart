@@ -1,74 +1,125 @@
 import 'package:flutter/material.dart';
-import 'widgets/feature_tile.dart';
 import 'main_page.dart';
+import 'login_page.dart';
 
-class LandingPage extends StatelessWidget {
+class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
+
+  @override
+  State<LandingPage> createState() => _LandingPageState();
+}
+
+class _LandingPageState extends State<LandingPage> {
+  double progressValue = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProgress();
+  }
+
+  void loadProgress() async {
+    for (int i = 1; i <= 100; i++) {
+      await Future.delayed(const Duration(milliseconds: 25));
+      setState(() {
+        progressValue = i / 100;
+      });
+    }
+  }
+
+  void goToMainPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MainPage()),
+    );
+  }
+
+  void goToLoginPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("HealthPH+"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/login');
-            },
-            child: const Text("Login"),
+      backgroundColor: const Color.fromARGB(255, 71, 94, 189),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/Backdrop1.png'),
+            fit: BoxFit.cover,
+            opacity: 0.18,
           ),
-        ],
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "HealthPH+",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              children: [
+                const Spacer(),
 
-              const SizedBox(height: 10),
+                // CENTER LOGO
+                Image.asset('assets/images/healthphpluslogo.png', height: 650),
 
-              const Text(
-                "AI-Powered Healthcare Platform.",
-                textAlign: TextAlign.center,
-              ),
+                const Spacer(),
 
-              const SizedBox(height: 30),
+                // LOADING PROGRESS BAR
+                LinearProgressIndicator(
+                  value: progressValue,
+                  minHeight: 10,
+                  backgroundColor: Colors.white,
+                  color: Colors.indigo,
+                  borderRadius: BorderRadius.circular(20),
+                ),
 
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainPage()),
-                  );
-                },
-                child: const Text("Get Started"),
-              ),
+                const SizedBox(height: 8),
 
-              const SizedBox(height: 30),
+                // VERSION AND DEPARTMENT
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Text(
+                      "v1.0",
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                    Text(
+                      "Department of Health",
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
+                ),
 
-              const FeatureTile(
-                icon: Icons.flash_on,
-                title: "Fast",
-                description: "Our app is optimized for speed.",
-              ),
+                const SizedBox(height: 40),
 
-              const FeatureTile(
-                icon: Icons.security,
-                title: "Secure",
-                description: "Your data is protected.",
-              ),
+                // CONTINUE BUTTON
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton.icon(
+                    onPressed: goToMainPage,
+                    icon: const Icon(Icons.login),
+                    label: const Text(
+                      "Continue to Login",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.indigo,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                ),
 
-              const FeatureTile(
-                icon: Icons.support_agent,
-                title: "Support",
-                description: "We offer great support.",
-              ),
-            ],
+                const SizedBox(height: 80),
+              ],
+            ),
           ),
         ),
       ),

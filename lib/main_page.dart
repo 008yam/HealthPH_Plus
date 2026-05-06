@@ -13,9 +13,9 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   final List<String> carouselItems = [
-    "Air Quality Alert",
-    "Respiratory Health News",
-    "Community Health Update",
+    "Active Outbreaks",
+    "Health Alerts",
+    "Actives Users",
   ];
 
   @override
@@ -42,7 +42,7 @@ class _MainPageState extends State<MainPage> {
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.teal.shade300,
+                        color: Colors.blue.shade300,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Center(
@@ -285,7 +285,7 @@ class WeatherInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, size: 35, color: Colors.teal),
+        Icon(icon, size: 35, color: Colors.blue),
         const SizedBox(height: 8),
         Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         Text(value),
@@ -320,7 +320,7 @@ class QuickActionButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Colors.teal),
+            Icon(icon, size: 40, color: Colors.blue),
             const SizedBox(height: 10),
             Text(
               title,
@@ -348,7 +348,7 @@ class HealthTipCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: const Icon(Icons.health_and_safety, color: Colors.teal),
+        leading: const Icon(Icons.health_and_safety, color: Colors.blue),
         title: Text(tip),
       ),
     );
