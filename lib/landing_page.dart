@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'widgets/feature_tile.dart';
+import 'main_page.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -39,7 +40,12 @@ class LandingPage extends StatelessWidget {
               const SizedBox(height: 30),
 
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MainPage()),
+                  );
+                },
                 child: const Text("Get Started"),
               ),
 
