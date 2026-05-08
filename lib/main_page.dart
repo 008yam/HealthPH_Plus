@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'pages/health_literacy_page.dart';
 
 // =======================================================
 // HOME PAGE
@@ -21,6 +22,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //backgroundColor: const Color(32418C), Commented for now, will apply for NU theme Color later
       appBar: AppBar(
         title: const Text("Respiratory Health Monitor"),
         centerTitle: true,
@@ -367,18 +369,6 @@ class DiseaseWatchPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Disease Watch")),
       body: const Center(child: Text("Disease Watch Page")),
-    );
-  }
-}
-
-class HealthLiteracyPage extends StatelessWidget {
-  const HealthLiteracyPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Health Literacy")),
-      body: const Center(child: Text("Health Literacy Page")),
     );
   }
 }
