@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 
 class HealthLiteracyPage extends StatelessWidget {
   const HealthLiteracyPage({super.key});
@@ -120,6 +120,7 @@ class HealthLiteracyPage extends StatelessWidget {
                           source: "RMC Medical Staff · August 5, 2025",
                           description:
                               "Learn about lung health, respiratory diseases, and ways to protect your lungs.",
+                           articleUrl: "https://www.rmci.com.ph/lung-health-in-the-philippines-latest-data/",
                         ),
                         HealthArticleCard( //College of Chest Article
                           imagePath: 'assets/images/COCarticle.png',
@@ -128,6 +129,7 @@ class HealthLiteracyPage extends StatelessWidget {
                           source: "Guinever Dy Agra+ · Septembr 01, 2025",
                           description:
                               "A look at respiratory health programs and public education efforts.",
+                          articleUrl: "https://onlinelibrary.wiley.com/doi/full/10.1111/resp.70110"
                         ),
                         HealthArticleCard( // Protect Your Lungs Article
                           imagePath: 'assets/images/protectyourlungs.png',
@@ -136,6 +138,7 @@ class HealthLiteracyPage extends StatelessWidget {
                           source: "Doctor Anywhere Team · Community Health",
                           description:
                               "Showcasing and informing the importance the Lungs",
+                          articleUrl: "https://www.doctoranywhere.ph/post/prevent-common-respiratory-issues"
                         ),
                       ],
                     ),
@@ -180,6 +183,7 @@ class HealthArticleCard extends StatelessWidget {
   final String title;
   final String source;
   final String description;
+  final String articleUrl;
 
   const HealthArticleCard({
     super.key,
@@ -187,7 +191,21 @@ class HealthArticleCard extends StatelessWidget {
     required this.title,
     required this.source,
     required this.description,
+    required this.articleUrl,
   });
+
+  Future<void> _openArticle() async {
+    final Uri url = Uri.parse(articleUrl);
+
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception('Could not launch $articleUrl');
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +258,7 @@ class HealthArticleCard extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _openArticle,
                     child: const Text("Read more"),
                   ),
                 ),
