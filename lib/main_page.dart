@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/health_literacy_page.dart';
-
+import 'pages/data_collection_page.dart';
 // =======================================================
 // HOME PAGE
 // =======================================================
@@ -385,14 +385,14 @@ class SentimentPulsePage extends StatelessWidget {
   }
 }
 
-class DataCollectionPage extends StatelessWidget {
-  const DataCollectionPage({super.key});
+// class DataCollectionPage extends StatelessWidget {
+//   const DataCollectionPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Data Collection")),
-      body: const Center(child: Text("Data Collection Page")),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text("Data Collection")),
+//       body: const Center(child: Text("Data Collection Page")),
+//     );
+//   }
+// }

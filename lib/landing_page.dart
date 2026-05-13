@@ -70,7 +70,7 @@ class _LandingPageState extends State<LandingPage> {
                   value: progressValue,
                   minHeight: 10,
                   backgroundColor: Colors.white,
-                  color: Colors.indigo,
+                  color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(20),
                 ),
 
