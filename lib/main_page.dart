@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:healthphplus/pages/sentiment_pulse_page.dart';
 import 'pages/health_literacy_page.dart';
 import 'pages/data_collection_page.dart';
 // =======================================================
@@ -369,18 +370,6 @@ class DiseaseWatchPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Disease Watch")),
       body: const Center(child: Text("Disease Watch Page")),
-    );
-  }
-}
-
-class SentimentPulsePage extends StatelessWidget {
-  const SentimentPulsePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Sentiment Pulse")),
-      body: const Center(child: Text("Sentiment Pulse Page")),
     );
   }
 }

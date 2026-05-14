@@ -78,7 +78,7 @@ class SentimentPulsePage extends StatelessWidget {
                         unselectedLabelColor: Colors.grey,
                         indicatorColor: Colors.indigo,
                         tabs: [
-                          Tab(text: "OVerview"),
+                          Tab(text: "Overview"),
                           Tab(text: "Trends"),
                           Tab(text: "Regional"),
                         ],
@@ -171,7 +171,7 @@ class TrendsTab extends StatelessWidget {
     return ListView(
       children: const [
         Text(
-          "Sentimment Trends",
+          "Sentiment Trends",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
 
@@ -202,7 +202,7 @@ class TrendsTab extends StatelessWidget {
             InsightCard(
               title: "Proactive",
               value: "+6%",
-              description: "Increase",
+              description: "Increase from last week",
               color: Color(0xFFC8E6C9),
             ),
           ],
@@ -397,7 +397,7 @@ class TrendLineCard extends StatelessWidget {
         children: [
           _trendRow("Concerned", "45% → 52%", Colors.amber),
           _trendRow("Neutral", "35% → 44%", Colors.amber),
-          _trendRow("Proactice", "26% → 33%", Colors.amber),
+          _trendRow("Proactive", "26% → 33%", Colors.amber),
           _trendRow("Misinformed", "16% → 24%", Colors.amber),
         ],
       ),
