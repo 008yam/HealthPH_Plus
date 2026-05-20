@@ -186,8 +186,8 @@ class MainPage extends StatelessWidget {
                     ),
                     QuickActionTile(
                       title: "Health Literacy",
-                      subtitle: "Fact-check health information",
-                      icon: Icons.menu_book,
+                      subtitle: "Public attitude insights",
+                      icon: Icons.article_outlined,
                       iconColor: Colors.green,
                       onTap: () {
                         Navigator.push(
@@ -545,7 +545,7 @@ class AlertCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
-        color: const Color(0xFADADD),
+        color: const Color(0xFADADADD),
         border: Border.all(color: Colors.black),
         borderRadius: BorderRadius.circular(5),
       ),
@@ -640,7 +640,7 @@ class DiseaseWatchPage extends StatelessWidget {
         child: Center(
           child: ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Back to HOme"),
+            child: const Text("Home"),
           ),
         ),
       ),

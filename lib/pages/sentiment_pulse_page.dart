@@ -264,7 +264,7 @@ class RegionalTab extends StatelessWidget {
         ),
 
         RegionalSentimentCard(
-          region: "Regiono IV-A",
+          region: "Region IV-A",
           sentiment: "Proactive",
           percent: 38,
           color: Colors.blue,

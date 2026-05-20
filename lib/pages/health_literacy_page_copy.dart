@@ -1,76 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class HealthLiteracyPage extends StatefulWidget {
+class HealthLiteracyPage extends StatelessWidget {
   const HealthLiteracyPage({super.key});
-
-  @override
-  State<HealthLiteracyPage> createState() => _HealthLiteracyPageState();
-}
-
-class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
-  final TextEditingController _searchController = TextEditingController();
-
-  String searchQuery = "";
-
-  final List<Map<String, dynamic>> articles = [
-    {
-      "imagePath": "assets/images/lunghealtharticle.png",
-      "title": "Lung Health in the Philippines - Latest Data",
-      "source": "RMCI Medical Staff · August 5, 2025",
-      "description":
-          "Lung health in the Philippines is a serious problem. Respiratory diseases are now ranking among the leading causes of death in the Philippines.",
-      "articleUrl":
-          "https://www.rmci.com.ph/lung-health-in-the-philippines-latest-data/",
-      "tags": ["community", "pneumonia", "tuberculosis"],
-    },
-    {
-      "imagePath": "assets/images/COCarticle.png",
-      "title": "The Philippine College of Chest Physicians and Its Impact",
-      "source": "Guinever Dy Agra · September 01, 2025",
-      "description":
-          "A look at respiratory health programs and public education efforts.",
-      "articleUrl":
-          "https://onlinelibrary.wiley.com/doi/full/10.1111/resp.70110",
-      "tags": ["health", "community", "respiratory"],
-    },
-    {
-      "imagePath": "assets/images/protectyourlungs.png",
-      "title": "Protect Your Lungs from Common Respiratory Issues",
-      "source": "Doctor Anywhere Team · Community Health",
-      "description":
-          "Learn how to prevent common respiratory issues and protect your lungs.",
-      "articleUrl":
-          "https://www.doctoranywhere.ph/post/prevent-common-respiratory-issues",
-      "tags": ["lungs", "prevention", "wellness"],
-    },
-  ];
-
-  List<Map<String, dynamic>> get filteredArticles {
-    if (searchQuery.isEmpty) return articles;
-
-    return articles.where((article) {
-      final title = article["title"].toString().toLowerCase();
-      final tags = (article["tags"] as List<String>)
-          .map((tag) => tag.toLowerCase())
-          .join(" ");
-
-      return title.contains(searchQuery) || tags.contains(searchQuery);
-    }).toList();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _clearSearch() {
-    _searchController.clear();
-    setState(() {
-      searchQuery = "";
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,24 +72,11 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
 
                       const SizedBox(height: 14),
 
-                      // SEARCH BAR - NOW FUNCTIONAL
                       TextField(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          setState(() {
-                            searchQuery = value.toLowerCase().trim();
-                          });
-                        },
                         decoration: InputDecoration(
                           hintText: "Search articles, topics, claims...",
                           hintStyle: const TextStyle(fontSize: 11),
                           prefixIcon: const Icon(Icons.search, size: 22),
-                          suffixIcon: searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: _clearSearch,
-                                )
-                              : null,
                           filled: true,
                           fillColor: const Color(0xFFF4F4F4),
                           contentPadding: const EdgeInsets.symmetric(
@@ -229,35 +148,44 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
             Expanded(
               child: TabBarView(
                 children: [
-                  // HEALTH ARTICLES TAB - NOW USES FILTERED LIST
-                  filteredArticles.isEmpty
-                      ? const Center(
-                          child: Text(
-                            "No articles found.",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-                          itemCount: filteredArticles.length,
-                          itemBuilder: (context, index) {
-                            final article = filteredArticles[index];
+                  ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+                    children: const [
+                      HealthArticleCard(
+                        imagePath: 'assets/images/lunghealtharticle.png',
+                        title: "Lung Health in the Philippines - Latest Data",
+                        source: "RMCI Medical Staff · August 5, 2025",
+                        description:
+                            "Lung health in the Philippines is a serious problem. Respiratory diseases are now ranking among the leading causes of death in the Philippines.",
+                        articleUrl:
+                            "https://www.rmci.com.ph/lung-health-in-the-philippines-latest-data/",
+                        tags: ["community", "pneumonia", "tuberculosis"],
+                      ),
+                      HealthArticleCard(
+                        imagePath: 'assets/images/COCarticle.png',
+                        title:
+                            "The Philippine College of Chest Physicians and Its Impact",
+                        source: "Guinever Dy Agra · September 01, 2025",
+                        description:
+                            "A look at respiratory health programs and public education efforts.",
+                        articleUrl:
+                            "https://onlinelibrary.wiley.com/doi/full/10.1111/resp.70110",
+                        tags: ["health", "community", "respiratory"],
+                      ),
+                      HealthArticleCard(
+                        imagePath: 'assets/images/protectyourlungs.png',
+                        title:
+                            "Protect Your Lungs from Common Respiratory Issues",
+                        source: "Doctor Anywhere Team · Community Health",
+                        description:
+                            "Learn how to prevent common respiratory issues and protect your lungs.",
+                        articleUrl:
+                            "https://www.doctoranywhere.ph/post/prevent-common-respiratory-issues",
+                        tags: ["lungs", "prevention", "wellness"],
+                      ),
+                    ],
+                  ),
 
-                            return HealthArticleCard(
-                              imagePath: article["imagePath"],
-                              title: article["title"],
-                              source: article["source"],
-                              description: article["description"],
-                              articleUrl: article["articleUrl"],
-                              tags: List<String>.from(article["tags"]),
-                            );
-                          },
-                        ),
-
-                  // FACT CHECKER TAB - RETAINED
                   ListView(
                     padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
                     children: const [
@@ -449,10 +377,13 @@ class FactCheckCard extends StatelessWidget {
     switch (result.toLowerCase()) {
       case "false":
         return Colors.redAccent;
+
       case "mostly true":
         return Colors.green;
+
       case "needs context":
         return Colors.orange;
+
       default:
         return Colors.blueGrey;
     }
@@ -462,10 +393,13 @@ class FactCheckCard extends StatelessWidget {
     switch (result.toLowerCase()) {
       case "false":
         return Icons.cancel;
+
       case "mostly true":
         return Icons.verified;
+
       case "needs context":
         return Icons.info;
+
       default:
         return Icons.fact_check;
     }
@@ -486,9 +420,11 @@ class FactCheckCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          //TOP ROW
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              //ICON
               Container(
                 width: 42,
                 height: 42,
@@ -501,6 +437,7 @@ class FactCheckCard extends StatelessWidget {
 
               const SizedBox(width: 12),
 
+              //CLAIM and Explanation
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -532,6 +469,7 @@ class FactCheckCard extends StatelessWidget {
 
           const SizedBox(height: 14),
 
+          //Verdict Bar
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
