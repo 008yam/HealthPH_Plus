@@ -9,100 +9,114 @@ class DataCollectionPage extends StatelessWidget {
       length: 2,
       child: Scaffold(
         backgroundColor: const Color(0xFF3B4C98),
-        body: Column(
+        body: Stack(
           children: [
-            // HEADER
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(45),
-                  bottomRight: Radius.circular(45),
-                ),
-              ),
-
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("Back"),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Image.asset(
-                        'assets/images/healthphplusbarlogo.png',
-                        height: 55,
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      const Text(
-                        "Data Collection",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
-                        ),
-                      ),
-
-                      const Text(
-                        "Tracks symptoms & outbreaks",
-                        style: TextStyle(fontSize: 12, color: Colors.indigo),
-                      ),
-                    ],
-                  ),
-                ),
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/Backdrop1.png',
+                fit: BoxFit.cover,
+                opacity: const AlwaysStoppedAnimation(0.15),
               ),
             ),
+            Column(
+              children: [
+                // HEADER
+                Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(45),
+                      bottomRight: Radius.circular(45),
+                    ),
+                  ),
 
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const TabBar(
-                        labelColor: Colors.black,
-                        unselectedLabelColor: Colors.grey,
-                        indicator: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.indigo, width: 3),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("Back"),
                           ),
-                        ),
-                        tabs: [
-                          Tab(text: "My Reports"),
-                          Tab(text: "Community"),
+
+                          const SizedBox(height: 8),
+
+                          Image.asset(
+                            'assets/images/healthphplusbarlogo.png',
+                            height: 55,
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          const Text(
+                            "Data Collection",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.indigo,
+                            ),
+                          ),
+
+                          const Text(
+                            "Tracks symptoms & outbreaks",
+                            style: TextStyle(fontSize: 12, color: Colors.indigo),
+                          ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 15),
-
-                    Expanded(
-                      child: TabBarView(
-                        children: [_MyReportsTab(), _CommunityTab()],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.black, width: 2),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const TabBar(
+                            labelColor: Colors.black,
+                            unselectedLabelColor: Colors.grey,
+                            indicator: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.indigo,
+                                  width: 3,
+                                ),
+                              ),
+                            ),
+                            tabs: [
+                              Tab(text: "My Reports"),
+                              Tab(text: "Community"),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        Expanded(
+                          child: TabBarView(
+                            children: [_MyReportsTab(), _CommunityTab()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -21,10 +21,20 @@ class _LandingPageState extends State<LandingPage> {
   void loadProgress() async {
     for (int i = 1; i <= 100; i++) {
       await Future.delayed(const Duration(milliseconds: 25));
+
+      if (!mounted) return;
+
       setState(() {
-        progressValue = i / 100;
+        progressValue = 1 / 100;
       });
     }
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MainPage()),
+    );
   }
 
   void goToMainPage() {
@@ -94,6 +104,7 @@ class _LandingPageState extends State<LandingPage> {
                 const SizedBox(height: 40),
 
                 // CONTINUE BUTTON
+                /* 
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -115,8 +126,7 @@ class _LandingPageState extends State<LandingPage> {
                       ),
                     ),
                   ),
-                ),
-
+                ),*/
                 const SizedBox(height: 80),
               ],
             ),

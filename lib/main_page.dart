@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:healthphplus/login_page.dart';
 import 'package:healthphplus/pages/sentiment_pulse_page.dart';
 import 'pages/health_literacy_page.dart';
 import 'pages/data_collection_page.dart';
+import 'pages/disease_watch_page.dart';
 
 //import 'package:healthphplus/main_page_copy.dart';
 
@@ -16,335 +18,364 @@ class MainPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF3B4C98),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              // ====================================================
-              // 1. HEADER SECTION
-              // ====================================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.asset(
-                      'assets/images/healthphplusbarlogo.png',
-                      height: 55,
-                    ),
-                    const Spacer(),
-                    const Icon(
-                      Icons.person_outline,
-                      color: Colors.indigo,
-                      size: 22,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              // ====================================================
-              // 2. TOP STATUS CARDS
-              // ====================================================
-              const Row(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/Backdrop1.png',
+              fit: BoxFit.cover,
+              opacity: const AlwaysStoppedAnimation(0.15),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(10),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TopStatCard(
-                      number: "3",
-                      label: "Active Outbreaks",
-                      icon: Icons.coronavirus,
+                  // ====================================================
+                  // 1. HEADER SECTION
+                  // ====================================================
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Image.asset(
+                          'assets/images/healthphplusbarlogo.png',
+                          height: 55,
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.person_outline,
+                            color: Colors.indigo,
+                            size: 22,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoginPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 6),
-                  Expanded(
-                    child: TopStatCard(
-                      number: "1",
-                      label: "Health Alerts",
-                      icon: Icons.local_hospital,
+
+                  const SizedBox(height: 6),
+
+                  // ====================================================
+                  // 2. TOP STATUS CARDS
+                  // ====================================================
+                  const Row(
+                    children: [
+                      Expanded(
+                        child: TopStatCard(
+                          number: "3",
+                          label: "Active Outbreaks",
+                          icon: Icons.coronavirus,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: TopStatCard(
+                          number: "1",
+                          label: "Health Alerts",
+                          icon: Icons.local_hospital,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: TopStatCard(
+                          number: "2",
+                          label: "Active Users",
+                          icon: Icons.groups,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // ====================================================
+                  // 3. WEATHER WIDGET
+                  // ====================================================
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: cardDecoration(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Quezon City",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const Text(
+                          "Today",
+                          style: TextStyle(fontSize: 10, color: Colors.black54),
+                        ),
+
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                '30°',
+                                style: TextStyle(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.wb_sunny_outlined,
+                              size: 78,
+                              color: Colors.amber.shade200,
+                            ),
+                          ],
+                        ),
+
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            WeatherSmallInfo(
+                              value: "71%",
+                              label: "Humidity",
+                              icon: Icons.water_drop,
+                            ),
+                            WeatherSmallInfo(
+                              value: "12 km/h%",
+                              label: "Humidity",
+                              icon: Icons.air,
+                            ),
+                            WeatherSmallInfo(
+                              value: "39",
+                              label: "AQI",
+                              icon: Icons.blur_on,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 6),
-                  Expanded(
-                    child: TopStatCard(
-                      number: "2",
-                      label: "Active Users",
-                      icon: Icons.groups,
+
+                  const SizedBox(height: 6),
+
+                  // ====================================================
+                  // 4. QUICK ACTIONS MENU
+                  // ====================================================
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: cardDecoration(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Quick Actions ⓘ",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        QuickActionTile(
+                          title: "Disease Watch",
+                          subtitle: "Track outbreaks and alerts",
+                          icon: Icons.coronavirus,
+                          iconColor: Colors.redAccent,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DiseaseWatchPage(),
+                              ),
+                            );
+                          },
+                        ),
+                        QuickActionTile(
+                          title: "Health Literacy",
+                          subtitle: "Public attitude insights",
+                          icon: Icons.article_outlined,
+                          iconColor: Colors.green,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HealthLiteracyPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        QuickActionTile(
+                          title: "Sentiment Pulse",
+                          subtitle: "Public attitude insights",
+                          icon: Icons.analytics,
+                          iconColor: Colors.blue,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SentimentPulsePage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        QuickActionTile(
+                          title: "Data Collection",
+                          subtitle: "Report symptoms & data",
+                          icon: Icons.assignment,
+                          iconColor: Colors.orange,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DataCollectionPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
+
+                  const SizedBox(height: 8),
+
+                  // ====================================================
+                  // 4. RECENT ALERTS SECTION
+                  // ====================================================
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: cardDecoration(),
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Recent Alerts ⓘ",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        SizedBox(height: 8),
+
+                        AlertCard(
+                          title: "Respiratory Infection Cluster",
+                          location: "Manila City . Respiratory",
+                          percent: "21%",
+                          progress: 0.75,
+                        ),
+
+                        AlertCard(
+                          title: "Dengue Outbreak",
+                          location: "Laguna Province . Vector Borne",
+                          percent: "14",
+                          progress: 0.55,
+                        ),
+
+                        AlertCard(
+                          title: "Acute Upper Respiraory Infection",
+                          location: "Bukidnon Province . Respiratory",
+                          percent: "21%",
+                          progress: 0.38,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // ====================================================
+                  // 6. HEALTH TIP SECTIONS
+                  // ====================================================
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: cardDecoration(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Health Tips 📖",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD9F8D8),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Stay Protected",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+
+                              const SizedBox(height: 4),
+
+                              const Text(
+                                "Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated",
+                                style: TextStyle(fontSize: 10),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            HealthLiteracyPage(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text("More Health Tips"),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
                 ],
               ),
-
-              const SizedBox(height: 8),
-
-              // ====================================================
-              // 3. WEATHER WIDGET
-              // ====================================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: cardDecoration(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Quezon City",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const Text(
-                      "Today",
-                      style: TextStyle(fontSize: 10, color: Colors.black54),
-                    ),
-
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            '30°',
-                            style: TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.wb_sunny_outlined,
-                          size: 78,
-                          color: Colors.amber.shade200,
-                        ),
-                      ],
-                    ),
-
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        WeatherSmallInfo(
-                          value: "71%",
-                          label: "Humidity",
-                          icon: Icons.water_drop,
-                        ),
-                        WeatherSmallInfo(
-                          value: "12 km/h%",
-                          label: "Humidity",
-                          icon: Icons.air,
-                        ),
-                        WeatherSmallInfo(
-                          value: "39",
-                          label: "AQI",
-                          icon: Icons.blur_on,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              // ====================================================
-              // 4. QUICK ACTIONS MENU
-              // ====================================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: cardDecoration(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Quick Actions ⓘ",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    QuickActionTile(
-                      title: "Disease Watch",
-                      subtitle: "Track outbreaks and alerts",
-                      icon: Icons.coronavirus,
-                      iconColor: Colors.redAccent,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const DiseaseWatchPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    QuickActionTile(
-                      title: "Health Literacy",
-                      subtitle: "Public attitude insights",
-                      icon: Icons.article_outlined,
-                      iconColor: Colors.green,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const HealthLiteracyPage(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    QuickActionTile(
-                      title: "Sentiment Pulse",
-                      subtitle: "Public attitude insights",
-                      icon: Icons.analytics,
-                      iconColor: Colors.blue,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const SentimentPulsePage(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    QuickActionTile(
-                      title: "Data Collection",
-                      subtitle: "Report symptoms & data",
-                      icon: Icons.assignment,
-                      iconColor: Colors.orange,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const DataCollectionPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // ====================================================
-              // 4. RECENT ALERTS SECTION
-              // ====================================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: cardDecoration(),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Recent Alerts ⓘ",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-
-                    SizedBox(height: 8),
-
-                    AlertCard(
-                      title: "Respiratory Infection Cluster",
-                      location: "Manila City . Respiratory",
-                      percent: "21%",
-                      progress: 0.75,
-                    ),
-
-                    AlertCard(
-                      title: "Dengue Outbreak",
-                      location: "Laguna Province . Vector Borne",
-                      percent: "14",
-                      progress: 0.55,
-                    ),
-
-                    AlertCard(
-                      title: "Acute Upper Respiraory Infection",
-                      location: "Bukidnon Province . Respiratory",
-                      percent: "21%",
-                      progress: 0.38,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // ====================================================
-              // 6. HEALTH TIP SECTIONS
-              // ====================================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: cardDecoration(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Health Tips 📖",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD9F8D8),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Stay Protected",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-
-                          const SizedBox(height: 4),
-
-                          const Text(
-                            "Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated",
-                            style: TextStyle(fontSize: 10),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              child: const Text("More Health Tips"),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -566,7 +597,7 @@ class AlertCard extends StatelessWidget {
               Container(
                 height: 18,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFF3B4C98),
                   border: Border.all(color: Colors.black),
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -620,29 +651,6 @@ class AlertCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-// =======================================================
-// PLACEHOLDER DISEASE WATCH PAGE
-// =======================================================
-
-class DiseaseWatchPage extends StatelessWidget {
-  const DiseaseWatchPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0XFF3B4C98),
-      body: SafeArea(
-        child: Center(
-          child: ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Home"),
-          ),
-        ),
       ),
     );
   }

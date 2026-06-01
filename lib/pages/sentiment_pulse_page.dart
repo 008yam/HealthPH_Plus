@@ -9,92 +9,107 @@ class SentimentPulsePage extends StatelessWidget {
       length: 3,
       child: Scaffold(
         backgroundColor: const Color(0xFF3B4C98),
-        body: Column(
+        body: Stack(
           children: [
-            // HEADER
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(45),
-                  bottomRight: Radius.circular(45),
-                ),
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 25),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("Back"),
-                      ),
-                      const SizedBox(height: 10),
-
-                      Image.asset(
-                        'assets/images/healthphplusbarlogo.png',
-                        height: 55,
-                      ),
-
-                      const Text(
-                        "Sentiment Pulse",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
-                        ),
-                      ),
-
-                      const Text(
-                        "Evidence-based health infomration and fact-checking",
-                        style: TextStyle(fontSize: 11, color: Colors.indigo),
-                      ),
-                    ],
-                  ),
-                ),
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/Backdrop1.png',
+                fit: BoxFit.cover,
+                opacity: const AlwaysStoppedAnimation(0.15),
               ),
             ),
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const TabBar(
-                        labelColor: Colors.black,
-                        unselectedLabelColor: Colors.grey,
-                        indicatorColor: Colors.indigo,
-                        tabs: [
-                          Tab(text: "Overview"),
-                          Tab(text: "Trends"),
-                          Tab(text: "Regional"),
+            Column(
+              children: [
+                // HEADER
+                Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(45),
+                      bottomRight: Radius.circular(45),
+                    ),
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 25),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("Back"),
+                          ),
+                          const SizedBox(height: 10),
+
+                          Image.asset(
+                            'assets/images/healthphplusbarlogo.png',
+                            height: 55,
+                          ),
+
+                          const Text(
+                            "Sentiment Pulse",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.indigo,
+                            ),
+                          ),
+
+                          const Text(
+                            "Evidence-based health infomration and fact-checking",
+                            style: TextStyle(fontSize: 11, color: Colors.indigo),
+                          ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 12),
-
-                    Expanded(
-                      child: TabBarView(
-                        children: [OverviewTab(), TrendsTab(), RegionalTab()],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.black, width: 2),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const TabBar(
+                            labelColor: Colors.black,
+                            unselectedLabelColor: Colors.grey,
+                            indicatorColor: Colors.indigo,
+                            tabs: [
+                              Tab(text: "Overview"),
+                              Tab(text: "Trends"),
+                              Tab(text: "Regional"),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              OverviewTab(),
+                              TrendsTab(),
+                              RegionalTab(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
