@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:healthphplus/login_page.dart';
 import 'package:healthphplus/pages/sentiment_pulse_page.dart';
+import 'package:healthphplus/widgets/floating_navbar.dart';
 import 'pages/health_literacy_page.dart';
 import 'pages/data_collection_page.dart';
 import 'pages/disease_watch_page.dart';
+import 'widgets/weather_widget.dart';
+//import 'pages/map_page.dart';
+//import 'widgets/floating_navbar.dart';
 
 //import 'package:healthphplus/main_page_copy.dart';
 
@@ -107,67 +111,7 @@ class MainPage extends StatelessWidget {
                   // ====================================================
                   // 3. WEATHER WIDGET
                   // ====================================================
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(10),
-                    decoration: cardDecoration(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Quezon City",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const Text(
-                          "Today",
-                          style: TextStyle(fontSize: 10, color: Colors.black54),
-                        ),
-
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                '30°',
-                                style: TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.wb_sunny_outlined,
-                              size: 78,
-                              color: Colors.amber.shade200,
-                            ),
-                          ],
-                        ),
-
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            WeatherSmallInfo(
-                              value: "71%",
-                              label: "Humidity",
-                              icon: Icons.water_drop,
-                            ),
-                            WeatherSmallInfo(
-                              value: "12 km/h%",
-                              label: "Humidity",
-                              icon: Icons.air,
-                            ),
-                            WeatherSmallInfo(
-                              value: "39",
-                              label: "AQI",
-                              icon: Icons.blur_on,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  const WeatherWidget(),
 
                   const SizedBox(height: 6),
 
@@ -370,11 +314,13 @@ class MainPage extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
           ),
+
+          const FloatingNavBar(selectedIndex: 1),
         ],
       ),
     );
