@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:healthphplus/main_page.dart';
+import '../services/healthph_api_services.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -79,6 +80,16 @@ class _MapPageState extends State<MapPage> {
   void zoomOut() {
     final currentZoom = mapController.camera.zoom;
     mapController.move(mapController.camera.center, currentZoom - 1);
+  }
+
+  late Future<Map<String, dynamic>> diseaseDataFuture;
+  @override
+  void iniState() {
+    super.initState();
+
+    diseaseDataFuture = HealthPhApiService(
+      baseUrl: 'http://10.0.2.2:8000',
+    ).fetchDiseasePoints();
   }
 
   @override

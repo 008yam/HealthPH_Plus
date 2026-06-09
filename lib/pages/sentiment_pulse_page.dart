@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/healthph_api_services.dart';
 
 class SentimentPulsePage extends StatelessWidget {
   const SentimentPulsePage({super.key});
@@ -59,7 +60,10 @@ class SentimentPulsePage extends StatelessWidget {
 
                           const Text(
                             "Evidence-based health infomration and fact-checking",
-                            style: TextStyle(fontSize: 11, color: Colors.indigo),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.indigo,
+                            ),
                           ),
                         ],
                       ),
@@ -135,14 +139,16 @@ class OverviewTab extends StatelessWidget {
         Row(
           children: [
             SentimentBox(
-              percent: "45%",
+              percent: "25%", //"${count['AURI']}%",
               label: "Concerned",
               icon: Icons.sentiment_dissatisfied,
               color: Color(0xFFFFD98A),
             ),
+
             SizedBox(width: 8),
+
             SentimentBox(
-              percent: "28%",
+              percent: "14%", //"${count['PN']}%",
               label: "Misinformed",
               icon: Icons.warning_amber_rounded,
               color: Color(0xFFFFB3B3),
@@ -155,14 +161,14 @@ class OverviewTab extends StatelessWidget {
         Row(
           children: [
             SentimentBox(
-              percent: "18%",
+              percent: "12%", //"${count['TB']}%",
               label: "Neutral",
               icon: Icons.sentiment_neutral,
               color: Color(0xFFBBD7FF),
             ),
             SizedBox(width: 8),
             SentimentBox(
-              percent: "9%",
+              percent: "24", //"${count['COVID']}%",
               label: "Proactive",
               icon: Icons.sentiment_satisfied_alt,
               color: Color(0xFFBDF2CD),
@@ -301,6 +307,7 @@ class SentimentBox extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
+  //final count = apiData['count']; // Babalikan
 
   const SentimentBox({
     super.key,
