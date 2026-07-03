@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../theme/app_theme.dart';
+import 'package:healthphplus/main_page.dart';
 
 class HealthLiteracyPage extends StatefulWidget {
   const HealthLiteracyPage({super.key});
@@ -77,7 +79,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFF3B4C98),
+        backgroundColor: AppTheme.pageBlue,
         body: Column(
           children: [
             // HEADER
@@ -99,7 +101,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                     children: [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF31459B),
+                          backgroundColor: AppTheme.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
@@ -109,7 +111,18 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MainPage(),
+                                  ),
+                                );
+                              }
+                            },
                         child: const Text("Back"),
                       ),
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/healthph_api_services.dart';
-
+import '../theme/app_theme.dart';
+import 'package:healthphplus/main_page.dart';
 class SentimentPulsePage extends StatelessWidget {
   const SentimentPulsePage({super.key});
 
@@ -9,7 +9,7 @@ class SentimentPulsePage extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: const Color(0xFF3B4C98),
+        backgroundColor: AppTheme.pageBlue,
         body: Stack(
           children: [
             Positioned.fill(
@@ -39,7 +39,18 @@ class SentimentPulsePage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MainPage(),
+                                  ),
+                                );
+                              }
+                            },
                             child: const Text("Back"),
                           ),
                           const SizedBox(height: 10),
@@ -76,7 +87,7 @@ class SentimentPulsePage extends StatelessWidget {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border.all(color: Colors.black, width: 2),
+                      border: Border.all(color: AppTheme.border),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Column(
@@ -364,10 +375,10 @@ class BarGraphCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = [
-      {"label": "Concerned", "value": 45, "color": Colors.orange},
-      {"label": "Misinfomred", "value": 28, "color": Colors.red},
-      {"label": "Concerned", "value": 18, "color": Colors.blue},
-      {"label": "Concerned", "value": 9, "color": Colors.green},
+      {"label": "Concerned", "value": 45, "color": AppTheme.concerned},
+      {"label": "Misinfomred", "value": 28, "color": AppTheme.misinformed},
+      {"label": "Neutral", "value": 18, "color": AppTheme.neutral},
+      {"label": "Proactive", "value": 9, "color": AppTheme.proactive},
     ];
 
     return Container(
@@ -388,7 +399,14 @@ class BarGraphCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text("$value%"),
-                Container(height: value * 3, width: 38, color: color),
+                Container(
+                  height: value * 3,
+                  width: 34,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   item["label"].toString(),
@@ -417,10 +435,10 @@ class TrendLineCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _trendRow("Concerned", "45% → 52%", Colors.amber),
-          _trendRow("Neutral", "35% → 44%", Colors.amber),
-          _trendRow("Proactive", "26% → 33%", Colors.amber),
-          _trendRow("Misinformed", "16% → 24%", Colors.amber),
+          _trendRow("Concerned", "45% → 52%", AppTheme.concerned),
+          _trendRow("Neutral", "35% → 44%", AppTheme.neutral),
+          _trendRow("Proactive", "26% → 33%", AppTheme.proactive),
+          _trendRow("Misinformed", "16% → 24%", AppTheme.misinformed),
         ],
       ),
     );

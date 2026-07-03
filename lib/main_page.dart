@@ -6,6 +6,8 @@ import 'pages/health_literacy_page.dart';
 import 'pages/data_collection_page.dart';
 import 'pages/disease_watch_page.dart';
 import 'widgets/weather_widget.dart';
+import 'theme/app_theme.dart';
+
 //import 'pages/map_page.dart';
 //import 'widgets/floating_navbar.dart';
 
@@ -21,7 +23,7 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF3B4C98),
+      backgroundColor: AppTheme.pageBlue,
       body: Stack(
         children: [
           Positioned.fill(
@@ -33,7 +35,7 @@ class MainPage extends StatelessWidget {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Column(
                 children: [
                   // ====================================================
@@ -120,7 +122,7 @@ class MainPage extends StatelessWidget {
                   // ====================================================
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     decoration: cardDecoration(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,8 +206,7 @@ class MainPage extends StatelessWidget {
                   // ====================================================
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(10),
-                    decoration: cardDecoration(),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -250,7 +251,7 @@ class MainPage extends StatelessWidget {
                   // ====================================================
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     decoration: cardDecoration(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,7 +268,7 @@ class MainPage extends StatelessWidget {
 
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                           decoration: BoxDecoration(
                             color: const Color(0xFFD9F8D8),
                             borderRadius: BorderRadius.circular(6),
@@ -294,7 +295,9 @@ class MainPage extends StatelessWidget {
 
                               Align(
                                 alignment: Alignment.centerRight,
-                                child: ElevatedButton(
+                                child: SizedBox(
+                                  height: 36,
+                                  child: ElevatedButton(
                                   onPressed: () {
                                     Navigator.push(
                                       context,
@@ -307,6 +310,7 @@ class MainPage extends StatelessWidget {
                                   child: const Text("More Health Tips"),
                                 ),
                               ),
+                              ),
                             ],
                           ),
                         ),
@@ -314,15 +318,14 @@ class MainPage extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-
-          const FloatingNavBar(selectedIndex: 1),
-        ],
+          ],
       ),
+      bottomNavigationBar: const FloatingNavBar(selectedIndex: 1),
     );
   }
 }
@@ -334,7 +337,7 @@ class MainPage extends StatelessWidget {
 BoxDecoration cardDecoration() {
   return BoxDecoration(
     color: Colors.white,
-    border: Border.all(color: Colors.black),
+    border: Border.all(color: AppTheme.border),
     borderRadius: BorderRadius.circular(8),
   );
 }
@@ -361,7 +364,7 @@ class TopStatCard extends StatelessWidget {
       height: 78,
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: const Color(0xFF31459B),
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(6),
         image: const DecorationImage(
           image: AssetImage('assets/images/Backdrop1.png'),
@@ -378,7 +381,7 @@ class TopStatCard extends StatelessWidget {
             number,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               height: 1,
             ),
@@ -389,7 +392,7 @@ class TopStatCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 8,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -426,7 +429,7 @@ class WeatherSmallInfo extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
 
-        Text(label, style: const TextStyle(fontSize: 8)),
+        Text(label, style: const TextStyle(fontSize: 10)),
       ],
     );
   }
@@ -487,7 +490,7 @@ class QuickActionTile extends StatelessWidget {
                     ),
                   ),
 
-                  Text(subtitle, style: const TextStyle(fontSize: 8)),
+                  Text(subtitle, style: const TextStyle(fontSize: 10)),
                 ],
               ),
             ],
@@ -522,9 +525,9 @@ class AlertCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
-        color: const Color(0xFADADADD),
-        border: Border.all(color: Colors.black),
-        borderRadius: BorderRadius.circular(5),
+        color: Colors.white,
+        border: Border.all(color: AppTheme.border),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,16 +537,18 @@ class AlertCard extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
           ),
 
-          Text(location, style: const TextStyle(fontSize: 8)),
+          Text(location, style: const TextStyle(fontSize: 10)),
 
           const SizedBox(height: 6),
 
-          Stack(
-            children: [
-              Container(
-                height: 18,
+          SizedBox(
+            width: 150,
+            child: Stack(
+              children: [
+                Container(
+                height: 10,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B4C98),
+                  color:AppTheme.pageBlue,
                   border: Border.all(color: Colors.black),
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -552,7 +557,7 @@ class AlertCard extends StatelessWidget {
               FractionallySizedBox(
                 widthFactor: progress,
                 child: Container(
-                  height: 18,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: Colors.yellow,
                     borderRadius: BorderRadius.circular(10),
@@ -570,26 +575,27 @@ class AlertCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
 
           const SizedBox(height: 3),
 
           const Row(
             children: [
-              Text("Severity Levels", style: TextStyle(fontSize: 8)),
+              Text("Severity Levels", style: TextStyle(fontSize: 10)),
 
               Spacer(),
 
               Text(
                 "View Details",
                 style: TextStyle(
-                  fontSize: 8,
+                  fontSize: 10,
                   color: Colors.blue,
                   fontWeight: FontWeight.bold,
                 ),

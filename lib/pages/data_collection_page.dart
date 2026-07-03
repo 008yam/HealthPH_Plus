@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+import 'package:healthphplus/main_page.dart';
+import '../services/self_report_store.dart';
+import '../data/ph_address_hierarchy.dart';
 
 class DataCollectionPage extends StatelessWidget {
   const DataCollectionPage({super.key});
@@ -6,9 +10,9 @@ class DataCollectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
-        backgroundColor: const Color(0xFF3B4C98),
+        backgroundColor: AppTheme.pageBlue,
         body: Stack(
           children: [
             Positioned.fill(
@@ -39,7 +43,18 @@ class DataCollectionPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MainPage(),
+                                  ),
+                                );
+                              }
+                            },
                             child: const Text("Back"),
                           ),
 
@@ -77,7 +92,7 @@ class DataCollectionPage extends StatelessWidget {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border.all(color: Colors.black, width: 2),
+                      border: Border.all(color: AppTheme.border),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Column(
@@ -99,6 +114,7 @@ class DataCollectionPage extends StatelessWidget {
                               ),
                             ),
                             tabs: [
+                              Tab(text: "Self Report"),
                               Tab(text: "My Reports"),
                               Tab(text: "Community"),
                             ],
@@ -109,7 +125,7 @@ class DataCollectionPage extends StatelessWidget {
 
                         Expanded(
                           child: TabBarView(
-                            children: [_MyReportsTab(), _CommunityTab()],
+                            children: [_SelfReportTab(), _MyReportsTab(), _CommunityTab()],
                           ),
                         ),
                       ],
@@ -220,6 +236,295 @@ class _CommunityTab extends StatelessWidget {
     );
   }
 }
+
+class _SelfReportTab extends StatefulWidget {
+  @override
+  State<_SelfReportTab> createState() => _SelfReportTabState();
+}
+
+class _SelfReportTabState extends State<_SelfReportTab> {
+  final notesController = TextEditingController();
+  
+  String? selectedRegion;
+  String? selectedProvince;
+  String? selectedCity;
+  String? selectedBarangay;
+
+  List<String> get provinceOptions =>
+      AddressHierarchy.provincesFor(selectedRegion);
+  List<String> get cityOptions =>
+      AddressHierarchy.citiesFor(selectedRegion, selectedProvince);
+
+  List<String> get barangayOptions =>
+      AddressHierarchy.barangaysFor(
+        selectedRegion,
+        selectedProvince,
+        selectedCity
+      );
+  final Set<String> selectedSymptoms = {};
+  
+  final symptoms = const [
+    "Cough",
+    "Fever",
+    "Chills",
+    "Fatigue",
+    "Shortness of breath",
+    "Chest Pain",
+    "Sore throat",
+    "Runny nose",
+    "Wheezing",
+    "Cough for 2+weeks",
+    "Night sweats",
+    "Weight loss",
+  ];
+  
+  @override
+  void dispose() {
+    // locationController.dispose();
+    notesController.dispose();
+    super.dispose();
+  }
+
+  String _possibleCondition() {
+    final s = selectedSymptoms;
+
+    if (s.contains("Cough") &&
+       s.contains("Fever") &&
+       s.contains("Chills") &&
+       s.contains("Fatigue")) {
+      return "POssible pneumonia pattern";
+    }
+
+    if (s.contains("Cough for 2+ weeks") ||
+        (s.contains("Cough") &&
+            s.contains("Night sweats") &&
+            s.contains("Weight loss"))) {
+        return "Possible tuberculosis symptom pattern";
+            }
+    if (s.contains("Cough for 2+ weeks") ||
+          (s.contains("Cough") &&
+            s.contains("Night sweats") &&
+            s.contains("Weight loss"))) {
+        return "Possible tuberculosis symptom pattern";
+      }
+    if (s.contains("Cough") || s.contains("Sore throat") || s.contains("Runny nose")) {
+      return "Possible acute respiratory infection pattern";
+    }
+
+    return "Respiratory symptoms reported";
+  }
+
+  void _submitReport() {
+    // if (locationController.text.trim().isEmpty || selectedSymptoms.isEmpty) {
+      if (selectedRegion == null ||
+      selectedProvince == null ||
+      selectedCity == null ||
+      selectedBarangay == null ||
+      selectedSymptoms.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Complete address and add at least one symptom.")),
+      );
+      return;
+    }
+
+    final condition = _possibleCondition();
+
+    SelfReportStore.instance.addReport(
+      SelfReport(
+        region: selectedRegion!,
+        province: selectedProvince!,
+        city: selectedCity!,
+        barangay: selectedBarangay!,
+        symptoms: selectedSymptoms.toList(),
+        possibleCondition: condition,
+        notes: notesController.text.trim(),
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(condition),
+        content: const Text(
+          "This is not a diagnosis. Please consult healthcare provider, especially if symptoms worsen.\n\n"
+           "Suggested facilities: Barangay Health Station, Rural Health Unit, City/Municipal Health Office, nearest clinic, or hospital emergency room for severe symptoms.\n\n"
+           "Do: rest, hydrate, weak a mask around others, monitor fever and breathing. \n\n"
+           "Don't: self-medicate with antibiotics, smoke nor vape. ignore chest pain or trouble breathing, or delay care if symptom worsen."
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Understood"),
+            ),
+          ],
+      ),
+    );
+
+    setState(() {
+      notesController.clear();
+      selectedSymptoms.clear();
+      selectedRegion = null;
+      selectedProvince = null;
+      selectedCity = null;
+      selectedBarangay = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        const Text(
+          "Self Report Symptoms",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          "Report respiratory symptoms to supper surveillance mapping.",
+          style: TextStyle(fontSize: 12),
+        ),
+
+        const SizedBox(height: 14),
+
+        DropdownButtonFormField<String>(
+          initialValue: selectedRegion,
+          decoration: const InputDecoration(
+            labelText: "Region",
+            prefixIcon: Icon(Icons.map_outlined),
+          ),
+          items: AddressHierarchy.regions.map((region) {
+            return DropdownMenuItem(value: region, child: Text(region));
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              selectedRegion = value;
+              selectedProvince = null;
+              selectedCity = null;
+              selectedBarangay = null;
+            });
+          },
+        ),
+        
+        const SizedBox(height: 12),
+
+        DropdownButtonFormField<String>(
+          initialValue: selectedProvince,
+          decoration: const InputDecoration(
+            labelText: "Province",
+            prefixIcon: Icon(Icons.location_city_outlined),
+          ),
+          items: provinceOptions.map((province) {
+            return DropdownMenuItem(value: province, child: Text(province));
+          }).toList(),
+          onChanged: selectedRegion == null
+              ? null
+              : (value) {
+                  setState(() {
+                    selectedProvince = value;
+                    selectedCity = null;
+                    selectedBarangay = null;
+                  });
+                },
+        ),
+
+        const SizedBox(height: 12),
+
+        DropdownButtonFormField<String>(
+          initialValue: selectedCity,
+          decoration: const InputDecoration(
+            labelText: "City/Municipality",
+            prefixIcon: Icon(Icons.apartment_outlined),
+          ),
+          items: cityOptions.map((city) {
+            return DropdownMenuItem(value: city, child: Text(city));
+          }).toList(),
+          onChanged: selectedProvince == null
+              ? null
+              : (value) {
+                  setState(() {
+                    selectedCity = value;
+                    selectedBarangay = null;
+                  });
+                },
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: selectedBarangay,
+          decoration: const InputDecoration(
+            labelText: "Barangay",
+            prefixIcon: Icon(Icons.home_work_outlined),
+          ),
+          items: barangayOptions.map((barangay) {
+            return DropdownMenuItem(value: barangay, child: Text(barangay));
+          }).toList(),
+          onChanged: selectedCity == null
+              ? null
+              : (value) {
+                  setState(() {
+                    selectedBarangay = value;
+                  });
+              },
+        ),
+
+        const SizedBox(height: 14),
+
+        const Text(
+          "Symptoms",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+
+        Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: symptoms.map((symptom) {
+              final selected = selectedSymptoms.contains(symptom);
+
+              return FilterChip(
+              label: Text(symptom),
+              selected: selected,
+              selectedColor: AppTheme.primary.withValues(alpha: 0.16),
+              checkmarkColor: AppTheme.primary,
+              onSelected: (checked) {
+                setState(() {
+                  if (checked) {
+                    selectedSymptoms.add(symptom);
+                  } else {
+                    selectedSymptoms.remove(symptom);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 14),
+
+        TextField(
+          controller: notesController,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            labelText: "Addtional notes optional",
+            alignLabelWithHint: true,
+          ),
+        ),
+
+        const SizedBox(height: 16),
+  
+        SizedBox(
+          height: 46,
+          child: ElevatedButton.icon(
+            onPressed: _submitReport,
+            icon: const Icon(Icons.add_location_alt_outlined),
+            label: const Text("Submit Self Report"),
+        ),
+        ),
+      ],
+    );
+  }
+}
+
 
 class ReportCard extends StatelessWidget {
   final String symptom;

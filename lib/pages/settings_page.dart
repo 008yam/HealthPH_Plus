@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/floating_navbar.dart';
+import '../theme/app_theme.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -7,7 +8,7 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF3B4C98),
+      backgroundColor: AppTheme.pageBlue,
       body: SafeArea(
         child: Center(
           child: Container(
@@ -31,13 +32,12 @@ class SettingsPage extends StatelessWidget {
                 SizedBox(height: 8),
 
                 Text("Coming Soon", style: TextStyle(color: Colors.white70)),
-                SizedBox(height: 100),
-                FloatingNavBar(selectedIndex: 0),
               ],
             ),
           ),
         ),
       ),
+      bottomNavigationBar: const FloatingNavBar(selectedIndex: 2),
     );
   }
 }

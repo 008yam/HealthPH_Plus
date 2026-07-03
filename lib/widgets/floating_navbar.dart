@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../pages/map_page.dart';
 import '../pages/settings_page.dart';
 import 'package:healthphplus/main_page.dart';
+import '../theme/app_theme.dart';
 
 class FloatingNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -35,37 +36,32 @@ class FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: 20,
-      right: 20,
-      bottom: 20,
-      child: Container(
-        height: 70,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(35),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 12,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _navItem(context, index: 0, icon: Icons.map, label: "Map"),
-
-            _navItem(context, index: 1, icon: Icons.home, label: "Home"),
-
-            _navItem(
-              context,
-              index: 2,
-              icon: Icons.settings,
-              label: "Settings",
-            ),
-          ],
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 6, 24, 10),
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: AppTheme.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _navItem(context, index: 0, icon: Icons.map, label: "Map"),
+              _navItem(context, index: 1, icon: Icons.home, label: "Home"),
+              _navItem(context, index: 2, icon: Icons.settings, label: "Settings"),
+            ],
+          ),
         ),
       ),
     );
@@ -83,9 +79,9 @@ class FloatingNavBar extends StatelessWidget {
       onTap: () => _navigate(context, index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF31459B) : Colors.transparent,
+          color: isSelected ? AppTheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(

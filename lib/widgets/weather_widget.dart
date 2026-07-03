@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
+import '../theme/app_theme.dart';
 
 class WeatherWidget extends StatefulWidget {
   const WeatherWidget({super.key});
@@ -164,7 +165,7 @@ class WeatherInfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF243B8F)),
+        Icon(icon, size: 20, color: AppTheme.navy),
 
         const SizedBox(width: 8),
 

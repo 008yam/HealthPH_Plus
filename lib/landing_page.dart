@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'main_page.dart';
 import 'login_page.dart';
+import 'pages/intro_tutorial_page.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -10,31 +11,24 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
-  double progressValue = 0.0;
+
+  static const Duration _splashDelay = Duration(seconds: 2);
 
   @override
   void initState() {
     super.initState();
-    loadProgress();
+    _goToMainAfterDelay();
   }
 
-  void loadProgress() async {
-    for (int i = 1; i <= 100; i++) {
-      await Future.delayed(const Duration(milliseconds: 25));
-
-      if (!mounted) return;
-
-      setState(() {
-        progressValue = 1 / 100;
-      });
-    }
+  Future<void> _goToMainAfterDelay() async {
+    await Future.delayed(_splashDelay);
 
     if (!mounted) return;
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => MainPage()),
-    );
+      MaterialPageRoute(builder: (context) => const IntroTutorialPage()),
+      );
   }
 
   void goToMainPage() {
@@ -75,17 +69,6 @@ class _LandingPageState extends State<LandingPage> {
 
                 const Spacer(),
 
-                // LOADING PROGRESS BAR
-                LinearProgressIndicator(
-                  value: progressValue,
-                  minHeight: 10,
-                  backgroundColor: Colors.white,
-                  color: const Color.fromARGB(255, 255, 255, 255),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-
-                const SizedBox(height: 8),
-
                 // VERSION AND DEPARTMENT
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -99,6 +82,19 @@ class _LandingPageState extends State<LandingPage> {
                       style: TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // ROTATING SPINNER
+                const SizedBox(
+                  width: 34,
+                  height: 34,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    backgroundColor: Color(0x33FFFFFF),
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
                 ),
 
                 const SizedBox(height: 40),
@@ -127,7 +123,7 @@ class _LandingPageState extends State<LandingPage> {
                     ),
                   ),
                 ),*/
-                const SizedBox(height: 80),
+                const SizedBox(height: 29),
               ],
             ),
           ),
