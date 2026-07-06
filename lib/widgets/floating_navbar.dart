@@ -12,6 +12,11 @@ class FloatingNavBar extends StatelessWidget {
   void _navigate(BuildContext context, int index) {
     if (index == selectedIndex) return;
 
+    if (index == 3) {
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
     Widget page;
 
     switch (index) {
@@ -39,7 +44,7 @@ class FloatingNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 6, 24, 10),
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
         child: Container(
           height: 60,
           decoration: BoxDecoration(
@@ -60,6 +65,7 @@ class FloatingNavBar extends StatelessWidget {
               _navItem(context, index: 0, icon: Icons.map, label: "Map"),
               _navItem(context, index: 1, icon: Icons.home, label: "Home"),
               _navItem(context, index: 2, icon: Icons.settings, label: "Settings"),
+              _navItem(context, index: 3, icon: Icons.person_outline, label: "Profile"),
             ],
           ),
         ),

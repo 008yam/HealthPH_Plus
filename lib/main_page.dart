@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:healthphplus/login_page.dart';
 import 'package:healthphplus/pages/sentiment_pulse_page.dart';
 import 'package:healthphplus/widgets/floating_navbar.dart';
 import 'pages/health_literacy_page.dart';
@@ -56,21 +55,6 @@ class MainPage extends StatelessWidget {
                           height: 55,
                         ),
                         const Spacer(),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.person_outline,
-                            color: Colors.indigo,
-                            size: 22,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
-                              ),
-                            );
-                          },
-                        ),
                       ],
                     ),
                   ),

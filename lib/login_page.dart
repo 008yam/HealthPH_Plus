@@ -68,6 +68,25 @@ class _LoginPageState extends State<LoginPage> {
     _loadLocations();
   }
 
+  void _handleBackPressed() {
+    if (isRegistering) {
+      setState(() {
+        isRegistering = false;
+      });
+      return;
+    }
+
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const MainPage()),
+      );
+  }
+
   Future<void> _loadLocations() async {
     await locationService.load();
 
@@ -214,6 +233,21 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            tooltip: "Back",
+                            onPressed: _handleBackPressed,
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new,
+                              color: AppTheme.navy,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 4),
+
                         Center(
                           child: Image.asset(
                             'assets/images/healthphplusbarlogo.png',

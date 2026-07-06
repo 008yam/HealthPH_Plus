@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'language_selection_page.dart';
 import '../widgets/floating_navbar.dart';
 import '../theme/app_theme.dart';
 
@@ -13,14 +14,14 @@ class SettingsPage extends StatelessWidget {
         child: Center(
           child: Container(
             padding: const EdgeInsets.all(24),
-            child: const Column(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.settings, size: 90, color: Colors.white),
+                const Icon(Icons.settings, size: 90, color: Colors.white),
 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-                Text(
+                const Text(
                   "Settings Page",
                   style: TextStyle(
                     color: Colors.white,
@@ -29,9 +30,44 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-                Text("Coming Soon", style: TextStyle(color: Colors.white70)),
+                 const Text(
+                  "Settings",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold
+                  ),
+                ),
+                 const SizedBox(height: 18),
+
+                ListTile(
+                  tileColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  leading: const Icon(Icons.person_outline, color: AppTheme.primary),
+                  title: const Text("Profile / Login"),
+                  subtitle: const Text("Manage your account and registration details."),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.pushNamed(context, '/login'),
+                ),
+
+                const SizedBox(height: 10),
+
+                ListTile(
+                  tileColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  leading: const Icon(Icons.language, color: AppTheme.primary),
+                  title: const Text("Language"),
+                  subtitle: const Text("Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon"),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
+                    );
+                  },
+                ),
               ],
             ),
           ),
