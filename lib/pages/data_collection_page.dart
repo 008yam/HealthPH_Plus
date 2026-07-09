@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
 import '../services/self_report_store.dart';
-import '../data/ph_address_hierarchy.dart';
+import '../services/location_data_services.dart';
+import '../widgets/location_autocomplete_field.dart';
+import '../services/profile_store.dart';
+import '../services/geocoding_service.dart';
 
 class DataCollectionPage extends StatelessWidget {
   const DataCollectionPage({super.key});
@@ -144,39 +147,56 @@ class DataCollectionPage extends StatelessWidget {
 class _MyReportsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: const [
-        Text(
-          "Your Recent Reports",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+    return AnimatedBuilder(
+      animation: SelfReportStore.instance,
+      builder: (context, _) {
+        final reports = SelfReportStore.instance.reports;
 
-        SizedBox(height: 12),
+        if (reports.isEmpty) {
+          return ListView(
+            children: const [
+              Text(
+                "Your Recent Reports",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 12),
+              Text(
+                "No self-reports submitted yet.",
+                style: TextStyle(fontSize: 12),
+              ),
+              InfoBox(),
+            ],
+          );
+        }
 
-        ReportCard(
-          symptom: "Fever",
-          location: "Quezon City",
-          duration: "3 days",
-          severity: "Moderate",
-          date: "Reported on May 5, 2025",
-          comment: "Felt chills and body heat, especially at night.",
-          icon: Icons.thermostat,
-          severityColor: Color(0xFFE8C47C),
-        ),
+        return ListView(
+          children: [
+            const Text(
+              "Your Recent Reports",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
 
-        ReportCard(
-          symptom: "Cough",
-          location: "Manila, NCR",
-          duration: "3 days",
-          severity: "Mild",
-          date: "Reported on May 4, 2025",
-          comment: "Dry cough, especially in the morning.",
-          icon: Icons.sick,
-          severityColor: Color(0xFFC9F2C7),
-        ),
+            ...reports.map((report) {
+              return ReportCard(
+                symptom: report.symptoms.join(", "),
+                location: report.locationLabel,
+                duration: "Self-reported",
+                severity: "For review",
+                date: report.reportedAtLabel,
+                comment: report.notes.isEmpty
+                    ? "No additional notes provided."
+                    : report.notes,
+                consideration: report.possibleCondition,
+                icon: Icons.assignment_turned_in,
+                severityColor: const Color(0xFFDDE6FF),
+              );
+            }),
 
-        InfoBox(),
-      ],
+            const InfoBox(),
+          ],
+        );
+      },
     );
   }
 }
@@ -245,22 +265,31 @@ class _SelfReportTab extends StatefulWidget {
 class _SelfReportTabState extends State<_SelfReportTab> {
   final notesController = TextEditingController();
   
-  String? selectedRegion;
-  String? selectedProvince;
-  String? selectedCity;
-  String? selectedBarangay;
+  bool locationLoaded = false;
+  bool reportSubmitting = false;
+  LocationOption? selectedRegion;
+  LocationOption? selectedProvince;
+  LocationOption? selectedCity;
+  LocationOption? selectedBarangay;
 
-  List<String> get provinceOptions =>
-      AddressHierarchy.provincesFor(selectedRegion);
-  List<String> get cityOptions =>
-      AddressHierarchy.citiesFor(selectedRegion, selectedProvince);
+  LocationDataService get locationService => LocationDataService.instance;
 
-  List<String> get barangayOptions =>
-      AddressHierarchy.barangaysFor(
-        selectedRegion,
-        selectedProvince,
-        selectedCity
-      );
+  List<LocationOption> get provinceOption =>
+    locationService.provincesForRegion(selectedRegion?.code);
+
+  List<LocationOption> get cityOptions =>
+    locationService.citiesForProvince(
+      selectedRegion?.code,
+      selectedProvince?.code,
+    );
+
+  List<LocationOption> get barangayOptions =>
+    locationService.barangaysForCity(
+      selectedRegion?.code,
+      selectedProvince?.code,
+      selectedCity?.code,
+    );
+
   final Set<String> selectedSymptoms = {};
   
   final symptoms = const [
@@ -273,10 +302,49 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     "Sore throat",
     "Runny nose",
     "Wheezing",
-    "Cough for 2+weeks",
+    "Cough for 2+ weeks",
     "Night sweats",
     "Weight loss",
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    await locationService.load();
+
+    final profile = ProfileStore.instance.profile;
+
+    if (profile != null && profile.hasAddress) {
+      selectedRegion = locationService.regions
+          .where((item) => item.code == profile.regionCode)
+          .firstOrNull;
+
+      selectedProvince = locationService
+          .provincesForRegion(selectedRegion?.code)
+          .where((item) => item.name == profile.province)
+          .firstOrNull;
+
+      selectedCity = locationService
+          .citiesForProvince(selectedRegion?.code, selectedProvince?.code)
+          .where((item) => item.name == profile.city)
+          .firstOrNull;
+      
+      selectedBarangay = locationService
+          .barangaysForCity(selectedRegion?.code, selectedProvince?.code, selectedCity?.code)
+          .where((item) => item.name == profile.barangay)
+          .firstOrNull;
+    }
+
+    if(!mounted) return;
+
+    setState(() {
+      locationLoaded = true;
+    });
+  }
   
   @override
   void dispose() {
@@ -287,7 +355,6 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
   String _possibleCondition() {
     final s = selectedSymptoms;
-
     if (s.contains("Cough") &&
        s.contains("Fever") &&
        s.contains("Chills") &&
@@ -314,30 +381,50 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     return "Respiratory symptoms reported";
   }
 
-  void _submitReport() {
-    // if (locationController.text.trim().isEmpty || selectedSymptoms.isEmpty) {
-      if (selectedRegion == null ||
-      selectedProvince == null ||
-      selectedCity == null ||
-      selectedBarangay == null ||
-      selectedSymptoms.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Complete address and add at least one symptom.")),
-      );
-      return;
-    }
+  Future<void> _submitReport() async {
+    if (reportSubmitting) return;
+
+    if (selectedRegion == null ||
+        selectedProvince == null ||
+        selectedCity == null ||
+        selectedBarangay == null ||
+        selectedSymptoms.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Complete address and add at least one symptoms")),
+          );
+          return;
+        }
+    
+    setState(() {
+      reportSubmitting = true;
+    });
 
     final condition = _possibleCondition();
 
+    final geocoded = await GeocodingService.instance.geocodePhilippinesAddress(
+      barangay: selectedBarangay!.name,
+      city: selectedCity!.name,
+      province: selectedProvince!.name,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      reportSubmitting = false;
+    });
+
     SelfReportStore.instance.addReport(
       SelfReport(
-        region: selectedRegion!,
-        province: selectedProvince!,
-        city: selectedCity!,
-        barangay: selectedBarangay!,
+        region: selectedRegion!.code,
+        province: selectedProvince!.name,
+        city: selectedCity!.name,
+        barangay: selectedBarangay!.name,
+        latitude: geocoded?.latitude,
+        longitude: geocoded?.longitude,
+        geocodedAddress: geocoded?.displayName,
         symptoms: selectedSymptoms.toList(),
         possibleCondition: condition,
-        notes: notesController.text.trim(),
+        notes: notesController.text.trim(), 
         createdAt: DateTime.now(),
       ),
     );
@@ -347,27 +434,20 @@ class _SelfReportTabState extends State<_SelfReportTab> {
       builder: (_) => AlertDialog(
         title: Text(condition),
         content: const Text(
-          "This is not a diagnosis. Please consult healthcare provider, especially if symptoms worsen.\n\n"
-           "Suggested facilities: Barangay Health Station, Rural Health Unit, City/Municipal Health Office, nearest clinic, or hospital emergency room for severe symptoms.\n\n"
-           "Do: rest, hydrate, weak a mask around others, monitor fever and breathing. \n\n"
-           "Don't: self-medicate with antibiotics, smoke nor vape. ignore chest pain or trouble breathing, or delay care if symptom worsen."
+          "This is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.",
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Understood"),
           ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Understood"),
-            ),
-          ],
+        ],
       ),
     );
 
     setState(() {
       notesController.clear();
       selectedSymptoms.clear();
-      selectedRegion = null;
-      selectedProvince = null;
-      selectedCity = null;
-      selectedBarangay = null;
     });
   }
 
@@ -387,87 +467,75 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
         const SizedBox(height: 14),
 
-        DropdownButtonFormField<String>(
-          initialValue: selectedRegion,
-          decoration: const InputDecoration(
-            labelText: "Region",
-            prefixIcon: Icon(Icons.map_outlined),
+        if (!locationLoaded)
+          const Center(child: CircularProgressIndicator())
+          else ...[
+            LocationAutocompleteField(
+              label: "Region",
+              icon: Icons.map_outlined,
+              enabled: true,
+              value: selectedRegion,
+              options: locationService.regions,
+              onSelected: (value) {
+                setState(() {
+                  selectedRegion = value;
+                  selectedProvince = null;
+                  selectedCity = null;
+                  selectedBarangay = null;
+                });
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            LocationAutocompleteField(
+            label: "Province",
+            icon: Icons.location_city_outlined,
+            enabled: selectedRegion != null,
+            value: selectedProvince,
+            options: provinceOption,
+            onSelected: (value) {
+              setState(() {
+                selectedProvince = value;
+                selectedCity = null;
+                selectedBarangay = null;
+              });
+            },
           ),
-          items: AddressHierarchy.regions.map((region) {
-            return DropdownMenuItem(value: region, child: Text(region));
-          }).toList(),
-          onChanged: (value) {
-            setState(() {
-              selectedRegion = value;
-              selectedProvince = null;
-              selectedCity = null;
-              selectedBarangay = null;
-            });
-          },
-        ),
+
+          const SizedBox(height: 12),
+
+          LocationAutocompleteField(
+            label: "City / Municipality",
+            icon: Icons.apartment_outlined,
+            enabled: selectedProvince != null,
+            value: selectedCity, 
+            options: cityOptions,
+            onSelected: (value) {
+              setState(() {
+                selectedCity = value;
+                selectedBarangay = null;
+              });
+            },
+          ),
+
+          const SizedBox(height: 12),
+
+          LocationAutocompleteField(
+            label: "Barangay",
+            icon: Icons.home_work_outlined,
+            enabled: selectedCity != null,
+            value: selectedBarangay,
+            options: barangayOptions,
+            onSelected: (value) {
+              setState(() {
+                selectedBarangay = value;
+              });
+            },
+          ),
+        ],
         
         const SizedBox(height: 12),
-
-        DropdownButtonFormField<String>(
-          initialValue: selectedProvince,
-          decoration: const InputDecoration(
-            labelText: "Province",
-            prefixIcon: Icon(Icons.location_city_outlined),
-          ),
-          items: provinceOptions.map((province) {
-            return DropdownMenuItem(value: province, child: Text(province));
-          }).toList(),
-          onChanged: selectedRegion == null
-              ? null
-              : (value) {
-                  setState(() {
-                    selectedProvince = value;
-                    selectedCity = null;
-                    selectedBarangay = null;
-                  });
-                },
-        ),
-
-        const SizedBox(height: 12),
-
-        DropdownButtonFormField<String>(
-          initialValue: selectedCity,
-          decoration: const InputDecoration(
-            labelText: "City/Municipality",
-            prefixIcon: Icon(Icons.apartment_outlined),
-          ),
-          items: cityOptions.map((city) {
-            return DropdownMenuItem(value: city, child: Text(city));
-          }).toList(),
-          onChanged: selectedProvince == null
-              ? null
-              : (value) {
-                  setState(() {
-                    selectedCity = value;
-                    selectedBarangay = null;
-                  });
-                },
-        ),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          initialValue: selectedBarangay,
-          decoration: const InputDecoration(
-            labelText: "Barangay",
-            prefixIcon: Icon(Icons.home_work_outlined),
-          ),
-          items: barangayOptions.map((barangay) {
-            return DropdownMenuItem(value: barangay, child: Text(barangay));
-          }).toList(),
-          onChanged: selectedCity == null
-              ? null
-              : (value) {
-                  setState(() {
-                    selectedBarangay = value;
-                  });
-              },
-        ),
-
-        const SizedBox(height: 14),
 
         const Text(
           "Symptoms",
@@ -505,7 +573,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
           controller: notesController,
           maxLines: 3,
           decoration: const InputDecoration(
-            labelText: "Addtional notes optional",
+            labelText: "Additional notes (optional)",
             alignLabelWithHint: true,
           ),
         ),
@@ -515,9 +583,9 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         SizedBox(
           height: 46,
           child: ElevatedButton.icon(
-            onPressed: _submitReport,
+            onPressed: reportSubmitting ? null : _submitReport,
             icon: const Icon(Icons.add_location_alt_outlined),
-            label: const Text("Submit Self Report"),
+            label: Text(reportSubmitting ? "Location Address..." : "Submit Self Report"),
         ),
         ),
       ],
@@ -533,6 +601,7 @@ class ReportCard extends StatelessWidget {
   final String severity;
   final String date;
   final String comment;
+  final String? consideration;
   final IconData icon;
   final Color severityColor;
 
@@ -544,6 +613,7 @@ class ReportCard extends StatelessWidget {
     required this.severity,
     required this.date,
     required this.comment,
+    this.consideration,
     required this.icon,
     required this.severityColor,
   });
@@ -609,6 +679,27 @@ class ReportCard extends StatelessWidget {
                 ),
               ],
             ),
+
+            if (consideration != null && consideration!.trim().isNotEmpty) ... [
+              const SizedBox(height: 10,),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF4D6),
+                  border: Border.all(color: AppTheme.warning),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "Possible / Consideration: $consideration",
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.text,
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 12),
 

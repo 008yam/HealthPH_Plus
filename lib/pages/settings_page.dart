@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'language_selection_page.dart';
 import '../widgets/floating_navbar.dart';
 import '../theme/app_theme.dart';
+import '../services/profile_store.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final profile = ProfileStore.instance.profile;
     return Scaffold(
       backgroundColor: AppTheme.pageBlue,
       body: SafeArea(
@@ -46,8 +48,13 @@ class SettingsPage extends StatelessWidget {
                   tileColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   leading: const Icon(Icons.person_outline, color: AppTheme.primary),
-                  title: const Text("Profile / Login"),
-                  subtitle: const Text("Manage your account and registration details."),
+                  title: Text(profile?.fullName ?? "Profile / Login"),
+                  subtitle: Text(
+                    profile == null
+                        ? "Manage your account and registration details."
+                        : "${profile.email}\n${profile.locationLabel}"
+                  ),
+                  isThreeLine: profile != null,
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.pushNamed(context, '/login'),
                 ),
@@ -75,5 +82,6 @@ class SettingsPage extends StatelessWidget {
       ),
       bottomNavigationBar: const FloatingNavBar(selectedIndex: 2),
     );
+    
   }
 }

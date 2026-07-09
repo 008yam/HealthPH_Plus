@@ -3,6 +3,7 @@ import 'main_page.dart';
 import 'theme/app_theme.dart';
 import 'services/location_data_services.dart';
 import 'widgets/location_autocomplete_field.dart';
+import 'services/profile_store.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -121,6 +122,21 @@ class _LoginPageState extends State<LoginPage> {
       context,
       MaterialPageRoute(builder: (_) => const MainPage()),
       );
+
+   if (isRegistering) {
+    ProfileStore.instance.saveProfile(
+      UserProfile(
+        fullName: fullNameController.text.trim(),
+        email: emailController.text.trim(),
+        role: selectedRole,
+        regionCode: selectedRegion!.code,
+        regionLabel: selectedRegion!.label,
+        province: selectedProvince!.name,
+        city: selectedCity!.name,
+        barangay: selectedBarangay!.name,
+      ),
+    );
+   }
   }
 
   void _showPasswordResetDialog(){
@@ -189,13 +205,6 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
-  String? _dropdownValidator(String? value, String label) {
-    if (value == null || value.trim().isEmpty) {
-      return "Select $label";
-    }
-    return null;
-  }
-
   String? _confirmPasswordValidator(String? value) {
     if(!isRegistering) return null;
 
@@ -245,7 +254,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 4),
 
                         Center(
@@ -421,7 +430,7 @@ class _LoginPageState extends State<LoginPage> {
                             },
                           ),
                         ],
-                        ],
+                      ],
 
                         if(!isRegistering) ...[
                           const SizedBox(height: 8),
