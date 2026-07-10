@@ -27,7 +27,7 @@ class _LandingPageState extends State<LandingPage> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const IntroTutorialPage()),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
       );
   }
 

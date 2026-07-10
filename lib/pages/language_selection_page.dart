@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../main_page.dart';
+import 'intro_tutorial_page.dart';
 import '../theme/app_theme.dart';
 
 class LanguageSelectionPage extends StatefulWidget {
@@ -23,7 +23,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   void _continueToApp() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const MainPage()),
+      MaterialPageRoute(builder: (_) => const IntroTutorialPage()),
       );
   }
 

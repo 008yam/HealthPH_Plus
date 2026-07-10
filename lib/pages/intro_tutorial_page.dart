@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
-import 'language_selection_page.dart';
+import '../main_page.dart';
 
 class IntroTutorialPage extends StatefulWidget {
   const IntroTutorialPage({super.key});
@@ -51,8 +51,8 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
   void _finishTutorial() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
-    );
+      MaterialPageRoute(builder: (_) => const MainPage()),
+      );
   }
 
   void _nextPage() {

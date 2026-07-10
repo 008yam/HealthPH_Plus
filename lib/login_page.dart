@@ -4,6 +4,7 @@ import 'theme/app_theme.dart';
 import 'services/location_data_services.dart';
 import 'widgets/location_autocomplete_field.dart';
 import 'services/profile_store.dart';
+import 'pages/language_selection_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -98,6 +99,30 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  void _goToLanguageSelection() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
+    );
+  }
+
+  void _continueAsGuest() {
+    ProfileStore.instance.saveProfile(
+      const UserProfile(
+        fullName: "Guest User",
+        email: "guest@healthphplus.local",
+        role: "Guest Tester",
+        regionCode: "",
+        regionLabel: "",
+        province: "",
+        city: "",
+        barangay: "",
+      ),
+    );
+
+    _goToLanguageSelection();
+  }
+
   void _submit() {
     if(!_formKey.currentState!.validate()) return;
 
@@ -111,6 +136,7 @@ class _LoginPageState extends State<LoginPage> {
     );
     return;
   }
+  
 
     ScaffoldMessenger.of(context).showSnackBar (
       SnackBar(
@@ -118,10 +144,28 @@ class _LoginPageState extends State<LoginPage> {
     ),
     );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const MainPage()),
+    if (isRegistering) {
+      ProfileStore.instance.saveProfile(
+        UserProfile(
+          fullName: fullNameController.text.trim(),
+          email: emailController.text.trim(),
+          role: selectedRole,
+          regionCode: selectedRegion!.code,
+          regionLabel: selectedRegion!.label,
+          province: selectedProvince!.name,
+          city: selectedCity!.name,
+          barangay: selectedBarangay!.name,
+          ),
       );
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isRegistering ? "Account Created." : "Logging in ..."),
+        ),
+    );
+
+  _goToLanguageSelection();
 
    if (isRegistering) {
     ProfileStore.instance.saveProfile(
@@ -457,7 +501,25 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 12),
+
+                        if (!isRegistering) ...[
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 44,
+                                child: OutlinedButton.icon(
+                                  onPressed: _continueAsGuest,
+                                  icon: const Icon(Icons.person_outline),
+                                  label: const Text(
+                                    "continue as Guest",
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ],
+
                         Center(
                           child: TextButton(
                             onPressed: () {
@@ -466,6 +528,7 @@ class _LoginPageState extends State<LoginPage> {
                               });
                             },
                             child: Text(
+                              
                               isRegistering
                                   ? "Already have an account? Login"
                                   : "New User? Create an account",
