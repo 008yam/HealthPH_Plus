@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'login_page.dart';
 import 'landing_page.dart';
 import 'theme/app_theme.dart';
+import 'services/self_report_database.dart';
+import 'services/self_report_store.dart';
 
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final savedReports = await SelfReportDatabase.instance.getReports();
+  SelfReportStore.instance.replaceReports(savedReports);
+
   runApp(const MyApp());
 }
 

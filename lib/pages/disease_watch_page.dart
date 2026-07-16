@@ -2,6 +2,7 @@
   import '../services/healthph_api_services.dart';
   import '../theme/app_theme.dart';
   import 'package:healthphplus/main_page.dart';
+  import '../theme/responsive.dart';
 
   class DiseaseWatchPage extends StatefulWidget {
     const DiseaseWatchPage({super.key});

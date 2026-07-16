@@ -6,6 +6,7 @@ import 'pages/data_collection_page.dart';
 import 'pages/disease_watch_page.dart';
 import 'widgets/weather_widget.dart';
 import 'theme/app_theme.dart';
+import 'theme/responsive.dart';
 
 //import 'pages/map_page.dart';
 //import 'widgets/floating_navbar.dart';
@@ -21,6 +22,7 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compactStats = MediaQuery.sizeOf(context).width < 380;
     return Scaffold(
       backgroundColor: AppTheme.pageBlue,
       body: Stack(
@@ -34,7 +36,7 @@ class MainPage extends StatelessWidget {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              padding: EdgeInsets.all(Responsive.pagePadding(context)), //EdgeInsets.fromLTRB
               child: Column(
                 children: [
                   // ====================================================
@@ -52,7 +54,7 @@ class MainPage extends StatelessWidget {
                       children: [
                         Image.asset(
                           'assets/images/healthphplusbarlogo.png',
-                          height: 55,
+                          height: Responsive.logoHeight(context),
                         ),
                         const Spacer(),
                       ],
@@ -64,7 +66,30 @@ class MainPage extends StatelessWidget {
                   // ====================================================
                   // 2. TOP STATUS CARDS
                   // ====================================================
-                  const Row(
+                 compactStats
+                    ? const Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TopStatCard(
+                          number: "3",
+                          label: "Active Outbreaks",
+                          icon: Icons.coronavirus,
+                        ),
+                        SizedBox(height: 6),
+                        TopStatCard(
+                          number: "1",
+                          label: "Health Alerts",
+                          icon: Icons.local_hospital,
+                        ),
+                        SizedBox(height: 6),
+                        TopStatCard(
+                          number: "2",
+                          label: "Active Users",
+                          icon: Icons.group,
+                        ),
+                      ],
+                    )
+                  : const Row(
                     children: [
                       Expanded(
                         child: TopStatCard(
@@ -73,7 +98,7 @@ class MainPage extends StatelessWidget {
                           icon: Icons.coronavirus,
                         ),
                       ),
-                      SizedBox(width: 6),
+                       SizedBox(width: 6),
                       Expanded(
                         child: TopStatCard(
                           number: "1",
@@ -81,18 +106,17 @@ class MainPage extends StatelessWidget {
                           icon: Icons.local_hospital,
                         ),
                       ),
-                      SizedBox(width: 6),
+                       SizedBox(width: 6),
                       Expanded(
                         child: TopStatCard(
                           number: "2",
-                          label: "Active Users",
+                          label: "Active User",
                           icon: Icons.groups,
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 8),
+                  
 
                   // ====================================================
                   // 3. WEATHER WIDGET
@@ -345,7 +369,7 @@ class TopStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 78,
+      height: Responsive.isSmallPhone(context) ? 72 : 78,
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: AppTheme.primary,
@@ -373,13 +397,15 @@ class TopStatCard extends StatelessWidget {
 
           Text(
             label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 10,
               fontWeight: FontWeight.bold,
             ),
-          ),
+          )
         ],
       ),
     );
@@ -463,19 +489,28 @@ class QuickActionTile extends StatelessWidget {
 
               const SizedBox(width: 10),
 
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
 
-                  Text(subtitle, style: const TextStyle(fontSize: 10)),
-                ],
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -526,7 +561,7 @@ class AlertCard extends StatelessWidget {
           const SizedBox(height: 6),
 
           SizedBox(
-            width: 150,
+            width: double.infinity,
             child: Stack(
               children: [
                 Container(

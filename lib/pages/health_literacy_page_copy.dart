@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../theme/responsive.dart';
 
 class HealthLiteracyPage extends StatelessWidget {
   const HealthLiteracyPage({super.key});

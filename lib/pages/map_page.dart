@@ -10,6 +10,7 @@ import 'settings_page.dart';
 import '../services/healthph_api_services.dart';
 import '../theme/app_theme.dart';
 import '../services/self_report_store.dart';
+import '../theme/responsive.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -116,7 +117,8 @@ class _MapPageState extends State<MapPage> {
   }
 
   void resetMapView() {
-    mapController.move(philippinesCenter, 5.5);
+    final zoom = Responsive.isTablet(context) ? 6.15 : 5.5;
+    mapController.move(philippinesCenter, zoom);
   }
 
   void zoomIn() {
@@ -354,23 +356,34 @@ class _MapPageState extends State<MapPage> {
     "BARMM": LatLng(7.2167, 124.2500),
   };
 
-  @override
+  @override //build()
   Widget build(BuildContext context) {
     final safeTop = MediaQuery.of(context).padding.top;
     final safeBottom = MediaQuery.of(context).padding.bottom;
-
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isTablet = Responsive.isTablet(context);
+    final initialZoom = isTablet ? 6.16 : 5.5;
+    final headerWidth = isTablet
+        ? 390.0
+        : (screenWidth - 148).clamp(180.0, 420.0).toDouble();
+    final filterWidth = isTablet
+        ? 390.0
+        : (screenWidth - 98).clamp(220.0, 430.0).toDouble();
+    final markerSize = isTablet ? 88.0 : 80.0;
+    final pinIconSize = isTablet ? 50.0 : 44.0;
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: _pageBlue,
       drawer: _buildDrawer(context),
       body: Stack(
         children: [
-          Positioned.fill(
+          Positioned.
+          fill(
             child: FlutterMap(
               mapController: mapController,
               options: MapOptions(
                 initialCenter: philippinesCenter,
-                initialZoom: 5.5,
+                initialZoom: initialZoom,
               ),
               children: [
                 TileLayer(
@@ -381,8 +394,8 @@ class _MapPageState extends State<MapPage> {
                   markers: filteredOutbreaks.map((outbreak) {
                     return Marker(
                       point: LatLng(outbreak["lat"], outbreak["lng"]),
-                      width: 80,
-                      height: 80,
+                      width: markerSize,
+                      height: markerSize,
                       child: GestureDetector(
                         onTap: () {
                           showModalBottomSheet(
@@ -402,7 +415,7 @@ class _MapPageState extends State<MapPage> {
                           color: outbreak['source'] == "selfReport"
                               ? AppTheme.info
                               : Colors.redAccent,
-                          size: 44,
+                          size: pinIconSize,
                         ),
                       ),
                     );
@@ -423,22 +436,26 @@ class _MapPageState extends State<MapPage> {
 
           Positioned(
             left: 72,
-            right: 76,
             top: safeTop + 12,
-            child: _MapHeader(
-              reportCount: filteredOutbreaks.length,
-              filterSummary: filterSummary,
+            child: SizedBox(
+              width: headerWidth,
+              child: _MapHeader(
+                reportCount: filteredOutbreaks.length,
+                filterSummary: filterSummary
+              ),
             ),
           ),
 
           Positioned(
             left: 16,
-            right: 82,
             top: safeTop + 94,
-            child: _FilterButton(
-              summary: filterSummary,
-              selectedCount: selectedFilters.length,
-              onTap: _openDiseaseFilterSheet,
+            child: SizedBox(
+              width: filterWidth,
+              child: _FilterButton(
+                summary: filterSummary,
+                selectedCount: selectedFilters.length,
+                onTap: _openDiseaseFilterSheet,
+              ),
             ),
           ),
 
@@ -476,10 +493,16 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ],
               ),
-              child: const Text(
+              child: Text(
                 "Map data updates show latest reported outbreak activity.",
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-              ),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: isTablet ? 14 : 10,
+                  height: 1.3,
+                  fontWeight: FontWeight.bold,
+                  color:AppTheme.text,
+                ),
+              )
             ),
           ),
         ],

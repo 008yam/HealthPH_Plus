@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'main_page.dart';
 import 'login_page.dart';
-import 'pages/intro_tutorial_page.dart';
+import 'theme/responsive.dart';
+
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -59,13 +60,17 @@ class _LandingPageState extends State<LandingPage> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
+            padding: EdgeInsets.symmetric(horizontal: Responsive.pagePadding(context)),
             child: Column(
               children: [
                 const Spacer(),
 
                 // CENTER LOGO
-                Image.asset('assets/images/healthphpluslogo.png', height: 650),
+                Image.asset(
+                  'assets/images/healthphpluslogo.png',
+                  height: Responsive.splashLogoHeight(context),
+                  fit: BoxFit.contain,
+                ),
 
                 const Spacer(),
 

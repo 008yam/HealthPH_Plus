@@ -6,6 +6,8 @@ import '../services/location_data_services.dart';
 import '../widgets/location_autocomplete_field.dart';
 import '../services/profile_store.dart';
 import '../services/geocoding_service.dart';
+import '../theme/responsive.dart';
+import '../services/self_report_database.dart';
 
 class DataCollectionPage extends StatelessWidget {
   const DataCollectionPage({super.key});
@@ -41,7 +43,7 @@ class DataCollectionPage extends StatelessWidget {
                   child: SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                      padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -91,7 +93,7 @@ class DataCollectionPage extends StatelessWidget {
 
                 Expanded(
                   child: Container(
-                    margin: const EdgeInsets.all(16),
+                    margin: EdgeInsets.all(Responsive.pagePadding(context) * 0.8),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -105,7 +107,8 @@ class DataCollectionPage extends StatelessWidget {
                             border: Border.all(color: Colors.black),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const TabBar(
+                          child: TabBar(
+                            isScrollable: Responsive.isSmallPhone(context),
                             labelColor: Colors.black,
                             unselectedLabelColor: Colors.grey,
                             indicator: BoxDecoration(
@@ -115,6 +118,7 @@ class DataCollectionPage extends StatelessWidget {
                                   width: 3,
                                 ),
                               ),
+                              
                             ),
                             tabs: [
                               Tab(text: "Self Report"),
@@ -413,21 +417,22 @@ class _SelfReportTabState extends State<_SelfReportTab> {
       reportSubmitting = false;
     });
 
-    SelfReportStore.instance.addReport(
-      SelfReport(
-        region: selectedRegion!.code,
-        province: selectedProvince!.name,
-        city: selectedCity!.name,
-        barangay: selectedBarangay!.name,
-        latitude: geocoded?.latitude,
-        longitude: geocoded?.longitude,
-        geocodedAddress: geocoded?.displayName,
-        symptoms: selectedSymptoms.toList(),
-        possibleCondition: condition,
-        notes: notesController.text.trim(), 
-        createdAt: DateTime.now(),
-      ),
+    final report = SelfReport(
+      region: selectedRegion!.code,
+      province: selectedProvince!.name,
+      city: selectedCity!.name,
+      barangay: selectedBarangay!.name,
+      latitude: geocoded?.latitude,
+      longitude: geocoded?.longitude,
+      geocodedAddress: geocoded?.displayName,
+      symptoms: selectedSymptoms.toList(),
+      possibleCondition: condition,
+      notes: notesController.text.trim(),
+      createdAt: DateTime.now(),
     );
+
+    SelfReportStore.instance.addReport(report);
+    await SelfReportDatabase.instance.insertReport(report);
 
     showDialog(
       context: context,

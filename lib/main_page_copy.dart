@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:healthphplus/pages/sentiment_pulse_page.dart';
 import 'pages/health_literacy_page.dart';
 import 'pages/data_collection_page.dart';
+import 'theme/responsive.dart';
 // =======================================================
 // HOME PAGE
 // =======================================================

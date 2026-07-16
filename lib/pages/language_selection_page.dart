@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'intro_tutorial_page.dart';
 import '../theme/app_theme.dart';
+import '../theme/responsive.dart';
 
 class LanguageSelectionPage extends StatefulWidget {
   const LanguageSelectionPage({super.key});
@@ -42,13 +43,18 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              padding: EdgeInsets.fromLTRB(
+                Responsive.pagePadding(context),
+                16,
+                Responsive.pagePadding(context),
+                20,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Image.asset(
                     'assets/images/healthphplusbarlogo.png',
-                    height: 52,
+                    height: Responsive.logoHeight(context),
                   ),
                   const SizedBox(height: 28),
                   const Text(
@@ -129,7 +135,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                   ),
                   SizedBox(
                     width: double.infinity,
-                    height: 46,
+                    height: Responsive.buttonHeight(context),
                     child: ElevatedButton(
                       onPressed: _continueToApp,
                       child: const Text(

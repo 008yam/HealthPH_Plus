@@ -71,6 +71,13 @@ class SelfReportStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void replaceReports(List<SelfReport> reports) {
+    _reports
+      ..clear()
+      ..addAll(reports);
+    notifyListeners();
+  }
+
   List<Map<String, dynamic>> get mapReports {
     return _reports.map((report) {
       final point = report.hasCoordinates

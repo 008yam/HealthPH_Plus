@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
+import '../theme/responsive.dart';
 
 class HealthLiteracyPage extends StatefulWidget {
   const HealthLiteracyPage({super.key});

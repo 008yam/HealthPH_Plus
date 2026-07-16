@@ -5,6 +5,7 @@ import 'services/location_data_services.dart';
 import 'widgets/location_autocomplete_field.dart';
 import 'services/profile_store.dart';
 import 'pages/language_selection_page.dart';
+import 'theme/responsive.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -275,10 +276,15 @@ class _LoginPageState extends State<LoginPage> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                padding: EdgeInsets.fromLTRB(
+                  Responsive.pagePadding(context),
+                  18,
+                  Responsive.pagePadding(context),
+                  24,
+                ),
                 child: Container(
                   width: double.infinity,
-                  constraints: const BoxConstraints(maxWidth: 390),
+                  constraints: BoxConstraints(maxWidth: Responsive.formMaxWidth(context)),
                   padding: const EdgeInsets.all(18),
                   decoration: AppTheme.cardDecoration,
                   child: Form(
@@ -304,7 +310,7 @@ class _LoginPageState extends State<LoginPage> {
                         Center(
                           child: Image.asset(
                             'assets/images/healthphplusbarlogo.png',
-                            height: 54,
+                            height: Responsive.logoHeight(context),
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -462,7 +468,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 12),
                           LocationAutocompleteField(
-                            label: "Baranggay",
+                            label: "Barangay",
                             icon: Icons.home_work_outlined,
                             enabled: selectedCity != null,
                             value: selectedBarangay,
@@ -490,7 +496,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 14),
                         SizedBox(
                           width: double.infinity,
-                          height: 46,
+                          height: Responsive.buttonHeight(context),
                           child: ElevatedButton(
                             onPressed: _submit,
                             child: Text(
@@ -508,12 +514,12 @@ class _LoginPageState extends State<LoginPage> {
                               const SizedBox(height: 8),
                               SizedBox(
                                 width: double.infinity,
-                                height: 44,
+                                height: Responsive.buttonHeight(context),
                                 child: OutlinedButton.icon(
                                   onPressed: _continueAsGuest,
                                   icon: const Icon(Icons.person_outline),
                                   label: const Text(
-                                    "continue as Guest",
+                                    "Continue as Guest",
                                     style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),

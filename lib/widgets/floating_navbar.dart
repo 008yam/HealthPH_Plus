@@ -3,6 +3,7 @@ import '../pages/map_page.dart';
 import '../pages/settings_page.dart';
 import 'package:healthphplus/main_page.dart';
 import '../theme/app_theme.dart';
+import '../theme/responsive.dart';
 
 class FloatingNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -94,7 +95,7 @@ class FloatingNavBar extends StatelessWidget {
           children: [
             Icon(icon, color: isSelected ? Colors.white : Colors.grey.shade600),
 
-            if (isSelected) ...[
+            if (isSelected && !Responsive.isSmallPhone(context)) ...[
               const SizedBox(width: 6),
 
               Text(
