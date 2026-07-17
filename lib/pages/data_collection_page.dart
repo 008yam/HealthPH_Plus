@@ -8,6 +8,7 @@ import '../services/profile_store.dart';
 import '../services/geocoding_service.dart';
 import '../theme/responsive.dart';
 import '../services/self_report_database.dart';
+import '../services/self_report_export_service.dart';
 
 class DataCollectionPage extends StatelessWidget {
   const DataCollectionPage({super.key});
@@ -83,7 +84,10 @@ class DataCollectionPage extends StatelessWidget {
 
                           const Text(
                             "Tracks symptoms & outbreaks",
-                            style: TextStyle(fontSize: 12, color: Colors.indigo),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.indigo,
+                            ),
                           ),
                         ],
                       ),
@@ -93,7 +97,9 @@ class DataCollectionPage extends StatelessWidget {
 
                 Expanded(
                   child: Container(
-                    margin: EdgeInsets.all(Responsive.pagePadding(context) * 0.8),
+                    margin: EdgeInsets.all(
+                      Responsive.pagePadding(context) * 0.8,
+                    ),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -118,7 +124,6 @@ class DataCollectionPage extends StatelessWidget {
                                   width: 3,
                                 ),
                               ),
-                              
                             ),
                             tabs: [
                               Tab(text: "Self Report"),
@@ -132,7 +137,11 @@ class DataCollectionPage extends StatelessWidget {
 
                         Expanded(
                           child: TabBarView(
-                            children: [_SelfReportTab(), _MyReportsTab(), _CommunityTab()],
+                            children: [
+                              _SelfReportTab(),
+                              _MyReportsTab(),
+                              _CommunityTab(),
+                            ],
                           ),
                         ),
                       ],
@@ -149,6 +158,39 @@ class DataCollectionPage extends StatelessWidget {
 }
 
 class _MyReportsTab extends StatelessWidget {
+  bool get _canExportReports {
+    final role = ProfileStore.instance.profile?.role.toLowerCase() ?? '';
+    return role.contains('field health worker') || role.contains('lgu/doh');
+  }
+
+  Future<void> _exportReports(
+    BuildContext context,
+    List<SelfReport> reports,
+  ) async {
+    if (reports.isEmpty) return;
+
+    try {
+      final shared = await SelfReportExportService.instance.shareCsv(
+        context: context,
+        reports: reports,
+      );
+
+      if (!context.mounted) return;
+
+      if (shared) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Self-reports CSV is ready to share.")),
+        );
+      }
+    } catch (_) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unable to export self-reports CSV.")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -175,9 +217,24 @@ class _MyReportsTab extends StatelessWidget {
 
         return ListView(
           children: [
-            const Text(
-              "Your Recent Reports",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "Your Recent Reports (${reports.length})",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (_canExportReports)
+                  IconButton(
+                    tooltip: "Export CSV",
+                    onPressed: () => _exportReports(context, reports),
+                    icon: const Icon(Icons.ios_share, color: AppTheme.primary),
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
 
@@ -268,7 +325,7 @@ class _SelfReportTab extends StatefulWidget {
 
 class _SelfReportTabState extends State<_SelfReportTab> {
   final notesController = TextEditingController();
-  
+
   bool locationLoaded = false;
   bool reportSubmitting = false;
   LocationOption? selectedRegion;
@@ -279,23 +336,21 @@ class _SelfReportTabState extends State<_SelfReportTab> {
   LocationDataService get locationService => LocationDataService.instance;
 
   List<LocationOption> get provinceOption =>
-    locationService.provincesForRegion(selectedRegion?.code);
+      locationService.provincesForRegion(selectedRegion?.code);
 
-  List<LocationOption> get cityOptions =>
-    locationService.citiesForProvince(
-      selectedRegion?.code,
-      selectedProvince?.code,
-    );
+  List<LocationOption> get cityOptions => locationService.citiesForProvince(
+    selectedRegion?.code,
+    selectedProvince?.code,
+  );
 
-  List<LocationOption> get barangayOptions =>
-    locationService.barangaysForCity(
-      selectedRegion?.code,
-      selectedProvince?.code,
-      selectedCity?.code,
-    );
+  List<LocationOption> get barangayOptions => locationService.barangaysForCity(
+    selectedRegion?.code,
+    selectedProvince?.code,
+    selectedCity?.code,
+  );
 
   final Set<String> selectedSymptoms = {};
-  
+
   final symptoms = const [
     "Cough",
     "Fever",
@@ -336,20 +391,24 @@ class _SelfReportTabState extends State<_SelfReportTab> {
           .citiesForProvince(selectedRegion?.code, selectedProvince?.code)
           .where((item) => item.name == profile.city)
           .firstOrNull;
-      
+
       selectedBarangay = locationService
-          .barangaysForCity(selectedRegion?.code, selectedProvince?.code, selectedCity?.code)
+          .barangaysForCity(
+            selectedRegion?.code,
+            selectedProvince?.code,
+            selectedCity?.code,
+          )
           .where((item) => item.name == profile.barangay)
           .firstOrNull;
     }
 
-    if(!mounted) return;
+    if (!mounted) return;
 
     setState(() {
       locationLoaded = true;
     });
   }
-  
+
   @override
   void dispose() {
     // locationController.dispose();
@@ -360,9 +419,9 @@ class _SelfReportTabState extends State<_SelfReportTab> {
   String _possibleCondition() {
     final s = selectedSymptoms;
     if (s.contains("Cough") &&
-       s.contains("Fever") &&
-       s.contains("Chills") &&
-       s.contains("Fatigue")) {
+        s.contains("Fever") &&
+        s.contains("Chills") &&
+        s.contains("Fatigue")) {
       return "POssible pneumonia pattern";
     }
 
@@ -370,15 +429,17 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         (s.contains("Cough") &&
             s.contains("Night sweats") &&
             s.contains("Weight loss"))) {
-        return "Possible tuberculosis symptom pattern";
-            }
+      return "Possible tuberculosis symptom pattern";
+    }
     if (s.contains("Cough for 2+ weeks") ||
-          (s.contains("Cough") &&
+        (s.contains("Cough") &&
             s.contains("Night sweats") &&
             s.contains("Weight loss"))) {
-        return "Possible tuberculosis symptom pattern";
-      }
-    if (s.contains("Cough") || s.contains("Sore throat") || s.contains("Runny nose")) {
+      return "Possible tuberculosis symptom pattern";
+    }
+    if (s.contains("Cough") ||
+        s.contains("Sore throat") ||
+        s.contains("Runny nose")) {
       return "Possible acute respiratory infection pattern";
     }
 
@@ -393,12 +454,14 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         selectedCity == null ||
         selectedBarangay == null ||
         selectedSymptoms.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Complete address and add at least one symptoms")),
-          );
-          return;
-        }
-    
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Complete address and add at least one symptoms"),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       reportSubmitting = true;
     });
@@ -433,6 +496,8 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
     SelfReportStore.instance.addReport(report);
     await SelfReportDatabase.instance.insertReport(report);
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -474,26 +539,26 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
         if (!locationLoaded)
           const Center(child: CircularProgressIndicator())
-          else ...[
-            LocationAutocompleteField(
-              label: "Region",
-              icon: Icons.map_outlined,
-              enabled: true,
-              value: selectedRegion,
-              options: locationService.regions,
-              onSelected: (value) {
-                setState(() {
-                  selectedRegion = value;
-                  selectedProvince = null;
-                  selectedCity = null;
-                  selectedBarangay = null;
-                });
-              },
-            ),
+        else ...[
+          LocationAutocompleteField(
+            label: "Region",
+            icon: Icons.map_outlined,
+            enabled: true,
+            value: selectedRegion,
+            options: locationService.regions,
+            onSelected: (value) {
+              setState(() {
+                selectedRegion = value;
+                selectedProvince = null;
+                selectedCity = null;
+                selectedBarangay = null;
+              });
+            },
+          ),
 
-            const SizedBox(height: 12),
+          const SizedBox(height: 12),
 
-            LocationAutocompleteField(
+          LocationAutocompleteField(
             label: "Province",
             icon: Icons.location_city_outlined,
             enabled: selectedRegion != null,
@@ -514,7 +579,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             label: "City / Municipality",
             icon: Icons.apartment_outlined,
             enabled: selectedProvince != null,
-            value: selectedCity, 
+            value: selectedCity,
             options: cityOptions,
             onSelected: (value) {
               setState(() {
@@ -539,22 +604,19 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             },
           ),
         ],
-        
+
         const SizedBox(height: 12),
 
-        const Text(
-          "Symptoms",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        const Text("Symptoms", style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
 
         Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: symptoms.map((symptom) {
-              final selected = selectedSymptoms.contains(symptom);
+          spacing: 8,
+          runSpacing: 8,
+          children: symptoms.map((symptom) {
+            final selected = selectedSymptoms.contains(symptom);
 
-              return FilterChip(
+            return FilterChip(
               label: Text(symptom),
               selected: selected,
               selectedColor: AppTheme.primary.withValues(alpha: 0.16),
@@ -584,20 +646,21 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         ),
 
         const SizedBox(height: 16),
-  
+
         SizedBox(
           height: 46,
           child: ElevatedButton.icon(
             onPressed: reportSubmitting ? null : _submitReport,
             icon: const Icon(Icons.add_location_alt_outlined),
-            label: Text(reportSubmitting ? "Location Address..." : "Submit Self Report"),
-        ),
+            label: Text(
+              reportSubmitting ? "Location Address..." : "Submit Self Report",
+            ),
+          ),
         ),
       ],
     );
   }
 }
-
 
 class ReportCard extends StatelessWidget {
   final String symptom;
@@ -685,8 +748,8 @@ class ReportCard extends StatelessWidget {
               ],
             ),
 
-            if (consideration != null && consideration!.trim().isNotEmpty) ... [
-              const SizedBox(height: 10,),
+            if (consideration != null && consideration!.trim().isNotEmpty) ...[
+              const SizedBox(height: 10),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),

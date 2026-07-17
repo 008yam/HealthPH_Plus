@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'language_selection_page.dart';
-import '../widgets/floating_navbar.dart';
-import '../theme/app_theme.dart';
+
 import '../services/profile_store.dart';
+import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
+import '../widgets/floating_navbar.dart';
+import 'language_selection_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -13,6 +14,7 @@ class SettingsPage extends StatelessWidget {
     final profile = ProfileStore.instance.profile;
     final isTablet = Responsive.isTablet(context);
     final maxContentWidth = isTablet ? 620.0 : Responsive.formMaxWidth(context);
+
     return Scaffold(
       backgroundColor: AppTheme.pageBlue,
       body: Stack(
@@ -21,16 +23,19 @@ class SettingsPage extends StatelessWidget {
             child: Image.asset(
               'assets/images/Backdrop1.png',
               fit: BoxFit.cover,
-              opacity: const AlwaysStoppedAnimation(0.16),
-            ), 
+              opacity: const AlwaysStoppedAnimation(0.10),
+            ),
+          ),
+          Positioned.fill(
+            child: ColoredBox(color: AppTheme.pageBlue.withValues(alpha: 0.82)),
           ),
           SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 Responsive.pagePadding(context),
-                isTablet ? 28 : 18,
+                isTablet ? 30 : 20,
                 Responsive.pagePadding(context),
-                96
+                96,
               ),
               child: Center(
                 child: ConstrainedBox(
@@ -41,10 +46,10 @@ class SettingsPage extends StatelessWidget {
                       Center(
                         child: Image.asset(
                           'assets/images/healthphplusbarlogo.png',
-                          height: isTablet ? 26 : 18,
+                          height: isTablet ? 72 : 54,
                         ),
                       ),
-                      SizedBox(height: isTablet ? 26 :18),
+                      SizedBox(height: isTablet ? 30 : 22),
                       Text(
                         "Settings",
                         textAlign: TextAlign.center,
@@ -56,84 +61,23 @@ class SettingsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        "Account, language, and App Reference",
+                        "Account, language, and app preferences",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.86),
+                          color: Colors.white.withValues(alpha: 0.88),
                           fontSize: isTablet ? 16 : 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      SizedBox(height: isTablet ?  28 : 20),
-
-                      Container(
-                        padding: EdgeInsets.all(isTablet ? 20 : 16),
-                        decoration: AppTheme.cardDecoration,
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: isTablet ? 30: 24,
-                              backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-                              child: Icon(
-                                Icons.person_outline,
-                                color: AppTheme.primary,
-                                size: isTablet ? 32 : 26,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    profile?.fullName ?? "Profile / Login",
-                                    style: TextStyle(
-                                      color: AppTheme.text,
-                                      fontSize: isTablet ? 18 : 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    profile == null
-                                        ? "Manage your account and registration details."
-                                        : "${profile.email}\n${profile.locationLabel}",
-                                    style: TextStyle(
-                                      color: AppTheme.mutedText,
-                                      fontSize: isTablet ? 14: 12,
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => Navigator.pushNamed(context, '/login'),
-                              icon: const Icon(Icons.chevron_right),
-                            ),
-                          ],
-                        ),
-                      ),
+                      SizedBox(height: isTablet ? 28 : 20),
+                      _ProfileCard(profile: profile, isTablet: isTablet),
                       const SizedBox(height: 12),
-
-                      ListTile(
-                        tileColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? 20 : 14,
-                          vertical: isTablet ? 10 : 6,
-                        ),
-                        leading: const Icon(Icons.language, color: AppTheme.primary),
-                        title: Text(
-                          "Language",
-                          style: TextStyle(
-                            fontSize: isTablet ? 17 : 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
+                      _SettingsTile(
+                        icon: Icons.language,
+                        title: "Language",
+                        subtitle:
+                            "Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon",
+                        isTablet: isTablet,
                         onTap: () {
                           Navigator.push(
                             context,
@@ -144,86 +88,163 @@ class SettingsPage extends StatelessWidget {
                         },
                       ),
                     ],
-                  ),),
+                  ),
+                ),
               ),
-            ))
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: const FloatingNavBar(selectedIndex: 2),
     );
-    
   }
 }
 
-/*
-body: SafeArea(
-        child: SingleChildScrollView(
-        padding: EdgeInsets.all(Responsive.pagePadding(context)),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: Responsive.formMaxWidth(context),
-            ),
-            child: Column(
-              children: [
-                const Icon(Icons.settings, size: 90, color: Colors.white),
+class _ProfileCard extends StatelessWidget {
+  final UserProfile? profile;
+  final bool isTablet;
 
-                const Text(
-                  "Settings Page",
+  const _ProfileCard({required this.profile, required this.isTablet});
+
+  @override
+  Widget build(BuildContext context) {
+    final isLoggedIn = profile != null;
+
+    return Container(
+      padding: EdgeInsets.all(isTablet ? 20 : 16),
+      decoration: AppTheme.cardDecoration,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: isTablet ? 30 : 24,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+            child: Icon(
+              isLoggedIn ? Icons.verified_user_outlined : Icons.person_outline,
+              color: AppTheme.primary,
+              size: isTablet ? 32 : 26,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  profile?.fullName ?? "Profile / Login",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
+                    color: AppTheme.text,
+                    fontSize: isTablet ? 18 : 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
-                 const Text(
-                  "Settings",
+                const SizedBox(height: 4),
+                Text(
+                  isLoggedIn
+                      ? "${profile!.email}\n${profile!.role}\n${profile!.locationLabel}"
+                      : "Login or create an account to save your profile details.",
+                  maxLines: isLoggedIn ? 4 : 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold
+                    color: AppTheme.mutedText,
+                    fontSize: isTablet ? 14 : 12,
+                    height: 1.35,
                   ),
-                ),
-
-                 const SizedBox(height: 18),
-
-                ListTile(
-                  tileColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  leading: const Icon(Icons.person_outline, color: AppTheme.primary),
-                  title: Text(profile?.fullName ?? "Profile / Login"),
-                  subtitle: Text(
-                    profile == null
-                        ? "Manage your account and registration details."
-                        : "${profile.email}\n${profile.locationLabel}"
-                  ),
-                  isThreeLine: profile != null,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.pushNamed(context, '/login'),
-                ),
-
-                const SizedBox(height: 10),
-
-                ListTile(
-                  tileColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  leading: const Icon(Icons.language, color: AppTheme.primary),
-                  title: const Text("Language"),
-                  subtitle: const Text("Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon"),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
-                    );
-                  },
                 ),
               ],
             ),
+          ),
+          const SizedBox(width: 10),
+          if (isLoggedIn)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: AppTheme.success.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: const Text(
+                "Active",
+                style: TextStyle(
+                  color: AppTheme.success,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          else
+            IconButton(
+              tooltip: "Login or register",
+              onPressed: () => Navigator.pushNamed(context, '/login'),
+              icon: const Icon(Icons.chevron_right),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool isTablet;
+  final VoidCallback onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.isTablet,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 20 : 14,
+            vertical: isTablet ? 16 : 12,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppTheme.primary),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: AppTheme.text,
+                        fontSize: isTablet ? 17 : 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: AppTheme.mutedText,
+                        fontSize: isTablet ? 14 : 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppTheme.mutedText),
+            ],
+          ),
         ),
-        ),
-      ),*/
+      ),
+    );
+  }
+}

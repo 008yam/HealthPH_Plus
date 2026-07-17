@@ -65,8 +65,18 @@ class FloatingNavBar extends StatelessWidget {
             children: [
               _navItem(context, index: 0, icon: Icons.map, label: "Map"),
               _navItem(context, index: 1, icon: Icons.home, label: "Home"),
-              _navItem(context, index: 2, icon: Icons.settings, label: "Settings"),
-              _navItem(context, index: 3, icon: Icons.person_outline, label: "Profile"),
+              _navItem(
+                context,
+                index: 2,
+                icon: Icons.settings,
+                label: "Settings",
+              ),
+              _navItem(
+                context,
+                index: 3,
+                icon: Icons.person_outline,
+                label: "Profile",
+              ),
             ],
           ),
         ),
