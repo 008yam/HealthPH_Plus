@@ -16,24 +16,24 @@ class SettingsPage extends StatelessWidget {
     final maxContentWidth = isTablet ? 620.0 : Responsive.formMaxWidth(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.pageBlue,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/Backdrop1.png',
-              fit: BoxFit.cover,
-              opacity: const AlwaysStoppedAnimation(0.10),
-            ),
-          ),
-          Positioned.fill(
-            child: ColoredBox(color: AppTheme.pageBlue.withValues(alpha: 0.82)),
-          ),
-          SafeArea(
+    extendBody: true,
+    backgroundColor: AppTheme.pageBlue,
+    body: Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppTheme.pageBlue,
+        image: DecorationImage(
+          image: AssetImage('assets/images/Backdrop1.png'),
+          fit: BoxFit.cover,
+          opacity: 0.24,
+        ),
+      ),
+      child: SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 Responsive.pagePadding(context),
-                isTablet ? 30 : 20,
+                Responsive.pagePadding(context),
                 Responsive.pagePadding(context),
                 96,
               ),
@@ -46,7 +46,7 @@ class SettingsPage extends StatelessWidget {
                       Center(
                         child: Image.asset(
                           'assets/images/healthphplusbarlogo.png',
-                          height: isTablet ? 72 : 54,
+                          height: isTablet ? 64 : 46,
                         ),
                       ),
                       SizedBox(height: isTablet ? 30 : 22),
@@ -92,8 +92,7 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        ],
+        ),
       ),
       bottomNavigationBar: const FloatingNavBar(selectedIndex: 2),
     );
@@ -142,7 +141,11 @@ class _ProfileCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   isLoggedIn
-                      ? "${profile!.email}\n${profile!.role}\n${profile!.locationLabel}"
+                      ? [
+                          profile!.email,
+                          profile!.role,
+                          if (profile!.hasAddress) profile!.locationLabel,
+                        ].join("\n")
                       : "Login or create an account to save your profile details.",
                   maxLines: isLoggedIn ? 4 : 2,
                   overflow: TextOverflow.ellipsis,

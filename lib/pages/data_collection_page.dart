@@ -334,6 +334,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
   LocationOption? selectedBarangay;
 
   LocationDataService get locationService => LocationDataService.instance;
+  bool get isNcrSelected => locationService.isNcr(selectedRegion?.code);
 
   List<LocationOption> get provinceOption =>
       locationService.provincesForRegion(selectedRegion?.code);
@@ -352,19 +353,22 @@ class _SelfReportTabState extends State<_SelfReportTab> {
   final Set<String> selectedSymptoms = {};
 
   final symptoms = const [
-    "Cough",
-    "Fever",
-    "Chills",
-    "Fatigue",
-    "Shortness of breath",
-    "Chest Pain",
-    "Sore throat",
-    "Runny nose",
-    "Wheezing",
-    "Cough for 2+ weeks",
-    "Night sweats",
-    "Weight loss",
-  ];
+  "Cough",
+  "Fever",
+  "Chills",
+  "Fatigue",
+  "Shortness of breath",
+  "Chest Pain",
+  "Sore throat",
+  "Runny nose",
+  "Wheezing",
+  "Loss of taste or smell",
+  "Headache",
+  "Body aches",
+  "Cough for 2+ weeks",
+  "Night sweats",
+  "Weight loss",
+];
 
   @override
   void initState() {
@@ -417,40 +421,45 @@ class _SelfReportTabState extends State<_SelfReportTab> {
   }
 
   String _possibleCondition() {
-    final s = selectedSymptoms;
-    if (s.contains("Cough") &&
-        s.contains("Fever") &&
-        s.contains("Chills") &&
-        s.contains("Fatigue")) {
-      return "POssible pneumonia pattern";
-    }
+  final s = selectedSymptoms;
 
-    if (s.contains("Cough for 2+ weeks") ||
-        (s.contains("Cough") &&
-            s.contains("Night sweats") &&
-            s.contains("Weight loss"))) {
-      return "Possible tuberculosis symptom pattern";
-    }
-    if (s.contains("Cough for 2+ weeks") ||
-        (s.contains("Cough") &&
-            s.contains("Night sweats") &&
-            s.contains("Weight loss"))) {
-      return "Possible tuberculosis symptom pattern";
-    }
-    if (s.contains("Cough") ||
-        s.contains("Sore throat") ||
-        s.contains("Runny nose")) {
-      return "Possible acute respiratory infection pattern";
-    }
-
-    return "Respiratory symptoms reported";
+  if ((s.contains("Cough") || s.contains("Sore throat")) &&
+      s.contains("Fever") &&
+      (s.contains("Loss of taste or smell") ||
+          s.contains("Fatigue") ||
+          s.contains("Body aches") ||
+          s.contains("Shortness of breath"))) {
+    return "Possible COVID-like respiratory symptom pattern";
   }
+
+  if (s.contains("Cough") &&
+      s.contains("Fever") &&
+      s.contains("Chills") &&
+      s.contains("Fatigue")) {
+    return "Possible pneumonia pattern";
+  }
+
+  if (s.contains("Cough for 2+ weeks") ||
+      (s.contains("Cough") &&
+          s.contains("Night sweats") &&
+          s.contains("Weight loss"))) {
+    return "Possible tuberculosis symptom pattern";
+  }
+
+  if (s.contains("Cough") ||
+      s.contains("Sore throat") ||
+      s.contains("Runny nose")) {
+    return "Possible acute respiratory infection pattern";
+  }
+
+  return "Respiratory symptoms reported";
+}
 
   Future<void> _submitReport() async {
     if (reportSubmitting) return;
 
     if (selectedRegion == null ||
-        selectedProvince == null ||
+        (!isNcrSelected && selectedProvince == null) ||
         selectedCity == null ||
         selectedBarangay == null ||
         selectedSymptoms.isEmpty) {
@@ -471,7 +480,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     final geocoded = await GeocodingService.instance.geocodePhilippinesAddress(
       barangay: selectedBarangay!.name,
       city: selectedCity!.name,
-      province: selectedProvince!.name,
+      province: selectedProvince?.name ?? selectedRegion!.name,
     );
 
     if (!mounted) return;
@@ -482,7 +491,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
     final report = SelfReport(
       region: selectedRegion!.code,
-      province: selectedProvince!.name,
+      province: selectedProvince?.name ?? selectedRegion!.name,
       city: selectedCity!.name,
       barangay: selectedBarangay!.name,
       latitude: geocoded?.latitude,
@@ -499,12 +508,18 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
     if (!mounted) return;
 
+    ScaffoldMessenger.of(context).showSnackBar(
+  const SnackBar(
+    content: Text("Self-report submitted successfully."),
+  ),
+);
+
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(condition),
-        content: const Text(
-          "This is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.",
+        title: const Text("Report submitted"),
+        content: Text(
+          "$condition\n\nThis is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.",
         ),
         actions: [
           ElevatedButton(
@@ -516,8 +531,12 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     );
 
     setState(() {
-      notesController.clear();
+      selectedRegion = null;
+      selectedProvince = null;
+      selectedCity = null;
+      selectedBarangay = null;
       selectedSymptoms.clear();
+      notesController.clear();
     });
   }
 
@@ -558,6 +577,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
           const SizedBox(height: 12),
 
+          if (!isNcrSelected) ...[
           LocationAutocompleteField(
             label: "Province",
             icon: Icons.location_city_outlined,
@@ -574,6 +594,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
           ),
 
           const SizedBox(height: 12),
+        ],
 
           LocationAutocompleteField(
             label: "City / Municipality",

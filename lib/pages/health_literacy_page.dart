@@ -81,8 +81,17 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
       length: 2,
       child: Scaffold(
         backgroundColor: AppTheme.pageBlue,
-        body: Column(
+        body: Stack(
           children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/Backdrop2.png',
+                fit: BoxFit.cover,
+                opacity: const AlwaysStoppedAnimation(0.15),
+              ),
+            ),
+            Column(
+              children: [
             // HEADER
             Container(
               width: double.infinity,
@@ -299,9 +308,11 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                 ],
               ),
             ),
-          ],
-        ),
+           ],
+          ),
+        ],
       ),
+    ),
     );
   }
 }

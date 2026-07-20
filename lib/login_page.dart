@@ -33,6 +33,7 @@ class _LoginPageState extends State<LoginPage> {
   LocationOption? selectedBarangay;
 
   LocationDataService get locationService => LocationDataService.instance;
+  bool get isNcrSelected => locationService.isNcr(selectedRegion?.code);
 
   List<LocationOption> get provinceOptions =>
     locationService.provincesForRegion(selectedRegion?.code);
@@ -126,17 +127,16 @@ class _LoginPageState extends State<LoginPage> {
 
   void _submit() {
     if(!_formKey.currentState!.validate()) return;
-
     if (isRegistering &&
-      (selectedRegion == null ||
-          selectedProvince == null ||
-          selectedCity == null ||
-          selectedBarangay == null)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Complete your address.")),
-    );
-    return;
-  }
+        (selectedRegion == null ||
+            (!isNcrSelected && selectedProvince == null) ||
+            selectedCity == null ||
+            selectedBarangay == null)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Complete your address.")),
+      );
+      return;
+    }
   
 
     ScaffoldMessenger.of(context).showSnackBar (
@@ -153,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
           role: selectedRole,
           regionCode: selectedRegion!.code,
           regionLabel: selectedRegion!.label,
-          province: selectedProvince!.name,
+          province: selectedProvince?.name ?? selectedRegion!.name,
           city: selectedCity!.name,
           barangay: selectedBarangay!.name,
           ),
@@ -176,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
         role: selectedRole,
         regionCode: selectedRegion!.code,
         regionLabel: selectedRegion!.label,
-        province: selectedProvince!.name,
+        province: selectedProvince?.name ?? selectedRegion!.name,
         city: selectedCity!.name,
         barangay: selectedBarangay!.name,
       ),
@@ -438,25 +438,28 @@ class _LoginPageState extends State<LoginPage> {
                             },
                           ),
                           const SizedBox(height: 12),
-                          LocationAutocompleteField(
-                            label: "Province",
-                            icon: Icons.location_city_outlined,
-                            enabled: selectedRegion != null,
-                            value: selectedProvince,
-                            options: provinceOptions,
-                            onSelected: (value) {
-                              setState(() {
-                                selectedProvince = value;
-                                selectedCity = null;
-                                selectedBarangay = null;
-                              });
-                            },
-                          ),
-                          const SizedBox (height: 12),
+                          
+                          if (!isNcrSelected) ...[
+                            LocationAutocompleteField(
+                              label: "Province",
+                              icon: Icons.location_city_outlined,
+                              enabled: selectedRegion != null,
+                              value: selectedProvince,
+                              options: provinceOptions,
+                              onSelected: (value) {
+                                setState(() {
+                                  selectedProvince = value;
+                                  selectedCity = null;
+                                  selectedBarangay = null;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                           LocationAutocompleteField(
                             label: "City / Municipality",
                             icon: Icons.apartment_outlined,
-                            enabled: selectedProvince != null,
+                            enabled: isNcrSelected ? selectedRegion != null : selectedProvince != null,
                             value: selectedCity,
                             options: cityOptions,
                             onSelected: (value) {
