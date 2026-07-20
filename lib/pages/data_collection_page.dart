@@ -577,29 +577,38 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
           const SizedBox(height: 12),
 
-          if (!isNcrSelected) ...[
-          LocationAutocompleteField(
-            label: "Province",
-            icon: Icons.location_city_outlined,
-            enabled: selectedRegion != null,
-            value: selectedProvince,
-            options: provinceOption,
-            onSelected: (value) {
-              setState(() {
-                selectedProvince = value;
-                selectedCity = null;
-                selectedBarangay = null;
-              });
-            },
-          ),
+          if (isNcrSelected) ... [
+            TextFormField(
+              initialValue: "NCR",
+              enabled: false,
+              decoration: InputDecoration(
+                labelText: "Province",
+                prefixIcon: Icon(Icons.location_city_outlined),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ] else ... [
+            LocationAutocompleteField(
+              label: "Province",
+              icon: Icons.location_city_outlined,
+              enabled: selectedRegion != null,
+              value: selectedProvince,
+              options: provinceOption,
+              onSelected: (value) {
+                setState(() {
+                  selectedProvince = value;
+                  selectedCity = null;
+                  selectedBarangay = null;
+                });
+              },
+            ),
 
-          const SizedBox(height: 12),
-        ],
-
+            const SizedBox(height: 12),
+          ],
           LocationAutocompleteField(
             label: "City / Municipality",
             icon: Icons.apartment_outlined,
-            enabled: selectedProvince != null,
+            enabled: isNcrSelected ? selectedRegion != null : selectedProvince != null,
             value: selectedCity,
             options: cityOptions,
             onSelected: (value) {
