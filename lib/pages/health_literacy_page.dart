@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
 import '../theme/responsive.dart';
+import '../widgets/coach_mark.dart';
 
 class HealthLiteracyPage extends StatefulWidget {
   const HealthLiteracyPage({super.key});
@@ -13,6 +14,10 @@ class HealthLiteracyPage extends StatefulWidget {
 
 class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
   final TextEditingController _searchController = TextEditingController();
+  final literacyHeaderKey = GlobalKey();
+  final literacySearchKey = GlobalKey();
+  final literacyTabsKey = GlobalKey();
+  final literacyContentKey = GlobalKey();
 
   String searchQuery = "";
 
@@ -63,6 +68,51 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(microseconds: 650), () {
+        if (!mounted) return;
+
+        CoachMark.showOnce(
+          context,
+          discoveryKey: "health_literacy_v1",
+          steps: [
+            CoachMarkStep(
+              targetKey: literacyHeaderKey, //Coach Mark for Header
+              title: "Health Literacy Hub",
+              description: "Read trusted respiratory health articles and fact-checking content here.",
+              icon: Icons.article_outlined,
+              color: AppTheme.success,
+            ),
+            CoachMarkStep( //Coach Mark for Search Bar
+              targetKey: literacySearchKey,
+              title: "Search Health Topics",
+              description: "Search Articles by topic, claim, disease, or keyword",
+              icon: Icons.search,
+              color: AppTheme.info,
+            ),
+            CoachMarkStep(
+              targetKey: literacyTabsKey,
+              title: "Articles and Fact Checks",
+              description: "Switch between health artilces and quick fact-checking cards",
+              icon: Icons.tab,
+              color: AppTheme.primary,
+            ),
+            CoachMarkStep(
+              targetKey: literacyContentKey,
+              title: "Learning Content",
+              description: "Tab an article card to open the full health resource",
+              icon: Icons.search,
+              color: AppTheme.warning,
+             ),
+            ],
+          );
+        });
+      });
+    }
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -93,9 +143,11 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
             Column(
               children: [
             // HEADER
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
+            KeyedSubtree(
+              key: literacyHeaderKey,
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(35),
@@ -164,8 +216,10 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                       const SizedBox(height: 14),
 
                       // SEARCH BAR - NOW FUNCTIONAL
-                      TextField(
-                        controller: _searchController,
+                      KeyedSubtree(
+                        key: literacySearchKey,
+                        child: TextField(
+                          controller: _searchController,
                         onChanged: (value) {
                           setState(() {
                             searchQuery = value.toLowerCase().trim();
@@ -196,11 +250,14 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                           ),
                         ),
                       ),
+                    ),
 
                       const SizedBox(height: 10),
 
-                      Container(
-                        padding: const EdgeInsets.all(4),
+                      KeyedSubtree(
+                        key: literacyTabsKey,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           border: Border.all(color: Colors.black),
@@ -243,14 +300,18 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                           ],
                         ),
                       ),
+                    ),
                     ],
                   ),
                 ),
               ),
             ),
+          ),
 
             Expanded(
-              child: TabBarView(
+              child: KeyedSubtree(
+                key: literacyContentKey,
+                child: TabBarView(
                 children: [
                   // HEALTH ARTICLES TAB - NOW USES FILTERED LIST
                   filteredArticles.isEmpty
@@ -307,6 +368,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                   ),
                 ],
               ),
+            ),
             ),
            ],
           ),

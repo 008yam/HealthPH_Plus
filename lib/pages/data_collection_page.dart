@@ -9,9 +9,58 @@ import '../services/geocoding_service.dart';
 import '../theme/responsive.dart';
 import '../services/self_report_database.dart';
 import '../services/self_report_export_service.dart';
+import '../widgets/coach_mark.dart';
 
-class DataCollectionPage extends StatelessWidget {
+class DataCollectionPage extends StatefulWidget{
   const DataCollectionPage({super.key});
+
+  @override
+  State<DataCollectionPage> createState() => _DataCollectionPageState();
+}
+
+class _DataCollectionPageState extends State<DataCollectionPage> {
+  final dataHeaderKey = GlobalKey();
+  final dataTabsKey = GlobalKey();
+  final dataContentKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 650), () {
+        if (!mounted) return;
+
+        CoachMark.showOnce(
+          context,
+          discoveryKey: "data_collection_v1",
+          steps: [
+            CoachMarkStep(
+              targetKey: dataHeaderKey, //Header Coach Mark
+              title: "Data Collection",
+              description: "This page lets users to contribute to disease surveillance by self-reporting symptoms and review submitted reports",
+              icon: Icons.assignment,
+              color: AppTheme.primary,
+            ),
+            CoachMarkStep(
+              targetKey: dataTabsKey, //Collection Coach Mark
+              title: "Collection Tabs",
+              description: "Use these to switch between self-reporting, your reports, and community reports",
+              icon: Icons.tab,
+              color: AppTheme.info,
+            ),
+            CoachMarkStep(
+              targetKey: dataContentKey, //Self-Report Coach Mark
+              title: "Self Report Form",
+              description: "Complete your address, symptoms, and notes before submitting a respiratory health report",
+              icon: Icons.add_location_alt_outlined,
+              color: AppTheme.warning,
+          ),
+          ],
+        );
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +80,11 @@ class DataCollectionPage extends StatelessWidget {
             Column(
               children: [
                 // HEADER
-                Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
+                KeyedSubtree(
+                  key: dataHeaderKey,
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(45),
@@ -94,6 +145,7 @@ class DataCollectionPage extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
 
                 Expanded(
                   child: Container(
@@ -108,7 +160,9 @@ class DataCollectionPage extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        Container(
+                        KeyedSubtree(
+                        key: dataTabsKey,
+                        child: Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black),
                             borderRadius: BorderRadius.circular(8),
@@ -132,11 +186,14 @@ class DataCollectionPage extends StatelessWidget {
                             ],
                           ),
                         ),
+                      ),
 
                         const SizedBox(height: 14),
 
                         Expanded(
-                          child: TabBarView(
+                          child: KeyedSubtree(
+                            key: dataContentKey,
+                            child: TabBarView(
                             children: [
                               _SelfReportTab(),
                               _MyReportsTab(),
@@ -144,16 +201,17 @@ class DataCollectionPage extends StatelessWidget {
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
-    );
+    ),
+  );
   }
 }
 
