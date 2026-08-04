@@ -111,7 +111,7 @@ class SentimentPulsePage extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
 
                         Expanded(
                           child: TabBarView(
@@ -141,6 +141,7 @@ class OverviewTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: EdgeInsets.zero,
       children: const [
         Text(
           "Overall Sentiment",
@@ -203,6 +204,7 @@ class TrendsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: EdgeInsets.zero,
       children: const [
         Text(
           "Sentiment Trends",
@@ -273,6 +275,7 @@ class RegionalTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: EdgeInsets.zero,
       children: const [
         Text(
           "Regional Sentiment",

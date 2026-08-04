@@ -8,7 +8,12 @@ import 'pages/language_selection_page.dart';
 import 'theme/responsive.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final bool startAsRegistering;
+
+  const LoginPage({
+    super.key,
+    this.startAsRegistering = false,
+  });
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -23,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
   final confirmPasswordController = TextEditingController();
 
 
-  bool isRegistering = false;
+  late bool isRegistering;
   bool obscurePassword = true;
   bool locationsLoaded = false;
   String selectedRole = "Citizen";
@@ -69,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    isRegistering = widget.startAsRegistering;
     _loadLocations();
   }
 
@@ -439,7 +445,17 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 12),
                           
-                          if (!isNcrSelected) ...[
+                          if (isNcrSelected) ...[
+                             TextFormField(
+                              initialValue: "NCR",
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: "Province",
+                                prefixIcon: Icon(Icons.location_city_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ] else ...[
                             LocationAutocompleteField(
                               label: "Province",
                               icon: Icons.location_city_outlined,
@@ -457,6 +473,9 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 12),
                           ],
                           LocationAutocompleteField(
+                            key: ValueKey(
+                              "login_city_${selectedRegion?.code}_${selectedProvince?.code}",
+                            ),
                             label: "City / Municipality",
                             icon: Icons.apartment_outlined,
                             enabled: isNcrSelected ? selectedRegion != null : selectedProvince != null,
@@ -471,6 +490,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 12),
                           LocationAutocompleteField(
+                            key: ValueKey(
+                              "login_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
+                            ),
                             label: "Barangay",
                             icon: Icons.home_work_outlined,
                             enabled: selectedCity != null,

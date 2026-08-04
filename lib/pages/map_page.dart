@@ -333,8 +333,8 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     SelfReportStore.instance.addListener(_refreshSelfReports);
     diseaseFuture = HealthPhApiService(
-      baseUrl: 'http://10.0.2.2:8000',
-    ).fetchDiseasePoints();
+    baseUrl: 'http://127.0.0.1:8000',
+  ).fetchDiseasePoints();
   }
 
   final Map<String, LatLng> regionCenters = {

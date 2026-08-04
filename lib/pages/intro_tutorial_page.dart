@@ -15,37 +15,47 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
   int currentIndex = 0;
 
   static const List<_TutorialItem> tutorials = [
-    _TutorialItem(
-      icon: Icons.coronavirus,
-      title: "Disease Watch",
-      description:
-          "Monitor outbreak reports, active cases, and disease risk signals across regions.",
-    ),
-    _TutorialItem(
-      icon: Icons.map,
-      title: "Disease Map",
-      description:
-          "View outbreak activity geographically and identify affected areas faster.",
-    ),
-    _TutorialItem(
-      icon: Icons.article_outlined,
-      title: "Health Literacy Hub",
-      description:
-          "Read evidence-based health articles and review fact-checking information.",
-    ),
-    _TutorialItem(
-      icon: Icons.analytics,
-      title: "Sentiment Pulse",
-      description:
-          "Understand public concern, misinformation, and health behavior trends.",
-    ),
-    _TutorialItem(
-      icon: Icons.assignment,
-      title: "Data Collection",
-      description:
-          "Submit and review symptom reports that support public health monitoring.",
-    ),
-  ];
+  _TutorialItem(
+    icon: Icons.coronavirus,
+    title: "Disease Watch",
+    description:
+        "Monitor outbreak reports, active cases, and disease risk signals across regions.",
+    accent: AppTheme.highRisk,
+    softBackground: Color(0xFFFFF0F0),
+  ),
+  _TutorialItem(
+    icon: Icons.map,
+    title: "Disease Map",
+    description:
+        "View outbreak activity geographically and identify affected areas faster.",
+    accent: AppTheme.info,
+    softBackground: Color(0xFFEAF3FF),
+  ),
+  _TutorialItem(
+    icon: Icons.article_outlined,
+    title: "Health Literacy Hub",
+    description:
+        "Read evidence-based health articles and review fact-checking information.",
+    accent: AppTheme.success,
+    softBackground: Color(0xFFEAF7F1),
+  ),
+  _TutorialItem(
+    icon: Icons.analytics,
+    title: "Sentiment Pulse",
+    description:
+        "Understand public concern, misinformation, and health behavior trends.",
+    accent: AppTheme.warning,
+    softBackground: Color(0xFFFFF7E3),
+  ),
+  _TutorialItem(
+    icon: Icons.assignment,
+    title: "Data Collection",
+    description:
+        "Submit and review symptom reports that support public health monitoring.",
+    accent: AppTheme.primary,
+    softBackground: Color(0xFFEFF2FF),
+  ),
+];
 
   bool get isLastPage => currentIndex == tutorials.length - 1;
 
@@ -92,6 +102,9 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
     final titleSize = isTablet ? 32.0 : 22.0;
     final descriptionSize = isTablet ? 18.0 : 13.0;
     final buttonHeight = isTablet ? 52.0 : 46.0; 
+    final activeTutorial = tutorials[currentIndex];
+    final activeAccent = activeTutorial.accent;
+    final activeSoftBackground = activeTutorial.softBackground;
 
     return Scaffold(
       backgroundColor: AppTheme.pageBlue,
@@ -132,13 +145,17 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                               fit: BoxFit.contain,
                             ),
                             SizedBox(height: isTablet ? 36 : 28),
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.all(cardPadding),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
+                            AnimatedContainer(
+                                duration: const Duration(milliseconds: 320),
+                                curve: Curves.easeOut,
+                                width: double.infinity,
+                                padding: EdgeInsets.all(cardPadding),
+                                decoration: BoxDecoration(
+                                  color: activeSoftBackground,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppTheme.border),
+                                border: Border.all(
+                                  color: activeAccent.withValues(alpha: 0.35),
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: 0.16),
@@ -163,18 +180,23 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                       itemBuilder: (context, index) {
                                         final item = tutorials[index];
 
-                                        return Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
+                                        return AnimatedScale(
+                                          duration: const Duration(milliseconds: 260),
+                                          curve: Curves.easeOutBack,
+                                          scale: index == currentIndex ? 1.0: 0.92,
+                                          child: AnimatedOpacity(
+                                            duration: const Duration(milliseconds: 260),
+                                            opacity: index == currentIndex ? 1.0 : 0.55,
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
                                             CircleAvatar(
                                               radius: iconRadius,
-                                              backgroundColor: AppTheme.primary
-                                                  .withValues(alpha: 0.12),
+                                              backgroundColor: item.accent.withValues(alpha: 0.14),
                                               child: Icon(
                                                 item.icon,
                                                 size: iconSize,
-                                                color: AppTheme.primary,
+                                                color: item.accent,
                                               ),
                                             ),
                                             const SizedBox(height: 18),
@@ -197,8 +219,10 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                                 height: 1.45,
                                               ),
                                             ),
-                                          ],
-                                        );
+                                                ],
+                                              ),
+                                            ),
+                                          );
                                       },
                                     ),
                                   ),
@@ -219,7 +243,7 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                         height: isTablet ? 8 : 7,
                                         decoration: BoxDecoration(
                                           color: isActive
-                                              ? AppTheme.primary
+                                              ? activeAccent
                                               : AppTheme.border,
                                           borderRadius:
                                               BorderRadius.circular(20),
@@ -245,6 +269,8 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                       ElevatedButton(
                                         onPressed: _nextPage,
                                         style: ElevatedButton.styleFrom(
+                                          backgroundColor: activeAccent,
+                                          foregroundColor: Colors.white,
                                           minimumSize: Size(isTablet ? 140 : 104, buttonHeight),
                                           textStyle: TextStyle(
                                             fontSize: isTablet ? 16 : 14,
@@ -277,10 +303,14 @@ class _TutorialItem {
   final IconData icon;
   final String title;
   final String description;
+  final Color accent;
+  final Color softBackground;
 
   const _TutorialItem({
     required this.icon,
     required this.title,
     required this.description,
+    required this.accent,
+    required this.softBackground,
   });
 }

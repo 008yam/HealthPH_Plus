@@ -7,6 +7,7 @@ import 'pages/disease_watch_page.dart';
 import 'widgets/weather_widget.dart';
 import 'theme/app_theme.dart';
 import 'theme/responsive.dart';
+import 'widgets/coach_mark.dart';
 
 //import 'pages/map_page.dart';
 //import 'widgets/floating_navbar.dart';
@@ -17,9 +18,56 @@ import 'theme/responsive.dart';
 // HOME PAGE
 // =======================================================
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget{
   const MainPage({super.key});
 
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  final headerKey = GlobalKey();
+  final quickActionKey = GlobalKey();
+  final recentAlertKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 700), () {
+          if (!mounted) return;
+
+        CoachMark.showOnce(
+        context,
+        discoveryKey: "main_page_v1",
+        steps: [
+          CoachMarkStep(
+            targetKey: headerKey,
+            title: "HealthPH+ Home",
+            description: "This is your main dashboard for respiratory health updates",
+            icon: Icons.home,
+            color: AppTheme.primary
+          ),
+          CoachMarkStep(
+            targetKey: quickActionKey,
+            title: "Quick Actions",
+            description: "Open Disease, Health Literacy, Sentiment Pulse, Data Collection",
+            icon: Icons.touch_app_outlined,
+            color: AppTheme.info
+          ),
+          CoachMarkStep(
+            targetKey: recentAlertKey,
+            title: "Recent Alerts",
+            description: "Review the latest respiratory health alerts and outbreaks",
+            icon: Icons.notifications_active_outlined,
+            color: AppTheme.warning,
+          ),
+        ],
+      );
+      });
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final compactStats = MediaQuery.sizeOf(context).width < 380;
@@ -42,8 +90,10 @@ class MainPage extends StatelessWidget {
                   // ====================================================
                   // 1. HEADER SECTION
                   // ====================================================
-                  Container(
-                    width: double.infinity,
+                  KeyedSubtree(
+                    key: headerKey,
+                    child: Container(
+                      width: double.infinity,
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -60,7 +110,7 @@ class MainPage extends StatelessWidget {
                       ],
                     ),
                   ),
-
+                ),
                   const SizedBox(height: 6),
 
                   // ====================================================
@@ -128,8 +178,10 @@ class MainPage extends StatelessWidget {
                   // ====================================================
                   // 4. QUICK ACTIONS MENU
                   // ====================================================
-                  Container(
-                    width: double.infinity,
+                  KeyedSubtree(
+                    key: quickActionKey,
+                    child: Container(
+                      width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     decoration: cardDecoration(),
                     child: Column(
@@ -206,14 +258,16 @@ class MainPage extends StatelessWidget {
                       ],
                     ),
                   ),
-
+                ),
                   const SizedBox(height: 8),
 
                   // ====================================================
                   // 4. RECENT ALERTS SECTION
                   // ====================================================
-                  Container(
-                    width: double.infinity,
+                  KeyedSubtree(
+                    key: recentAlertKey,
+                    child: Container(
+                      width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,6 +305,7 @@ class MainPage extends StatelessWidget {
                       ],
                     ),
                   ),
+                ),
 
                   const SizedBox(height: 8),
 
@@ -258,7 +313,7 @@ class MainPage extends StatelessWidget {
                   // 6. HEALTH TIP SECTIONS
                   // ====================================================
                   Container(
-                    width: double.infinity,
+                      width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     decoration: cardDecoration(),
                     child: Column(

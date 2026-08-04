@@ -8,6 +8,7 @@ class LocationAutocompleteField extends StatefulWidget {
   final LocationOption? value;
   final List<LocationOption> options;
   final ValueChanged<LocationOption> onSelected;
+  final Object? refreshKey;
 
   const LocationAutocompleteField({
     super.key,
@@ -17,6 +18,7 @@ class LocationAutocompleteField extends StatefulWidget {
     required this.value,
     required this.options,
     required this.onSelected,
+    this.refreshKey,
   });
 
 
@@ -39,6 +41,18 @@ class _LocationAutocompleteFieldState extends State<LocationAutocompleteField> {
   @override
   void didUpdateWidget(LocationAutocompleteField oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    final dependencyChanged = oldWidget.refreshKey != widget.refreshKey;
+
+    if (dependencyChanged) {
+      _controller.text = widget.value?.label ?? "";
+
+      if (_focusNode.hasFocus) {
+        _focusNode.unfocus();
+      }
+
+      return;
+    }
 
     if (oldWidget.value?.code != widget.value?.code) {
       _controller.text = widget.value?.label ?? "";

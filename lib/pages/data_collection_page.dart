@@ -133,7 +133,7 @@ class DataCollectionPage extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 14),
 
                         Expanded(
                           child: TabBarView(
@@ -200,6 +200,7 @@ class _MyReportsTab extends StatelessWidget {
 
         if (reports.isEmpty) {
           return ListView(
+            padding: EdgeInsets.zero,
             children: const [
               Text(
                 "Your Recent Reports",
@@ -216,6 +217,7 @@ class _MyReportsTab extends StatelessWidget {
         }
 
         return ListView(
+          padding: EdgeInsets.zero,
           children: [
             Row(
               children: [
@@ -266,6 +268,7 @@ class _CommunityTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: EdgeInsets.zero,
       children: const [
         Text(
           "Community Reports",
@@ -543,6 +546,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: EdgeInsets.zero,
       children: [
         const Text(
           "Self Report Symptoms",
@@ -606,6 +610,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             const SizedBox(height: 12),
           ],
           LocationAutocompleteField(
+            refreshKey: "${selectedRegion?.code}_${selectedProvince?.code}",
             label: "City / Municipality",
             icon: Icons.apartment_outlined,
             enabled: isNcrSelected ? selectedRegion != null : selectedProvince != null,
@@ -622,7 +627,11 @@ class _SelfReportTabState extends State<_SelfReportTab> {
           const SizedBox(height: 12),
 
           LocationAutocompleteField(
-            label: "Barangay",
+          key: ValueKey(
+            "self_report_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
+          ),
+          label: "Barangay",
+             refreshKey: "${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
             icon: Icons.home_work_outlined,
             enabled: selectedCity != null,
             value: selectedBarangay,

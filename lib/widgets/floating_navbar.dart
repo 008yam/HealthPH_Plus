@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../pages/map_page.dart';
 import '../pages/settings_page.dart';
+import '../services/profile_store.dart';
 import 'package:healthphplus/main_page.dart';
+import 'package:healthphplus/login_page.dart';
 import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
 
@@ -14,7 +16,19 @@ class FloatingNavBar extends StatelessWidget {
     if (index == selectedIndex) return;
 
     if (index == 3) {
-      Navigator.pushReplacementNamed(context, '/login');
+      final profile = ProfileStore.instance.profile;
+      final isGuest = profile == null ||
+          profile.email == 'guest@healthphplus.local' ||
+          profile.role == "Guest Tester";
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => isGuest 
+          ? const LoginPage(startAsRegistering: true)
+          : const SettingsPage(selectedNavIndex: 3),
+        ),
+      );
       return;
     }
 
@@ -30,7 +44,7 @@ class FloatingNavBar extends StatelessWidget {
         break;
 
       case 2:
-        page = const SettingsPage();
+        page = const SettingsPage(selectedNavIndex: 2);
         break;
 
       default:

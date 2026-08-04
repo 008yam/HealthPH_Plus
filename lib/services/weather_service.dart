@@ -2,7 +2,6 @@ import '../models/weather_model.dart';
 
 class WeatherService {
   Future<WeatherModel> getWeather() async {
-    await Future.delayed(const Duration(seconds: 1));
     //To be replaced with API call for weather widget later on
     return WeatherModel(
       city: "Quezon City",
