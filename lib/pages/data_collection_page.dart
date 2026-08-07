@@ -33,7 +33,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
 
         CoachMark.showOnce(
           context,
-          discoveryKey: "data_collection_v1",
+          discoveryKey: "data_collection_v2",
           steps: [
             CoachMarkStep(
               targetKey: dataHeaderKey, //Header Coach Mark
@@ -411,6 +411,21 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     selectedCity?.code,
   );
 
+  UserProfile? get currentProfile => ProfileStore.instance.profile;
+
+  bool get isGuestUser {
+    final profile = currentProfile;
+
+    return profile == null ||
+        profile.email == "guest@healthphplus.local" ||
+        profile.role == "Guest Tester";
+  }
+
+  bool get lockAddressFields {
+    final profile = currentProfile;
+    return !isGuestUser && (profile?.hasAddress ?? false);
+  }
+
   final Set<String> selectedSymptoms = {};
 
   final symptoms = const [
@@ -442,7 +457,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
     final profile = ProfileStore.instance.profile;
 
-    if (profile != null && profile.hasAddress) {
+    if (lockAddressFields && profile != null) {
       selectedRegion = locationService.regions
           .where((item) => item.code == profile.regionCode)
           .firstOrNull;
@@ -592,10 +607,13 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     );
 
     setState(() {
-      selectedRegion = null;
-      selectedProvince = null;
-      selectedCity = null;
-      selectedBarangay = null;
+      if (!lockAddressFields) {
+        selectedRegion = null;
+        selectedProvince = null;
+        selectedCity = null;
+        selectedBarangay = null;
+      }
+
       selectedSymptoms.clear();
       notesController.clear();
     });
@@ -620,11 +638,31 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
         if (!locationLoaded)
           const Center(child: CircularProgressIndicator())
-        else ...[
+        else ... [
+          if(lockAddressFields) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.08),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                "Using your registered address. Adress fields are locked for account consistency.",
+                style: TextStyle(
+                  color: AppTheme.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           LocationAutocompleteField(
             label: "Region",
             icon: Icons.map_outlined,
-            enabled: true,
+            enabled: !lockAddressFields,
             value: selectedRegion,
             options: locationService.regions,
             onSelected: (value) {
@@ -653,7 +691,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             LocationAutocompleteField(
               label: "Province",
               icon: Icons.location_city_outlined,
-              enabled: selectedRegion != null,
+              enabled: !lockAddressFields && selectedRegion != null,
               value: selectedProvince,
               options: provinceOption,
               onSelected: (value) {
@@ -671,7 +709,8 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             refreshKey: "${selectedRegion?.code}_${selectedProvince?.code}",
             label: "City / Municipality",
             icon: Icons.apartment_outlined,
-            enabled: isNcrSelected ? selectedRegion != null : selectedProvince != null,
+            enabled: !lockAddressFields &&
+                (isNcrSelected ? selectedRegion != null : selectedProvince != null),
             value: selectedCity,
             options: cityOptions,
             onSelected: (value) {
@@ -691,7 +730,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
           label: "Barangay",
              refreshKey: "${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
             icon: Icons.home_work_outlined,
-            enabled: selectedCity != null,
+            enabled: !lockAddressFields && selectedCity != null,
             value: selectedBarangay,
             options: barangayOptions,
             onSelected: (value) {

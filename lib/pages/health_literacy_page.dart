@@ -77,7 +77,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
 
         CoachMark.showOnce(
           context,
-          discoveryKey: "health_literacy_v1",
+          discoveryKey: "health_literacy_v2",
           steps: [
             CoachMarkStep(
               targetKey: literacyHeaderKey, //Coach Mark for Header

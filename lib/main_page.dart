@@ -40,7 +40,7 @@ class _MainPageState extends State<MainPage> {
 
         CoachMark.showOnce(
         context,
-        discoveryKey: "main_page_v1",
+        discoveryKey: "main_page_v2",
         steps: [
           CoachMarkStep(
             targetKey: headerKey,

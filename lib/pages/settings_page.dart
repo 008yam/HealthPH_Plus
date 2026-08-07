@@ -34,7 +34,7 @@ class _SettingsPageState extends State<SettingsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       CoachMark.showOnce(
         context,
-        discoveryKey: "settings_profile_v1",
+        discoveryKey: "settings_profile_v2",
         steps: [
           CoachMarkStep(
             targetKey: profileKey,
