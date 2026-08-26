@@ -6,7 +6,9 @@ class SelfReport {
   final String province;
   final String city;
   final String barangay;
+  final List<String> symptomIds;
   final List<String> symptoms;
+  final String possibleConditionId;
   final String possibleCondition;
   final String notes;
   final DateTime createdAt;
@@ -19,7 +21,9 @@ class SelfReport {
     required this.province,
     required this.city,
     required this.barangay,
+    required this.symptomIds,
     required this.symptoms,
+    required this.possibleConditionId,
     required this.possibleCondition,
     required this.notes,
     required this.createdAt,
@@ -34,6 +38,7 @@ class SelfReport {
     final minute = createdAt.minute.toString().padLeft(2, "0");
     return "Self-reported on ${createdAt.month}/${createdAt.day}/${createdAt.year} at $hour:$minute";
   }
+
   bool get hasCoordinates => latitude != null && longitude != null;
 }
 
@@ -86,12 +91,14 @@ class SelfReportStore extends ChangeNotifier {
 
       return {
         "name": report.locationLabel,
+        "diseaseId": report.possibleConditionId,
         "disease": report.possibleCondition,
         "category": "Self-reported respiratory symptoms",
         "reports": 1,
         "updated": report.reportedAtLabel,
         "lat": point.latitude,
         "lng": point.longitude,
+        "tagIds": report.symptomIds,
         "tags": report.symptoms,
         "source": "selfReport",
         "pinAccuracy": report.hasCoordinates

@@ -4,6 +4,7 @@ import 'data_collection_page.dart';
 import '../widgets/coach_mark.dart';
 
 import '../login_page.dart';
+import '../data/app_taxonomy.dart';
 import '../services/profile_store.dart';
 import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
@@ -13,10 +14,7 @@ import 'language_selection_page.dart';
 class SettingsPage extends StatefulWidget {
   final int selectedNavIndex;
 
-  const SettingsPage({
-    super.key,
-    this.selectedNavIndex = 2,
-  });
+  const SettingsPage({super.key, this.selectedNavIndex = 2});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -34,26 +32,29 @@ class _SettingsPageState extends State<SettingsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       CoachMark.showOnce(
         context,
-        discoveryKey: "settings_profile_v2",
+        discoveryKey: "settings_profile_v3",
         steps: [
           CoachMarkStep(
             targetKey: profileKey,
             title: "Profile",
-            description: "This section shows the details saved from registration.",
+            description:
+                "This section shows the details saved from registration.",
             icon: Icons.person_outline,
             color: AppTheme.primary,
           ),
           CoachMarkStep(
             targetKey: selfReportKey,
             title: "Self Reporting",
-            description: "Use this to report symptoms and support respiratory surveillance.",
+            description:
+                "Use this to report symptoms and support respiratory surveillance.",
             icon: Icons.assignment_add,
             color: AppTheme.warning,
           ),
           CoachMarkStep(
             targetKey: languageKey,
             title: "Language Selection",
-            description: "Choose the language that is most comfortable for you.",
+            description:
+                "Choose the language that is most comfortable for you.",
             icon: Icons.language,
             color: AppTheme.info,
           ),
@@ -69,54 +70,54 @@ class _SettingsPageState extends State<SettingsPage> {
     final maxContentWidth = isTablet ? 620.0 : Responsive.formMaxWidth(context);
 
     return Scaffold(
-    extendBody: true,
-    backgroundColor: AppTheme.pageBlue,
-    body: Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppTheme.pageBlue,
-        image: DecorationImage(
-          image: AssetImage('assets/images/Backdrop1.png'),
-          fit: BoxFit.cover,
-          opacity: 0.24,
+      extendBody: true,
+      backgroundColor: AppTheme.pageBlue,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          color: AppTheme.pageBlue,
+          image: DecorationImage(
+            image: AssetImage('assets/images/Backdrop1.png'),
+            fit: BoxFit.cover,
+            opacity: 0.24,
+          ),
         ),
-      ),
-      child: SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                Responsive.pagePadding(context),
-                Responsive.pagePadding(context),
-                Responsive.pagePadding(context),
-                96,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxContentWidth),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Image.asset(
-                          'assets/images/healthphplusbarlogo.png',
-                          height: isTablet ? 64 : 46,
-                        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              Responsive.pagePadding(context),
+              Responsive.pagePadding(context),
+              Responsive.pagePadding(context),
+              96,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxContentWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Image.asset(
+                        'assets/images/healthphplusbarlogo.png',
+                        height: isTablet ? 64 : 46,
                       ),
-                      SizedBox(height: isTablet ? 28 : 20),
-                      KeyedSubtree(
-                        key: profileKey,
-                        child: _ProfileCard(profile: profile, isTablet: isTablet),
-                      ),
-                      const SizedBox(height: 18),
-                      KeyedSubtree(
-                        key: selfReportKey,
-                        child: _SelfReportButton(isTablet: isTablet),
-                      ),
-                      const SizedBox(height: 18),
-                      KeyedSubtree(
-                        key: languageKey,
-                        child: _SettingsTile(
-                          icon: Icons.language,
+                    ),
+                    SizedBox(height: isTablet ? 28 : 20),
+                    KeyedSubtree(
+                      key: profileKey,
+                      child: _ProfileCard(profile: profile, isTablet: isTablet),
+                    ),
+                    const SizedBox(height: 18),
+                    KeyedSubtree(
+                      key: selfReportKey,
+                      child: _SelfReportButton(isTablet: isTablet),
+                    ),
+                    const SizedBox(height: 18),
+                    KeyedSubtree(
+                      key: languageKey,
+                      child: _SettingsTile(
+                        icon: Icons.language,
                         title: "Language Selection",
                         subtitle:
                             "Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon",
@@ -145,7 +146,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-
 class _ProfileCard extends StatelessWidget {
   final UserProfile? profile;
   final bool isTablet;
@@ -155,9 +155,10 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLoggedIn = profile != null;
-    final isGuest = !isLoggedIn ||
-        profile!.email == "guest@healthphplus.local" ||
-        profile!.role == "Guest Tester";
+    final isGuest =
+        !isLoggedIn ||
+        AppTaxonomy.isGuestRole(profile!.roleId) ||
+        profile!.email == AppTaxonomy.guestEmail;
 
     final name = isGuest ? "Guest User" : profile!.fullName;
     final email = isGuest ? "Tap to create your profile" : profile!.email;
@@ -167,8 +168,9 @@ class _ProfileCard extends StatelessWidget {
         : "Complete your address during registration";
 
     final accent = isGuest ? Colors.grey.shade600 : AppTheme.primary;
-    final surfaceStart =
-        isGuest ? const Color(0xFFF0F1F3) : const Color(0xFFEFF3FF);
+    final surfaceStart = isGuest
+        ? const Color(0xFFF0F1F3)
+        : const Color(0xFFEFF3FF);
     final surfaceEnd = isGuest ? const Color(0xFFE4E6EA) : Colors.white;
     final avatarColor = isGuest
         ? Colors.grey.shade200
@@ -379,38 +381,38 @@ class _ProfileInfoChip extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOut,
-     constraints: const BoxConstraints(minHeight: 42),
-     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-     decoration: BoxDecoration(
-      color: isGuest ? Colors.grey.shade100 : const Color(0xFFF8FAFF),
-      borderRadius: BorderRadius.circular(999),
-      border: Border.all(
-        color: isGuest ? Colors.grey.shade300 : AppTheme.border,
-      ),
-     ), 
-     child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isGuest ? Colors.grey.shade500 : AppTheme.primary,
-          size: 20,
+      constraints: const BoxConstraints(minHeight: 42),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: isGuest ? Colors.grey.shade100 : const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: isGuest ? Colors.grey.shade300 : AppTheme.border,
         ),
-        const SizedBox(width: 7),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: isGuest ? Colors.grey.shade600 : AppTheme.text,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isGuest ? Colors.grey.shade500 : AppTheme.primary,
+            size: 20,
+          ),
+          const SizedBox(width: 7),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isGuest ? Colors.grey.shade600 : AppTheme.text,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-        ),
-      ],
-     ),
+        ],
+      ),
     );
   }
 }
@@ -458,19 +460,20 @@ class _SelfReportButton extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 18),
-              Expanded(child: Text(
-                "Self-Reporting",
-                style: TextStyle(
-                  color: AppTheme.text,
-                  fontSize: isTablet ?  28 : 23,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  "Self-Reporting",
+                  style: TextStyle(
+                    color: AppTheme.text,
+                    fontSize: isTablet ? 28 : 23,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: AppTheme.warning,
-              size: isTablet ? 32 : 28,
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppTheme.warning,
+                size: isTablet ? 32 : 28,
               ),
             ],
           ),
@@ -544,4 +547,3 @@ class _SettingsTile extends StatelessWidget {
     );
   }
 }
-

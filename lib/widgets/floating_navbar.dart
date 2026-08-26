@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../pages/map_page.dart';
 import '../pages/settings_page.dart';
+import '../data/app_taxonomy.dart';
 import '../services/profile_store.dart';
 import 'package:healthphplus/main_page.dart';
 import 'package:healthphplus/login_page.dart';
@@ -17,16 +18,17 @@ class FloatingNavBar extends StatelessWidget {
 
     if (index == 3) {
       final profile = ProfileStore.instance.profile;
-      final isGuest = profile == null ||
-          profile.email == 'guest@healthphplus.local' ||
-          profile.role == "Guest Tester";
+      final isGuest =
+          profile == null ||
+          AppTaxonomy.isGuestRole(profile.roleId) ||
+          profile.email == AppTaxonomy.guestEmail;
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => isGuest 
-          ? const LoginPage(startAsRegistering: true)
-          : const SettingsPage(selectedNavIndex: 3),
+          builder: (_) => isGuest
+              ? const LoginPage(startAsRegistering: true)
+              : const SettingsPage(selectedNavIndex: 3),
         ),
       );
       return;

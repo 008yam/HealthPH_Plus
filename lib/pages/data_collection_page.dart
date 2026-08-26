@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/app_taxonomy.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
 import '../services/self_report_store.dart';
@@ -10,8 +11,9 @@ import '../theme/responsive.dart';
 import '../services/self_report_database.dart';
 import '../services/self_report_export_service.dart';
 import '../widgets/coach_mark.dart';
+import '../services/healthph_api_services.dart';
 
-class DataCollectionPage extends StatefulWidget{
+class DataCollectionPage extends StatefulWidget {
   const DataCollectionPage({super.key});
 
   @override
@@ -33,29 +35,32 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
 
         CoachMark.showOnce(
           context,
-          discoveryKey: "data_collection_v2",
+          discoveryKey: "data_collection_v3",
           steps: [
             CoachMarkStep(
               targetKey: dataHeaderKey, //Header Coach Mark
               title: "Data Collection",
-              description: "This page lets users to contribute to disease surveillance by self-reporting symptoms and review submitted reports",
+              description:
+                  "This page lets users to contribute to disease surveillance by self-reporting symptoms and review submitted reports",
               icon: Icons.assignment,
               color: AppTheme.primary,
             ),
             CoachMarkStep(
               targetKey: dataTabsKey, //Collection Coach Mark
               title: "Collection Tabs",
-              description: "Use these to switch between self-reporting, your reports, and community reports",
+              description:
+                  "Use these to switch between self-reporting, your reports, and community reports",
               icon: Icons.tab,
               color: AppTheme.info,
             ),
             CoachMarkStep(
               targetKey: dataContentKey, //Self-Report Coach Mark
               title: "Self Report Form",
-              description: "Complete your address, symptoms, and notes before submitting a respiratory health report",
+              description:
+                  "Complete your address, symptoms, and notes before submitting a respiratory health report",
               icon: Icons.add_location_alt_outlined,
               color: AppTheme.warning,
-          ),
+            ),
           ],
         );
       });
@@ -85,67 +90,67 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                   child: Container(
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(45),
-                      bottomRight: Radius.circular(45),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(45),
+                        bottomRight: Radius.circular(45),
+                      ),
                     ),
-                  ),
 
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              if (Navigator.canPop(context)) {
-                                Navigator.pop(context);
-                              } else {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const MainPage(),
-                                  ),
-                                );
-                              }
-                            },
-                            child: const Text("Back"),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          Image.asset(
-                            'assets/images/healthphplusbarlogo.png',
-                            height: 55,
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          const Text(
-                            "Data Collection",
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.indigo,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {
+                                if (Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                } else {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const MainPage(),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text("Back"),
                             ),
-                          ),
 
-                          const Text(
-                            "Tracks symptoms & outbreaks",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.indigo,
+                            const SizedBox(height: 8),
+
+                            Image.asset(
+                              'assets/images/healthphplusbarlogo.png',
+                              height: 55,
                             ),
-                          ),
-                        ],
+
+                            const SizedBox(height: 8),
+
+                            const Text(
+                              "Data Collection",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.indigo,
+                              ),
+                            ),
+
+                            const Text(
+                              "Tracks symptoms & outbreaks",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.indigo,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
 
                 Expanded(
                   child: Container(
@@ -161,32 +166,32 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                     child: Column(
                       children: [
                         KeyedSubtree(
-                        key: dataTabsKey,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: TabBar(
-                            isScrollable: Responsive.isSmallPhone(context),
-                            labelColor: Colors.black,
-                            unselectedLabelColor: Colors.grey,
-                            indicator: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Colors.indigo,
-                                  width: 3,
+                          key: dataTabsKey,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: TabBar(
+                              isScrollable: Responsive.isSmallPhone(context),
+                              labelColor: Colors.black,
+                              unselectedLabelColor: Colors.grey,
+                              indicator: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: Colors.indigo,
+                                    width: 3,
+                                  ),
                                 ),
                               ),
+                              tabs: [
+                                Tab(text: "Self Report"),
+                                Tab(text: "My Reports"),
+                                Tab(text: "Community"),
+                              ],
                             ),
-                            tabs: [
-                              Tab(text: "Self Report"),
-                              Tab(text: "My Reports"),
-                              Tab(text: "Community"),
-                            ],
                           ),
                         ),
-                      ),
 
                         const SizedBox(height: 14),
 
@@ -194,31 +199,31 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                           child: KeyedSubtree(
                             key: dataContentKey,
                             child: TabBarView(
-                            children: [
-                              _SelfReportTab(),
-                              _MyReportsTab(),
-                              _CommunityTab(),
-                            ],
+                              children: [
+                                _SelfReportTab(),
+                                _MyReportsTab(),
+                                _CommunityTab(),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 }
 
 class _MyReportsTab extends StatelessWidget {
   bool get _canExportReports {
-    final role = ProfileStore.instance.profile?.role.toLowerCase() ?? '';
-    return role.contains('field health worker') || role.contains('lgu/doh');
+    final roleId = ProfileStore.instance.profile?.roleId ?? '';
+    return roleId == "field_health_worker" || roleId == "lgu_doh_user";
   }
 
   Future<void> _exportReports(
@@ -417,8 +422,8 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     final profile = currentProfile;
 
     return profile == null ||
-        profile.email == "guest@healthphplus.local" ||
-        profile.role == "Guest Tester";
+        AppTaxonomy.isGuestRole(profile.roleId) ||
+        profile.email == AppTaxonomy.guestEmail;
   }
 
   bool get lockAddressFields {
@@ -426,25 +431,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     return !isGuestUser && (profile?.hasAddress ?? false);
   }
 
-  final Set<String> selectedSymptoms = {};
-
-  final symptoms = const [
-  "Cough",
-  "Fever",
-  "Chills",
-  "Fatigue",
-  "Shortness of breath",
-  "Chest Pain",
-  "Sore throat",
-  "Runny nose",
-  "Wheezing",
-  "Loss of taste or smell",
-  "Headache",
-  "Body aches",
-  "Cough for 2+ weeks",
-  "Night sweats",
-  "Weight loss",
-];
+  final Set<String> selectedSymptomIds = {};
 
   @override
   void initState() {
@@ -496,40 +483,40 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     super.dispose();
   }
 
-  String _possibleCondition() {
-  final s = selectedSymptoms;
+  AppOption _possibleCondition() {
+    final s = selectedSymptomIds;
 
-  if ((s.contains("Cough") || s.contains("Sore throat")) &&
-      s.contains("Fever") &&
-      (s.contains("Loss of taste or smell") ||
-          s.contains("Fatigue") ||
-          s.contains("Body aches") ||
-          s.contains("Shortness of breath"))) {
-    return "Possible COVID-like respiratory symptom pattern";
+    if ((s.contains("cough") || s.contains("sore_throat")) &&
+        s.contains("fever") &&
+        (s.contains("loss_of_taste_or_smell") ||
+            s.contains("fatigue") ||
+            s.contains("body_aches") ||
+            s.contains("shortness_of_breath"))) {
+      return AppTaxonomy.possibleConditions[0];
+    }
+
+    if (s.contains("cough") &&
+        s.contains("fever") &&
+        s.contains("chills") &&
+        s.contains("fatigue")) {
+      return AppTaxonomy.possibleConditions[1];
+    }
+
+    if (s.contains("cough_2_weeks") ||
+        (s.contains("cough") &&
+            s.contains("night_sweats") &&
+            s.contains("weight_loss"))) {
+      return AppTaxonomy.possibleConditions[2];
+    }
+
+    if (s.contains("cough") ||
+        s.contains("sore_throat") ||
+        s.contains("runny_nose")) {
+      return AppTaxonomy.possibleConditions[3];
+    }
+
+    return AppTaxonomy.possibleConditions[4];
   }
-
-  if (s.contains("Cough") &&
-      s.contains("Fever") &&
-      s.contains("Chills") &&
-      s.contains("Fatigue")) {
-    return "Possible pneumonia pattern";
-  }
-
-  if (s.contains("Cough for 2+ weeks") ||
-      (s.contains("Cough") &&
-          s.contains("Night sweats") &&
-          s.contains("Weight loss"))) {
-    return "Possible tuberculosis symptom pattern";
-  }
-
-  if (s.contains("Cough") ||
-      s.contains("Sore throat") ||
-      s.contains("Runny nose")) {
-    return "Possible acute respiratory infection pattern";
-  }
-
-  return "Respiratory symptoms reported";
-}
 
   Future<void> _submitReport() async {
     if (reportSubmitting) return;
@@ -538,7 +525,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         (!isNcrSelected && selectedProvince == null) ||
         selectedCity == null ||
         selectedBarangay == null ||
-        selectedSymptoms.isEmpty) {
+        selectedSymptomIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Complete address and add at least one symptoms"),
@@ -573,8 +560,13 @@ class _SelfReportTabState extends State<_SelfReportTab> {
       latitude: geocoded?.latitude,
       longitude: geocoded?.longitude,
       geocodedAddress: geocoded?.displayName,
-      symptoms: selectedSymptoms.toList(),
-      possibleCondition: condition,
+      symptomIds: selectedSymptomIds.toList(),
+      symptoms: AppTaxonomy.labelsFor(
+        AppTaxonomy.symptoms,
+        selectedSymptomIds.toList(),
+      ),
+      possibleConditionId: condition.id,
+      possibleCondition: condition.label,
       notes: notesController.text.trim(),
       createdAt: DateTime.now(),
     );
@@ -582,20 +574,32 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     SelfReportStore.instance.addReport(report);
     await SelfReportDatabase.instance.insertReport(report);
 
+    try {
+      await HealthPhApiService(
+        baseUrl: "http://127.0.0.1:8000",
+      ). submitSelfReport(
+        report: report,
+        regionName: selectedRegion!.name,
+        provinceCode: selectedProvince?.code,
+        cityCode: selectedCity?.code,
+        barangayCode: selectedBarangay?.code,
+      );
+    } catch (error) {
+      debugPrint("Self-report MongoDB sync failed: $error");
+    }
+
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-  const SnackBar(
-    content: Text("Self-report submitted successfully."),
-  ),
-);
+      const SnackBar(content: Text("Self-report submitted successfully.")),
+    );
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Report submitted"),
         content: Text(
-          "$condition\n\nThis is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.",
+          "${condition.label}\n\nThis is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.",
         ),
         actions: [
           ElevatedButton(
@@ -614,7 +618,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         selectedBarangay = null;
       }
 
-      selectedSymptoms.clear();
+      selectedSymptomIds.clear();
       notesController.clear();
     });
   }
@@ -638,14 +642,16 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
         if (!locationLoaded)
           const Center(child: CircularProgressIndicator())
-        else ... [
-          if(lockAddressFields) ...[
+        else ...[
+          if (lockAddressFields) ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppTheme.primary.withValues(alpha: 0.08),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
+                border: Border.all(
+                  color: AppTheme.primary.withValues(alpha: 0.25),
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -677,7 +683,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
           const SizedBox(height: 12),
 
-          if (isNcrSelected) ... [
+          if (isNcrSelected) ...[
             TextFormField(
               initialValue: "NCR",
               enabled: false,
@@ -687,7 +693,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
               ),
             ),
             const SizedBox(height: 12),
-          ] else ... [
+          ] else ...[
             LocationAutocompleteField(
               label: "Province",
               icon: Icons.location_city_outlined,
@@ -709,8 +715,11 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             refreshKey: "${selectedRegion?.code}_${selectedProvince?.code}",
             label: "City / Municipality",
             icon: Icons.apartment_outlined,
-            enabled: !lockAddressFields &&
-                (isNcrSelected ? selectedRegion != null : selectedProvince != null),
+            enabled:
+                !lockAddressFields &&
+                (isNcrSelected
+                    ? selectedRegion != null
+                    : selectedProvince != null),
             value: selectedCity,
             options: cityOptions,
             onSelected: (value) {
@@ -724,11 +733,12 @@ class _SelfReportTabState extends State<_SelfReportTab> {
           const SizedBox(height: 12),
 
           LocationAutocompleteField(
-          key: ValueKey(
-            "self_report_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
-          ),
-          label: "Barangay",
-             refreshKey: "${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
+            key: ValueKey(
+              "self_report_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
+            ),
+            label: "Barangay",
+            refreshKey:
+                "${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
             icon: Icons.home_work_outlined,
             enabled: !lockAddressFields && selectedCity != null,
             value: selectedBarangay,
@@ -749,20 +759,20 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: symptoms.map((symptom) {
-            final selected = selectedSymptoms.contains(symptom);
+          children: AppTaxonomy.symptoms.map((symptom) {
+            final selected = selectedSymptomIds.contains(symptom.id);
 
             return FilterChip(
-              label: Text(symptom),
+              label: Text(symptom.label),
               selected: selected,
               selectedColor: AppTheme.primary.withValues(alpha: 0.16),
               checkmarkColor: AppTheme.primary,
               onSelected: (checked) {
                 setState(() {
                   if (checked) {
-                    selectedSymptoms.add(symptom);
+                    selectedSymptomIds.add(symptom.id);
                   } else {
-                    selectedSymptoms.remove(symptom);
+                    selectedSymptomIds.remove(symptom.id);
                   }
                 });
               },

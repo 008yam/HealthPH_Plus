@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 class UserProfile {
   final String fullName;
   final String email;
+  final String roleId;
   final String role;
   final String regionCode;
   final String regionLabel;
@@ -13,6 +14,7 @@ class UserProfile {
   const UserProfile({
     required this.fullName,
     required this.email,
+    required this.roleId,
     required this.role,
     required this.regionCode,
     required this.regionLabel,

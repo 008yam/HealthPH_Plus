@@ -6,14 +6,12 @@ import 'widgets/location_autocomplete_field.dart';
 import 'services/profile_store.dart';
 import 'pages/language_selection_page.dart';
 import 'theme/responsive.dart';
+import 'data/app_taxonomy.dart';
 
 class LoginPage extends StatefulWidget {
   final bool startAsRegistering;
 
-  const LoginPage({
-    super.key,
-    this.startAsRegistering = false,
-  });
+  const LoginPage({super.key, this.startAsRegistering = false});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -27,11 +25,10 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-
   late bool isRegistering;
   bool obscurePassword = true;
   bool locationsLoaded = false;
-  String selectedRole = "Citizen";
+  AppOption selectedRole = AppTaxonomy.roles.first;
   LocationOption? selectedRegion;
   LocationOption? selectedProvince;
   LocationOption? selectedCity;
@@ -41,26 +38,18 @@ class _LoginPageState extends State<LoginPage> {
   bool get isNcrSelected => locationService.isNcr(selectedRegion?.code);
 
   List<LocationOption> get provinceOptions =>
-    locationService.provincesForRegion(selectedRegion?.code);
+      locationService.provincesForRegion(selectedRegion?.code);
 
-  List<LocationOption> get cityOptions =>
-    locationService.citiesForProvince(
-      selectedRegion?.code,
-      selectedProvince?.code,
-    );
+  List<LocationOption> get cityOptions => locationService.citiesForProvince(
+    selectedRegion?.code,
+    selectedProvince?.code,
+  );
 
-  List<LocationOption> get barangayOptions =>
-    locationService.barangaysForCity(
-      selectedRegion?.code,
-      selectedProvince?.code,
-      selectedCity?.code,
-    );
-
-  final List<String> roles = const [
-    "Citizen",
-    "Field Health Worker",
-    "LGU/DOH User",
-  ];
+  List<LocationOption> get barangayOptions => locationService.barangaysForCity(
+    selectedRegion?.code,
+    selectedProvince?.code,
+    selectedCity?.code,
+  );
 
   @override
   void dispose() {
@@ -94,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const MainPage()),
-      );
+    );
   }
 
   Future<void> _loadLocations() async {
@@ -116,10 +105,11 @@ class _LoginPageState extends State<LoginPage> {
 
   void _continueAsGuest() {
     ProfileStore.instance.saveProfile(
-      const UserProfile(
+      UserProfile(
         fullName: "Guest User",
-        email: "guest@healthphplus.local",
-        role: "Guest Tester",
+        email: AppTaxonomy.guestEmail,
+        roleId: AppTaxonomy.guestRole.id,
+        role: AppTaxonomy.guestRole.label,
         regionCode: "",
         regionLabel: "",
         province: "",
@@ -132,66 +122,48 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _submit() {
-    if(!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
+
     if (isRegistering &&
         (selectedRegion == null ||
             (!isNcrSelected && selectedProvince == null) ||
             selectedCity == null ||
             selectedBarangay == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Complete your address.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Complete your address.")));
       return;
     }
-  
-
-    ScaffoldMessenger.of(context).showSnackBar (
-      SnackBar(
-       content: Text(isRegistering ? "Account created." : "Logging in ..."),
-    ),
-    );
 
     if (isRegistering) {
       ProfileStore.instance.saveProfile(
         UserProfile(
           fullName: fullNameController.text.trim(),
           email: emailController.text.trim(),
-          role: selectedRole,
+          roleId: selectedRole.id,
+          role: selectedRole.label,
           regionCode: selectedRegion!.code,
           regionLabel: selectedRegion!.label,
           province: selectedProvince?.name ?? selectedRegion!.name,
           city: selectedCity!.name,
           barangay: selectedBarangay!.name,
-          ),
+        ),
       );
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(isRegistering ? "Account Created." : "Logging in ..."),
-        ),
-    );
-
-  _goToLanguageSelection();
-
-   if (isRegistering) {
-    ProfileStore.instance.saveProfile(
-      UserProfile(
-        fullName: fullNameController.text.trim(),
-        email: emailController.text.trim(),
-        role: selectedRole,
-        regionCode: selectedRegion!.code,
-        regionLabel: selectedRegion!.label,
-        province: selectedProvince?.name ?? selectedRegion!.name,
-        city: selectedCity!.name,
-        barangay: selectedBarangay!.name,
       ),
     );
-   }
+
+    _goToLanguageSelection();
   }
 
-  void _showPasswordResetDialog(){
-    final resetEmailController = TextEditingController(text: emailController.text);
+  void _showPasswordResetDialog() {
+    final resetEmailController = TextEditingController(
+      text: emailController.text,
+    );
 
     showDialog<void>(
       context: context,
@@ -210,16 +182,16 @@ class _LoginPageState extends State<LoginPage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Pass reset link sent.")),
-                  );
-                },
-                child: const Text("Send Link"),
-              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Pass reset link sent.")),
+                );
+              },
+              child: const Text("Send Link"),
+            ),
           ],
         );
       },
@@ -229,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
   String? _requiredValidator(String? value, String label) {
     if (value == null || value.trim().isEmpty) {
       return "Enter $label";
-    } 
+    }
     return null;
   }
 
@@ -239,25 +211,25 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     if (!value.contains("@")) {
-      return"Enter a valid email";
+      return "Enter a valid email";
     }
 
     return null;
   }
 
   String? _passwordValidator(String? value) {
-    if(value == null || value.isEmpty) {
+    if (value == null || value.isEmpty) {
       return "Enter your password";
     }
 
     if (value.length < 6) {
       return "Password must be at least 6 characters";
-    } 
+    }
     return null;
   }
 
   String? _confirmPasswordValidator(String? value) {
-    if(!isRegistering) return null;
+    if (!isRegistering) return null;
 
     if (value != passwordController.text) {
       return "Passowrd do not match";
@@ -290,7 +262,9 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 child: Container(
                   width: double.infinity,
-                  constraints: BoxConstraints(maxWidth: Responsive.formMaxWidth(context)),
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.formMaxWidth(context),
+                  ),
                   padding: const EdgeInsets.all(18),
                   decoration: AppTheme.cardDecoration,
                   child: Form(
@@ -348,7 +322,7 @@ class _LoginPageState extends State<LoginPage> {
                               labelText: "Full Name",
                               prefixIcon: Icon(Icons.person_outlined),
                             ),
-                            validator: (value) => 
+                            validator: (value) =>
                                 _requiredValidator(value, "your full name"),
                           ),
                           const SizedBox(height: 12),
@@ -377,9 +351,9 @@ class _LoginPageState extends State<LoginPage> {
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(
-                              obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                                obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -404,110 +378,114 @@ class _LoginPageState extends State<LoginPage> {
                             validator: _confirmPasswordValidator,
                           ),
                           const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
+                          DropdownButtonFormField<AppOption>(
                             initialValue: selectedRole,
                             decoration: const InputDecoration(
                               labelText: "Role",
                               prefixIcon: Icon(Icons.badge_outlined),
                             ),
-                            items: roles.map((role) {
-                              return DropdownMenuItem(
+                            items: AppTaxonomy.roles.map((role) {
+                              return DropdownMenuItem<AppOption>(
                                 value: role,
-                                child: Text(role),
+                                child: Text(role.label),
                               );
                             }).toList(),
                             onChanged: (value) {
-                                setState(() {
-                                  selectedRole = value ?? "Citizen";
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                        //DROPDOWN
-
-                        if (!locationsLoaded)
-                          const Center(child: CircularProgressIndicator())
-                        else ...[
-                          LocationAutocompleteField(
-                            label: "Region",
-                            icon: Icons.map_outlined,
-                            enabled: true,
-                            value: selectedRegion,
-                            options: locationService.regions,
-                            onSelected: (value) {
                               setState(() {
-                                selectedRegion = value;
-                                selectedProvince = null;
-                                selectedCity = null;
-                                selectedBarangay = null;
+                                selectedRole = value ?? AppTaxonomy.roles.first;
                               });
                             },
                           ),
                           const SizedBox(height: 12),
-                          
-                          if (isNcrSelected) ...[
-                             TextFormField(
-                              initialValue: "NCR",
-                              enabled: false,
-                              decoration: InputDecoration(
-                                labelText: "Province",
-                                prefixIcon: Icon(Icons.location_city_outlined),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                          ] else ...[
+
+                          //DROPDOWN
+                          if (!locationsLoaded)
+                            const Center(child: CircularProgressIndicator())
+                          else ...[
                             LocationAutocompleteField(
-                              label: "Province",
-                              icon: Icons.location_city_outlined,
-                              enabled: selectedRegion != null,
-                              value: selectedProvince,
-                              options: provinceOptions,
+                              label: "Region",
+                              icon: Icons.map_outlined,
+                              enabled: true,
+                              value: selectedRegion,
+                              options: locationService.regions,
                               onSelected: (value) {
                                 setState(() {
-                                  selectedProvince = value;
+                                  selectedRegion = value;
+                                  selectedProvince = null;
                                   selectedCity = null;
                                   selectedBarangay = null;
                                 });
                               },
                             ),
                             const SizedBox(height: 12),
-                          ],
-                          LocationAutocompleteField(
-                            key: ValueKey(
-                              "login_city_${selectedRegion?.code}_${selectedProvince?.code}",
-                            ),
-                            label: "City / Municipality",
-                            icon: Icons.apartment_outlined,
-                            enabled: isNcrSelected ? selectedRegion != null : selectedProvince != null,
-                            value: selectedCity,
-                            options: cityOptions,
-                            onSelected: (value) {
-                              setState(() {
-                                selectedCity = value;
-                                selectedBarangay = null;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          LocationAutocompleteField(
-                            key: ValueKey(
-                              "login_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
-                            ),
-                            label: "Barangay",
-                            icon: Icons.home_work_outlined,
-                            enabled: selectedCity != null,
-                            value: selectedBarangay,
-                            options: barangayOptions,
-                            onSelected: (value) {
-                              setState(() {
-                                selectedBarangay = value;
-                              });
-                            },
-                          ),
-                        ],
-                      ],
 
-                        if(!isRegistering) ...[
+                            if (isNcrSelected) ...[
+                              TextFormField(
+                                initialValue: "NCR",
+                                enabled: false,
+                                decoration: InputDecoration(
+                                  labelText: "Province",
+                                  prefixIcon: Icon(
+                                    Icons.location_city_outlined,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ] else ...[
+                              LocationAutocompleteField(
+                                label: "Province",
+                                icon: Icons.location_city_outlined,
+                                enabled: selectedRegion != null,
+                                value: selectedProvince,
+                                options: provinceOptions,
+                                onSelected: (value) {
+                                  setState(() {
+                                    selectedProvince = value;
+                                    selectedCity = null;
+                                    selectedBarangay = null;
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                            LocationAutocompleteField(
+                              key: ValueKey(
+                                "login_city_${selectedRegion?.code}_${selectedProvince?.code}",
+                              ),
+                              label: "City / Municipality",
+                              icon: Icons.apartment_outlined,
+                              enabled: isNcrSelected
+                                  ? selectedRegion != null
+                                  : selectedProvince != null,
+                              value: selectedCity,
+                              options: cityOptions,
+                              onSelected: (value) {
+                                setState(() {
+                                  selectedCity = value;
+                                  selectedBarangay = null;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            LocationAutocompleteField(
+                              key: ValueKey(
+                                "login_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
+                              ),
+                              label: "Barangay",
+                              icon: Icons.home_work_outlined,
+                              enabled: selectedCity != null,
+                              value: selectedBarangay,
+                              options: barangayOptions,
+                              onSelected: (value) {
+                                setState(() {
+                                  selectedBarangay = value;
+                                });
+                              },
+                            ),
+                          ],
+                        ],
+
+                        if (!isRegistering) ...[
                           const SizedBox(height: 8),
                           Align(
                             alignment: Alignment.centerRight,
@@ -536,20 +514,20 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 12),
 
                         if (!isRegistering) ...[
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                width: double.infinity,
-                                height: Responsive.buttonHeight(context),
-                                child: OutlinedButton.icon(
-                                  onPressed: _continueAsGuest,
-                                  icon: const Icon(Icons.person_outline),
-                                  label: const Text(
-                                    "Continue as Guest",
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            height: Responsive.buttonHeight(context),
+                            child: OutlinedButton.icon(
+                              onPressed: _continueAsGuest,
+                              icon: const Icon(Icons.person_outline),
+                              label: const Text(
+                                "Continue as Guest",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                            ],
+                            ),
+                          ),
+                        ],
 
                         Center(
                           child: TextButton(
@@ -559,7 +537,6 @@ class _LoginPageState extends State<LoginPage> {
                               });
                             },
                             child: Text(
-                              
                               isRegistering
                                   ? "Already have an account? Login"
                                   : "New User? Create an account",
