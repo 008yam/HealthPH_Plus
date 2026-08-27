@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 
 ContentType = Literal[
@@ -28,7 +28,9 @@ class HealthLiteracyContent(BaseModel):
     source: str | None = None
     author: str | None = None
     publishedDate: datetime | None = None
-    externalUrl: HttpUrl | None = None
+    externalUrl: str | None = None
+    publicUrl: str | None = None
+    shareUrl: str | None = None
     imageUrl: str | None = None
     mediaUrl: str | None = None
     media: dict[str, Any] | None = None

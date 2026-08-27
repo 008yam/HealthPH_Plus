@@ -24,7 +24,7 @@ class Settings:
 
     mongo_self_reports_collection: str = os.getenv(
         "MONGO_SELF_REPORTS_COLLECTION",
-        "mobile_self_report",
+        "self_reports",
     )
 
     mongo_health_literacy_content_collection: str = os.getenv(
@@ -35,6 +35,11 @@ class Settings:
     mongo_health_literacy_analytics_collection: str = os.getenv(
         "MONGO_HEALTH_LITERACY_ANALYTICS_COLLECTION",
         "analytics_events",
+    )
+
+    mongo_mobile_users_collection: str = os.getenv(
+        "MONGO_MOBILE_USERS_COLLECTION",
+        "mobile_users",
     )
 
 

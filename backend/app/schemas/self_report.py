@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 
 ReporterType = Literal["guest", "registered"]
-UserRoleId = Literal["guest", "citizen", "field_health_worker", "lgu_doh_user"]
+UserRoleId = Literal["guest", "user"]
 PinAccuracy = Literal["geocoded", "region_estimate"]
 ReportStatus = Literal["submitted", "for_review", "verified", "rejected"]
 

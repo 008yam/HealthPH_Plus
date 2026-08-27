@@ -36,8 +36,8 @@ class HealthPhApiService {
       "reporter": {
         "userId": null,
         "reporterType": isGuest ? "guest" : "registered",
-        "roleId": profile?.roleId ?? AppTaxonomy.guestRole.id,
-        "roleLabel": profile?.role ?? AppTaxonomy.guestRole.label,
+        "roleId": isGuest ? "guest" : "user",
+        "roleLabel": isGuest ? "Guest" : "User",
         "fullName": isGuest ? null : profile.fullName,
         "email": isGuest ? null : profile.email,
       },
@@ -88,27 +88,54 @@ class HealthPhApiService {
   }
 
   Future<List<Map<String, dynamic>>> fetchHealthLiteracyContent() async {
-  final response = await http.get(
-    Uri.parse('$baseUrl/api/health-literacy/mobile'),
-  );
+    final response = await http
+        .get(Uri.parse('$baseUrl/api/health-literacy/mobile'))
+        .timeout(const Duration(seconds: 12));
 
-  if (response.statusCode == 200) {
-    final decoded = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
 
-    final List<dynamic> items;
-    if (decoded is List) {
-      items = decoded;
-    } else if (decoded is Map && decoded["items"] is List) {
-      items = decoded["items"] as List;
-    } else {
-      items = [];
+      final List<dynamic> items;
+      if (decoded is List) {
+        items = decoded;
+      } else if (decoded is Map && decoded["items"] is List) {
+        items = decoded["items"] as List;
+      } else {
+        items = [];
+      }
+
+      return items
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
     }
 
-    return items
-        .map((item) => Map<String, dynamic>.from(item as Map))
-        .toList();
+    throw Exception(
+      "Failed to load health literacy content "
+      "(${response.statusCode}): ${response.body}",
+    );
   }
+  Future<void> registerMobileUser(UserProfile profile) async {
+    final payload = {
+      "fullName": profile.fullName,
+      "email": profile.email,
+      "roleId": "user",
+      "roleLabel": "User",
+      "regionCode": profile.regionCode,
+      "regionLabel": profile.regionLabel,
+      "province": profile.province,
+      "city": profile.city,
+      "barangay": profile.barangay,
+      "source": "mobile_registration",
+    };
 
-  throw Exception("Failed to load health literacy content");
-}
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/mobile/users"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception("Failed to save mobile user to MongoDB: ${response.body}");
+    }
+  }
 }

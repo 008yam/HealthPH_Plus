@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
@@ -138,7 +139,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
               "Unable to load content.",
               style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold
+                fontWeight: FontWeight.bold,
               ),
             ),
           );
@@ -147,7 +148,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
         final items = snapshot.data ?? [];
 
         final filtered = items.where((item) {
-          final type = item ["contentType"].toString().toLowerCase();
+          final type = item["contentType"].toString().toLowerCase();
 
           final searchableText = [
             item["title"],
@@ -376,12 +377,18 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                     key: literacyContentKey,
                     child: TabBarView(
                       children: [
-                        _buildContentList(["article", "articles"], "No articles found."),
-                        _buildContentList(["video", "videos"], "No videos found."),
-                        _buildContentList(
-                          ["infographic", "infographics"],
-                          "No infographics found.",
-                        ),
+                        _buildContentList([
+                          "article",
+                          "articles",
+                        ], "No articles found."),
+                        _buildContentList([
+                          "video",
+                          "videos",
+                        ], "No videos found."),
+                        _buildContentList([
+                          "infographic",
+                          "infographics",
+                        ], "No infographics found."),
                       ],
                     ),
                   ),
@@ -415,11 +422,37 @@ class HealthArticleCard extends StatelessWidget {
     required this.tags,
   });
 
-  Future<void> _openArticle() async {
+  bool get _isVideo => contentType == "video" || contentType == "videos";
+
+  Future<void> _openContent(BuildContext context) async {
+    if (_isVideo) {
+      if (mediaUrl.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Video is unavailable.")));
+        return;
+      }
+
+      await showDialog(
+        context: context,
+        builder: (_) {
+          return VideoPlayerDialog(videoUrl: mediaUrl, title: title);
+        },
+      );
+      return;
+    }
+
+    if (articleUrl.isEmpty || articleUrl == "null") {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Content Link is unavailable.")),
+      );
+      return;
+    }
+
     final Uri url = Uri.parse(articleUrl);
 
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $articleUrl');
+      throw Exception("Could not launch $articleUrl");
     }
   }
 
@@ -435,16 +468,15 @@ class HealthArticleCard extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            const Icon(
-              Icons.play_circle_fill,
-              color: Colors.white,
-              size: 62,
-            ),
+            const Icon(Icons.play_circle_fill, color: Colors.white, size: 62),
             Positioned(
               left: 12,
               bottom: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.65),
                   borderRadius: BorderRadius.circular(20),
@@ -454,7 +486,7 @@ class HealthArticleCard extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 11,
-                    fontWeight: FontWeight.bold
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -470,7 +502,7 @@ class HealthArticleCard extends StatelessWidget {
         height: 230,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _,) {
+        errorBuilder: (_, _, _) {
           return Image.asset(
             "assets/images/lunghealtharticle.png",
             height: 230,
@@ -580,13 +612,14 @@ class HealthArticleCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        onPressed: _openArticle,
+                        onPressed: () => _openContent(context),
                         child: Text(
                           contentType == "video" || contentType == "videos"
                               ? "Watch video"
-                              : contentType == "infographic" || contentType == "infograpihcs"
-                                  ? "View"
-                                  : "Read more",
+                              : contentType == "infographic" ||
+                                    contentType == "infographics"
+                              ? "View"
+                              : "Read more",
                           style: const TextStyle(fontSize: 11),
                         ),
                       ),
@@ -594,6 +627,144 @@ class HealthArticleCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class VideoPlayerDialog extends StatefulWidget {
+  final String videoUrl;
+  final String title;
+
+  const VideoPlayerDialog({
+    super.key,
+    required this.videoUrl,
+    required this.title,
+  });
+
+  @override
+  State<VideoPlayerDialog> createState() => _VideoPlayerDialogState();
+}
+
+class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
+  late final VideoPlayerController _controller;
+  late final Future<void> _initializeVideoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+
+    _initializeVideoFuture = _controller.initialize().then((_) {
+      if (!mounted) return;
+      _controller.play();
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _togglePlayback() {
+    setState(() {
+      if (_controller.value.isPlaying) {
+        _controller.pause();
+      } else {
+        _controller.play();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.all(18),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              color: AppTheme.primary,
+              padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            FutureBuilder<void>(
+              future: _initializeVideoFuture,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return SizedBox(
+                    height: 260,
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Center(
+                        child: Text(
+                          "Unable to play video.\n\nURL:\n${widget.videoUrl}\n\nError:\n${snapshot.error}",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const SizedBox(
+                    height: 220,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final aspectRatio = _controller.value.aspectRatio == 0
+                    ? 16 / 9
+                    : _controller.value.aspectRatio;
+
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: aspectRatio,
+                      child: VideoPlayer(_controller),
+                    ),
+                    IconButton(
+                      onPressed: _togglePlayback,
+                      iconSize: 64,
+                      icon: Icon(
+                        _controller.value.isPlaying
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_fill,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),

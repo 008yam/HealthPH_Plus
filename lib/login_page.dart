@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'main_page.dart';
 import 'theme/app_theme.dart';
 import 'services/location_data_services.dart';
+import 'services/healthph_api_services.dart';
 import 'widgets/location_autocomplete_field.dart';
 import 'services/profile_store.dart';
 import 'pages/language_selection_page.dart';
@@ -121,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
     _goToLanguageSelection();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (isRegistering &&
@@ -136,20 +137,26 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     if (isRegistering) {
-      ProfileStore.instance.saveProfile(
-        UserProfile(
-          fullName: fullNameController.text.trim(),
-          email: emailController.text.trim(),
-          roleId: selectedRole.id,
-          role: selectedRole.label,
-          regionCode: selectedRegion!.code,
-          regionLabel: selectedRegion!.label,
-          province: selectedProvince?.name ?? selectedRegion!.name,
-          city: selectedCity!.name,
-          barangay: selectedBarangay!.name,
-        ),
+      final profile = UserProfile(
+        fullName: fullNameController.text.trim(),
+        email: emailController.text.trim(),
+        roleId: "user",
+        role: "User",
+        regionCode: selectedRegion!.code,
+        regionLabel: selectedRegion!.label,
+        province: selectedProvince?.name ?? selectedRegion!.name,
+        city: selectedCity!.name,
+        barangay: selectedBarangay!.name,
       );
+
+      ProfileStore.instance.saveProfile(profile);
+
+      await HealthPhApiService(
+        baseUrl: "http://127.0.0.1:8000",
+      ).registerMobileUser(profile);
     }
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
