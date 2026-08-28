@@ -9,7 +9,7 @@ class SentimentPulsePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         backgroundColor: AppTheme.pageBlue,
         body: Stack(
@@ -107,6 +107,7 @@ class SentimentPulsePage extends StatelessWidget {
                               Tab(text: "Overview"),
                               Tab(text: "Trends"),
                               Tab(text: "Regional"),
+                              Tab(text: "Surveys"),
                             ],
                           ),
                         ),
@@ -119,6 +120,7 @@ class SentimentPulsePage extends StatelessWidget {
                               OverviewTab(),
                               TrendsTab(),
                               RegionalTab(),
+                              SurveysTab(),
                             ],
                           ),
                         ),
@@ -312,6 +314,52 @@ class RegionalTab extends StatelessWidget {
           sentiment: "Concerned",
           percent: 48,
           color: Colors.amber,
+        ),
+      ],
+    );
+  }
+}
+
+class SurveysTab extends StatelessWidget {
+  const SurveysTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        const Text(
+          "Available Surveys",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          "Share your experience and help improve community health programs.",
+          style: TextStyle(fontSize: 12, color: AppTheme.mutedText),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceSoft,
+            border: Border.all(color: AppTheme.border),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Column(
+            children: [
+              Icon(
+                Icons.assignment_outlined,
+                size: 48,
+                color: AppTheme.primary,
+              ),
+              SizedBox(height: 6),
+              Text(
+                "Approved surveys will appear here when they become available,",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: AppTheme.mutedText),
+              ),
+            ],
+          ),
         ),
       ],
     );
