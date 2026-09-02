@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../pages/map_page.dart';
 import '../pages/settings_page.dart';
@@ -13,6 +15,13 @@ class FloatingNavBar extends StatelessWidget {
 
   const FloatingNavBar({super.key, required this.selectedIndex});
 
+  static const Duration _pillDuration = Duration(milliseconds: 380);
+  static const Duration _tapPreviewDelay = Duration(milliseconds: 140);
+  static const Duration _pageTransitionDuration = Duration(milliseconds: 320);
+
+  static const double _iconPopScale = 1.28;
+  static const double _iconLift = -5;
+
   void _navigate(BuildContext context, int index) {
     if (index == selectedIndex) return;
 
@@ -23,14 +32,11 @@ class FloatingNavBar extends StatelessWidget {
           AppTaxonomy.isGuestRole(profile.roleId) ||
           profile.email == AppTaxonomy.guestEmail;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => isGuest
-              ? const LoginPage(startAsRegistering: true)
-              : const SettingsPage(selectedNavIndex: 3),
-        ),
-      );
+           final page = isGuest
+          ? const LoginPage(startAsRegistering: true)
+          : const SettingsPage(selectedNavIndex: 3);
+
+      _pushWithTransition(context, page, index);
       return;
     }
 
@@ -53,7 +59,35 @@ class FloatingNavBar extends StatelessWidget {
         page = const MainPage();
     }
 
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => page));
+    _pushWithTransition(context, page, index);
+  }
+    void _pushWithTransition(BuildContext context, Widget page, int nextIndex) {
+    final slideFromRight = nextIndex > selectedIndex;
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: _pageTransitionDuration,
+        reverseTransitionDuration: _pageTransitionDuration,
+        pageBuilder: (_, _, _) => page,
+        transitionsBuilder: (_, animation, _, child) {
+          final offsetAnimation = Tween<Offset>(
+            begin: Offset(slideFromRight ? 0.12 : -0.12, 0),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          );
+
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: offsetAnimation,
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -108,31 +142,142 @@ class FloatingNavBar extends StatelessWidget {
   }) {
     final bool isSelected = selectedIndex == index;
 
-    return GestureDetector(
+    return _AnimatedNavItem(
+      icon: icon,
+      label: label,
+      isSelected: isSelected,
+      showLabel: isSelected && !Responsive.isSmallPhone(context),
       onTap: () => _navigate(context, index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: isSelected ? Colors.white : Colors.grey.shade600),
+    );
+  }
+}
 
-            if (isSelected && !Responsive.isSmallPhone(context)) ...[
-              const SizedBox(width: 6),
+class _FlipNavIcon extends StatelessWidget {
+  final IconData icon;
+  final bool isSelected;
+  final Color color;
 
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+  const _FlipNavIcon({
+    required this.icon,
+    required this.isSelected,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      key: ValueKey("${icon.codePoint}-$isSelected"),
+      tween: Tween<double>(
+        begin: 0,
+        end: isSelected ? 1 : 0,
+      ),
+      duration: const Duration(milliseconds: 520),
+      curve: Curves.easeOutBack,
+      child: Icon(icon, color: color),
+      builder: (context, value, child) {
+        final rotation = isSelected ? value * math.pi * 2: 0.0;
+        final pop = math.sin(value * math.pi);
+        final scale = isSelected
+            ? 1.0 + (pop * (FloatingNavBar._iconPopScale - 1.0))
+            : 1.0;
+        final lift = isSelected ? pop * FloatingNavBar._iconLift : 0.0;
+
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(rotation),
+              child: Transform.translate(
+                offset: Offset(0, lift),
+                child: Transform.scale(
+                  scale: scale,
+                  child: child,
                 ),
               ),
+        );
+      },
+    );
+  }
+}
+
+class _AnimatedNavItem extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final bool showLabel;
+  final VoidCallback onTap;
+
+  const _AnimatedNavItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.showLabel,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedNavItem> createState() => _AnimatedNavItemState();
+}
+
+class _AnimatedNavItemState extends State<_AnimatedNavItem> {
+  bool isPressed = false;
+
+  Future<void> _handleTap() async {
+    setState(() => isPressed = true);
+    await Future.delayed(FloatingNavBar._tapPreviewDelay);
+
+    if(!mounted) return;
+
+    setState(() => isPressed = false);
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: AnimatedScale(
+        scale: isPressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        child: AnimatedContainer(
+          duration: FloatingNavBar._pillDuration,
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.isSelected ? 16 : 12,
+            vertical: 8,
+          ),
+          decoration: BoxDecoration(
+            color: widget.isSelected ? AppTheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.24),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                ]
+                : null,
+          ),
+          child: Row (
+            children: [
+              _FlipNavIcon(
+                icon: widget.icon,
+                isSelected: widget.isSelected || isPressed,
+                color: widget.isSelected ? Colors.white : Colors.grey.shade600,
+              ),
+              if (widget.showLabel) ...[
+                const SizedBox(width: 6),
+                Text(
+                  widget.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                   ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

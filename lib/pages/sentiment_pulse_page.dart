@@ -2,14 +2,26 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
 import '../theme/responsive.dart';
+import '../models/mobile_survey.dart';
+import '../services/api_config.dart';
+import '../services/profile_store.dart';
+import '../services/sentiment_survey_service.dart';
+
 
 class SentimentPulsePage extends StatelessWidget {
-  const SentimentPulsePage({super.key});
+  final int initialTabIndex;
+
+  const SentimentPulsePage({
+    super.key,
+    this.initialTabIndex = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final safeInitialIndex = initialTabIndex.clamp(0, 3).toInt();
     return DefaultTabController(
-      length: 3,
+      length: 4,
+      initialIndex: safeInitialIndex,
       child: Scaffold(
         backgroundColor: AppTheme.pageBlue,
         body: Stack(
@@ -107,6 +119,7 @@ class SentimentPulsePage extends StatelessWidget {
                               Tab(text: "Overview"),
                               Tab(text: "Trends"),
                               Tab(text: "Regional"),
+                              Tab(text: "Survey")
                             ],
                           ),
                         ),
@@ -119,6 +132,7 @@ class SentimentPulsePage extends StatelessWidget {
                               OverviewTab(),
                               TrendsTab(),
                               RegionalTab(),
+                              SurveyTab(),
                             ],
                           ),
                         ),
@@ -315,6 +329,384 @@ class RegionalTab extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class SurveyTab extends StatefulWidget {
+  const SurveyTab({super.key});
+
+  @override
+  State<SurveyTab> createState() => _SurveyTabState();
+}
+
+class _SurveyTabState extends State<SurveyTab>{
+  late Future<List<MobileSurvey>> surveyFuture;
+
+  final surveyService = SentimentSurveyService(
+    baseUrl: ApiConfig.baseUrl
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    surveyFuture = surveyService.fetchPublicSurveys();
+  }
+
+  void _refreshSurveys() {
+    setState(() {
+      surveyFuture = surveyService.fetchPublicSurveys();
+    });
+  }
+
+  void _openSurvey(MobileSurvey survey) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (_) {
+        return SurveyResponseSheet(
+          survey: survey,
+          surveyService: surveyService,
+          onSubmitted: _refreshSurveys,
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<MobileSurvey>>(
+      future: surveyFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Unable to load surveys.",
+              style: TextStyle(
+                color: AppTheme.text,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          );
+        }
+
+        final surveys = snapshot.data ?? [];
+
+        if (surveys.isEmpty) {
+          return const Center(
+            child: Text(
+              "No active mobile surveys currently available.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          );
+        }
+
+        return ListView.separated(
+          padding: EdgeInsets.zero,
+          itemCount: surveys.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final survey = surveys[index];
+            final progress = survey.target <= 0
+                ? 0.0
+                : (survey.responses / survey.target).clamp(0.0, 1.0);
+
+            return InkWell(
+              onTap: () => _openSurvey(survey),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F8FF),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      survey.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    if (survey.subtitle.isNotEmpty) ... [
+                      const SizedBox(height: 4),
+                      Text(
+                        survey.subtitle,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    LinearProgressIndicator(value: progress),
+                    const SizedBox(height: 6),
+                    Text(
+                      "${survey.responses} / ${survey.target} responses",
+                      style: const TextStyle(fontSize: 11),
+                     ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class SurveyResponseSheet extends StatefulWidget {
+  final MobileSurvey survey;
+  final SentimentSurveyService surveyService;
+  final VoidCallback onSubmitted;
+
+  const SurveyResponseSheet({
+    super.key,
+    required this.survey,
+    required this.surveyService,
+    required this.onSubmitted,
+  });
+
+  @override
+  State<SurveyResponseSheet> createState() => _SurveyResponseSheetState();
+}
+
+class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final Map<String, dynamic> answers = {};
+  bool isSubmitting = false;
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final cleanedAnswers = Map<String, dynamic>.from(answers)
+      ..removeWhere((_, value) => value == null || value.toString().trim().isEmpty);
+
+    if (cleanedAnswers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please answer at least one question.")),
+      );
+      return;
+    }
+
+    final profile = ProfileStore.instance.profile;
+    final metadata = <String, dynamic>{
+      "roleId": profile?.roleId,
+      "province": profile?.province,
+      "city": profile?.city,
+      "barangay": profile?.barangay,
+    }..removeWhere((_, value) => value == null || value == "");
+
+    setState(() => isSubmitting = true);
+
+    try {
+      await widget.surveyService.submitSurveyResponse(
+        surveyId: widget.survey.id,
+        answers: cleanedAnswers,
+        region: profile?.regionLabel,
+        metadata: metadata,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      widget.onSubmitted();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Survey response submitted.")),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => isSubmitting = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unable to submit survey response.")),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          18,
+          16,
+          18,
+          MediaQuery.of(context).viewInsets.bottom + 18,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.survey.title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primary,
+                ),
+              ),
+              if (widget.survey.subtitle.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(widget.survey.subtitle),
+              ],
+              const SizedBox(height: 16),
+              ...List.generate(widget.survey.questions.length, (index) {
+                return _QuestionCard(
+                  number: index + 1,
+                  question: widget.survey.questions[index],
+                  answers: answers,
+                  isSubmitting: isSubmitting,
+                  onChanged: () => setState(() {}),
+                );
+              }),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: isSubmitting ? null : _submit,
+                  icon: isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send),
+                  label: Text(isSubmitting ? "Submitting..." : "Submit"),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuestionCard extends StatelessWidget {
+  final int number;
+  final MobileSurveyQuestion question;
+  final Map<String, dynamic> answers;
+  final bool isSubmitting;
+  final VoidCallback onChanged;
+
+  const _QuestionCard({
+    required this.number,
+    required this.question,
+    required this.answers,
+    required this.isSubmitting,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final answer = answers[question.id];
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "$number. ${question.title}${question.isRequired ? " *" : ""}",
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.text,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildQuestionInput(answer),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuestionInput(dynamic answer) {
+    switch (question.type) {
+      case "multipleChoice":
+        return Column(
+          children: question.choices.map((choice) {
+            return RadioListTile<String>(
+              value: choice,
+              groupValue: answer?.toString(),
+              onChanged: isSubmitting
+                  ? null
+                  : (value) {
+                      answers[question.id] = value;
+                      onChanged();
+                    },
+              title: Text(choice),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            );
+          }).toList(),
+        );
+
+      case "rating":
+        final min = question.rateMin;
+        final max = question.rateMax;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: List.generate(max - min + 1, (index) {
+            final value = min + index;
+            final isSelected = answer == value;
+
+            return ChoiceChip(
+              label: Text("$value"),
+              selected: isSelected,
+              onSelected: isSubmitting
+                  ? null
+                  : (_) {
+                      answers[question.id] = value;
+                      onChanged();
+                    },
+            );
+          }),
+        );
+
+      case "text":
+      default:
+        return TextFormField(
+          enabled: !isSubmitting,
+          minLines: 2,
+          maxLines: 4,
+          initialValue: answer?.toString(),
+          decoration: const InputDecoration(
+            hintText: "Type your answer",
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) {
+            if (question.isRequired && (value == null || value.trim().isEmpty)) {
+              return "This question is required.";
+            }
+            return null;
+          },
+          onChanged: (value) {
+            answers[question.id] = value;
+          },
+        );
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health, health_literacy, mobile_users, self_reports
+from app.api import health, health_literacy, mobile_users, self_reports, sentiment_pulse
 from app.core.config import settings
 
 
@@ -24,7 +24,7 @@ def create_app() -> FastAPI:
     app.include_router(health_literacy.router, prefix=settings.api_prefix)
     app.include_router(mobile_users.router, prefix=settings.api_prefix)
     app.include_router(self_reports.router, prefix=settings.api_prefix)
-
+    app.include_router(sentiment_pulse.router, prefix=settings.api_prefix)
     return app
 
 

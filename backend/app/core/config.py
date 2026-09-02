@@ -1,4 +1,27 @@
 import os
+from pathlib import Path
+
+
+def _load_local_env() -> None:
+    env_path = Path(__file__).resolve().parents[2] / ".env"
+
+    if not env_path.exists():
+        return
+
+    for raw_line in env_path.read_text().splitlines():
+        line = raw_line.strip()
+
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+
+        os.environ.setdefault(key, value)
+
+
+_load_local_env()
 
 
 class Settings:
@@ -20,27 +43,19 @@ class Settings:
 
     mongo_uri: str = os.getenv("MONGO_URI", "")
 
-    mongo_db_name: str = os.getenv("MONGO_DB_NAME", "healthph-plus")
+    mongo_db_name: str = "healthph-plus"
 
-    mongo_self_reports_collection: str = os.getenv(
-        "MONGO_SELF_REPORTS_COLLECTION",
-        "self_reports",
-    )
+    mongo_self_reports_collection: str = "self_reports"
 
-    mongo_health_literacy_content_collection: str = os.getenv(
-        "MONGO_HEALTH_LITERACY_CONTENT_COLLECTION",
-        "content",
-    )
+    mongo_health_literacy_content_collection: str = "content"
 
-    mongo_health_literacy_analytics_collection: str = os.getenv(
-        "MONGO_HEALTH_LITERACY_ANALYTICS_COLLECTION",
-        "analytics_events",
-    )
+    mongo_health_literacy_analytics_collection: str = "analytics_events"
 
-    mongo_mobile_users_collection: str = os.getenv(
-        "MONGO_MOBILE_USERS_COLLECTION",
-        "mobile_users",
-    )
+    mongo_sentiment_surveys_collection: str = "surveys"
+
+    mongo_sentiment_survey_responses_collection: str = "survey_responses"
+
+    mongo_mobile_users_collection: str = "mobile_users"
 
 
 settings = Settings()

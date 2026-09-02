@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'data_collection_page.dart';
 
 import '../widgets/coach_mark.dart';
-
+import 'sentiment_pulse_page.dart';
 import '../login_page.dart';
 import '../data/app_taxonomy.dart';
 import '../services/profile_store.dart';
@@ -23,6 +23,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final profileKey = GlobalKey();
   final selfReportKey = GlobalKey();
+  final surveyKey = GlobalKey();
   final languageKey = GlobalKey();
 
   @override
@@ -41,6 +42,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 "This section shows the details saved from registration.",
             icon: Icons.person_outline,
             color: AppTheme.primary,
+          ),
+          CoachMarkStep(
+            targetKey: surveyKey,
+            title: "Mobile Surveys",
+            description:
+                "Answer active surveys published for mobile users.",
+            icon: Icons.poll_outlined,
+            color: AppTheme.info,
           ),
           CoachMarkStep(
             targetKey: selfReportKey,
@@ -112,6 +121,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     KeyedSubtree(
                       key: selfReportKey,
                       child: _SelfReportButton(isTablet: isTablet),
+                    ),
+                    const SizedBox(height: 12),
+                    KeyedSubtree(
+                      key: surveyKey,
+                      child: _SurveyButton(isTablet: isTablet),
                     ),
                     const SizedBox(height: 18),
                     KeyedSubtree(
@@ -218,7 +232,14 @@ class _ProfileCard extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [surfaceStart, surfaceEnd],
+                colors: isGuest
+                    ? [surfaceStart, surfaceEnd]
+                    : [
+                      Colors.white,
+                      const Color(0xFFEFF4FF),
+                      const Color(0xFFFFF7DC),
+                    ],
+                stops: isGuest ? null : const [0, 0.66, 1.0],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
@@ -260,7 +281,13 @@ class _ProfileCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 12),
+                _MindfulGooeyAccentBar(
+                  accent: accent,
+                  isGuest: isGuest,
+                  isTablet: isTablet,
+                ),
+                const SizedBox(height: 14),
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0.88, end: 1),
                   duration: const Duration(milliseconds: 480),
@@ -417,6 +444,82 @@ class _ProfileInfoChip extends StatelessWidget {
   }
 }
 
+class _MindfulGooeyAccentBar extends StatefulWidget {
+  final Color accent;
+  final bool isGuest;
+  final bool isTablet;
+
+  const _MindfulGooeyAccentBar({
+    required this.accent,
+    required this.isGuest,
+    required this.isTablet,
+  });
+
+  @override
+  State<_MindfulGooeyAccentBar> createState() => _MindfulGooeyAccentBarState();
+}
+
+class _MindfulGooeyAccentBarState extends State<_MindfulGooeyAccentBar>
+    with SingleTickerProviderStateMixin {
+      late final AnimationController controller;
+
+      @override
+      void initState() {
+        super.initState();
+        controller = AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 2600),
+        )..repeat(reverse: true);
+      }
+
+      @override
+      void dispose() {
+        controller.dispose();
+        super.dispose();
+      }
+
+      @override
+      Widget build(BuildContext context) {
+        final colors = widget.isGuest
+            ? [
+            Colors.grey.shade300,
+            Colors.grey.shade100,
+            Colors.grey.shade300,
+          ]
+        : [
+            widget.accent.withValues(alpha: 0.22),
+            AppTheme.info.withValues(alpha: 0.42),
+            AppTheme.warning.withValues(alpha: 0.34),
+            widget.accent.withValues(alpha: 0.22),
+          ];
+
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: SizedBox(
+          width: double.infinity,
+          height: widget.isTablet ? 9 : 7,
+          child: AnimatedBuilder(
+            animation: controller,
+            builder: (context, _) {
+              final shift = -1.0 + (controller.value * 2.0);
+
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment(-1.0 + shift, 0),
+                    end: Alignment(1.0 + shift, 0),
+                    colors: colors,
+                  ),
+                ),
+                child : const SizedBox.expand(),
+              );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class _SelfReportButton extends StatelessWidget {
   final bool isTablet;
 
@@ -473,6 +576,76 @@ class _SelfReportButton extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 color: AppTheme.warning,
+                size: isTablet ? 32 : 28,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SurveyButton extends StatelessWidget {
+  final bool isTablet;
+
+  const _SurveyButton({required this.isTablet});
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = AppTheme.info;
+
+    return Material(
+      color: const Color(0xFFEAF6FF),
+      borderRadius: BorderRadius.circular(16),
+      elevation: 4,
+      shadowColor: Colors.black26,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const SentimentPulsePage(initialTabIndex: 3),
+            ),
+          );
+        },
+        child: Container(
+          height: isTablet ? 155 : 125,
+          padding: EdgeInsets.symmetric(horizontal: isTablet ? 28 : 20),
+          decoration: BoxDecoration(
+            border: Border.all(color: accent, width: 1.4),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: isTablet ? 68 : 56,
+                height: isTablet ? 68 : 56,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Icon(
+                  Icons.poll_outlined,
+                  color: accent,
+                  size: isTablet ? 36 : 30,
+                ),
+              ),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Text(
+                  "Mobile Surveys",
+                  style: TextStyle(
+                    color: AppTheme.text,
+                    fontSize: isTablet ? 28 : 23,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: accent,
                 size: isTablet ? 32 : 28,
               ),
             ],
