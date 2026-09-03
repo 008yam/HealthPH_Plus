@@ -8,7 +8,8 @@ from bson import ObjectId
 from pymongo import MongoClient, DESCENDING
 
 from app.core.config import settings
-from app.schemas.self_report import SelfReportCreate,SelfReportMapPin, SelfReportRecord
+from app.helpers.analytics_entry_helpers import build_self_report_analytics_entry
+from app.schemas.self_report import SelfReportCreate, SelfReportMapPin, SelfReportRecord
 
 class MongoSelfReportStore:
     def __init__(self) -> None:
@@ -18,6 +19,7 @@ class MongoSelfReportStore:
         self.client = MongoClient(settings.mongo_uri)
         self.db = self.client[settings.mongo_db_name]
         self.collection = self.db[settings.mongo_self_reports_collection]
+        self.analytics_collection = self.db[settings.mongo_analytics_entries_collection]
 
     def create_self_report(self, payload: SelfReportCreate) -> SelfReportRecord:
         now = datetime.now(timezone.utc)
@@ -38,6 +40,21 @@ class MongoSelfReportStore:
         document["_id"] = object_id
 
         self.collection.insert_one(document)
+
+        analytics_entry = build_self_report_analytics_entry(document)
+        if analytics_entry:
+            analytics_entry_result = self.analytics_collection.insert_one(
+                analytics_entry
+            )
+            analytics_entry_id = str(analytics_entry_result.inserted_id)
+            self.collection.update_one(
+                {"_id": object_id},
+                {"$set": {"analyticsEntryId": analytics_entry_id}},
+            )
+            record = record.model_copy(
+                update={"analyticsEntryId": analytics_entry_id}
+            )
+
         return record
 
     def list_self_reports(
@@ -122,6 +139,7 @@ class MongoSelfReportStore:
             "symptom_labels",
             "possible_condition_id",
             "possible_condition_label",
+            "analytics_entry_id",
             "notes",
             "latitude",
             "longitude",
@@ -151,6 +169,7 @@ class MongoSelfReportStore:
                 "|".join(report.symptomLabels),
                 report.possibleConditionId,
                 report.possibleConditionLabel,
+                report.analyticsEntryId,
                 report.notes,
                 report.location.latitude,
                 report.location.longitude,

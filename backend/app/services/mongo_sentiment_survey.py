@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import uuid4
 
 from fastapi import HTTPException
 from pymongo import DESCENDING, MongoClient
+from app.helpers.analytics_entry_helpers import build_survey_response_analytics_entry
 
 from app.core.config import settings
 from app.schemas.sentiment_survey import SentimentSurveyResponseCreate
@@ -22,6 +23,7 @@ class MongoSentimentSurveyStore:
         self.responses = self.db[
             settings.mongo_sentiment_survey_responses_collection
         ]
+        self.analytics_entries = self.db[settings.mongo_analytics_entries_collection]
 
     def list_public_surveys(self, platform: str = "mobile") -> list[dict]:
         normalized_platform = platform.strip().lower()
@@ -38,11 +40,13 @@ class MongoSentimentSurveyStore:
             else "publishToWebsite"
         )
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone(timedelta(hours=8)))
 
         query = {
-            publish_field: True,
-            "scheduledAt": {"$ne": ""},
+            "$or": [
+                {publish_field: True},
+                {publish_field: {"$exists": False}},
+            ]
         }
 
         rows = self.surveys.find(query).sort(
@@ -67,7 +71,7 @@ class MongoSentimentSurveyStore:
         *,
         survey_id: str,
         payload: SentimentSurveyResponseCreate,
-    ) -> None:
+    ) -> dict[str, str]:
         normalized_platform = payload.platform.strip().lower()
 
         if normalized_platform not in {"mobile", "website"}:
@@ -113,7 +117,7 @@ class MongoSentimentSurveyStore:
         now = datetime.now(timezone.utc)
         response_id = str(uuid4())
 
-        self.responses.insert_one({
+        response_document = {
             "id": response_id,
             "surveyId": survey_id,
             "answers": payload.answers,
@@ -122,7 +126,26 @@ class MongoSentimentSurveyStore:
             "region": payload.region or "",
             "metadata": payload.metadata or {},
             "createdAt": now,
-        })
+        }
+
+        self.responses.insert_one(response_document)
+
+        analytics_entry = build_survey_response_analytics_entry(
+            survey_document=survey,
+            response_document=response_document,
+        )
+
+        analytics_entry_id = None
+
+        if analytics_entry:
+            analytics_result = self.analytics_entries.insert_one(analytics_entry)
+            analytics_entry_id = str(analytics_result.inserted_id)
+
+            self.responses.update_one(
+                {"id": response_id},
+                {"$set": {"analyticsEntryId": analytics_entry_id}},
+            )
+
 
         self.surveys.update_one(
             {"id": survey_id},
@@ -132,13 +155,21 @@ class MongoSentimentSurveyStore:
             },
         )
 
+        return {
+            "message": "Sentiment Pulse survey response recorded",
+            "responseId": response_id,
+            "analyticsEntryId": analytics_entry_id or "",
+        }
+
     def _serialize_survey(self, row: dict, *, now: datetime) -> dict:
         survey = dict(row)
-        survey.pop("_id", None)
+        mongo_id = survey.pop("_id", None)
         survey.pop("createdBy", None)
         survey.pop("updatedBy", None)
 
-        survey["id"] = str(survey.get("id") or "")
+        survey["id"] = str(
+            survey.get("id") or survey.get("surveyId") or mongo_id or ""
+        )
         survey["title"] = str(survey.get("title") or "Untitled Survey")
         survey["subtitle"] = str(survey.get("subtitle") or "")
         survey["target"] = self._int_value(survey.get("target"), default=0)
@@ -164,9 +195,15 @@ class MongoSentimentSurveyStore:
         scheduled_at = survey.get("scheduledAt")
         scheduled_dt = self._parse_datetime(scheduled_at)
 
-        if scheduled_dt is not None and scheduled_dt <= now:
+        raw_status = str(survey.get("status") or "").strip().lower()
+
+        if raw_status == "published" or (
+            scheduled_dt is not None and scheduled_dt <= now
+        ):
             survey["status"] = "Published"
-            survey["publishedAt"] = scheduled_at
+            survey["publishedAt"] = self._string_date(
+                survey.get("publishedAt") or scheduled_at
+            )
         elif scheduled_dt is not None:
             survey["status"] = "Scheduled"
             survey["publishedAt"] = ""
@@ -183,7 +220,7 @@ class MongoSentimentSurveyStore:
     def _parse_datetime(self, value: Any) -> datetime | None:
         if isinstance(value, datetime):
             if value.tzinfo is None:
-                return value.replace(tzinfo=timezone.utc)
+                return value.replace(tzinfo=timezone(timedelta(hours=8)))
             return value
 
         if not value:
@@ -200,7 +237,7 @@ class MongoSentimentSurveyStore:
             return None
 
         if parsed.tzinfo is None:
-            return parsed.replace(tzinfo=timezone.utc)
+            return parsed.replace(tzinfo=timezone(timedelta(hours=8)))
 
         return parsed
 

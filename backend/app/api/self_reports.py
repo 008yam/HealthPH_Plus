@@ -3,16 +3,38 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Response
 
-from app.schemas.self_report import SelfReportCreate, SelfReportMapPin, SelfReportRecord
+from app.schemas.self_report import (
+    MobileSelfReportResponse,
+    SelfReportCreate,
+    SelfReportMapPin,
+    SelfReportRecord,
+)
 from app.services.mongo_self_report import store
 
 
 router = APIRouter(prefix="/mobile/self-reports", tags=["self-reports"])
 
 
-@router.post("", response_model=SelfReportRecord, status_code=201)
-def create_self_report(payload: SelfReportCreate) -> SelfReportRecord:
-    return store.create_self_report(payload)
+@router.post("", response_model=MobileSelfReportResponse, status_code=201)
+def create_mobile_self_report(payload: SelfReportCreate) -> MobileSelfReportResponse:
+    record = store.create_self_report(payload)
+    mobile_user = None
+
+    if record.reporter.reporterType == "registered":
+        mobile_user = {
+            "userId": record.reporter.userId,
+            "fullName": record.reporter.fullName,
+            "email": record.reporter.email,
+            "roleId": record.reporter.roleId,
+            "roleLabel": record.reporter.roleLabel,
+        }
+
+    return MobileSelfReportResponse(
+        message="Self-report submitted successfully",
+        item=record,
+        mobileUser=mobile_user,
+        analyticsEntryId=record.analyticsEntryId,
+    )
 
 
 @router.get("/mine", response_model=list[SelfReportRecord])

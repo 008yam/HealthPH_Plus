@@ -18,5 +18,4 @@ def submit_public_survey_response(
     survey_id: str,
     payload: SentimentSurveyResponseCreate,
 ) -> dict[str, str]:
-    store.submit_response(survey_id=survey_id, payload=payload)
-    return {"message": "Sentiment Pulse survey response recorded"}
+    return store.submit_response(survey_id=survey_id, payload=payload)

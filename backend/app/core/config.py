@@ -51,6 +51,8 @@ class Settings:
 
     mongo_health_literacy_analytics_collection: str = "analytics_events"
 
+    mongo_analytics_entries_collection: str = "analytics_entries"
+
     mongo_sentiment_surveys_collection: str = "surveys"
 
     mongo_sentiment_survey_responses_collection: str = "survey_responses"

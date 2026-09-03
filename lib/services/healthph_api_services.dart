@@ -114,10 +114,29 @@ class HealthPhApiService {
       "(${response.statusCode}): ${response.body}",
     );
   }
-  Future<void> registerMobileUser(UserProfile profile) async {
+
+  UserProfile _profileFromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      fullName: json["fullName"] as String? ?? "",
+      email: json["email"] as String? ?? "",
+      roleId: json["roleId"] as String? ?? "user",
+      role: json["roleLabel"] as String? ?? json["role"] as String? ?? "User",
+      regionCode: json["regionCode"] as String? ?? "",
+      regionLabel: json["regionLabel"] as String? ?? "",
+      province: json["province"] as String? ?? "",
+      city: json["city"] as String? ?? "",
+      barangay: json["barangay"] as String? ?? "",
+    );
+  }
+
+  Future<UserProfile> registerMobileUser(
+    UserProfile profile,
+    String password,
+  ) async {
     final payload = {
       "fullName": profile.fullName,
       "email": profile.email,
+      "password": password,
       "roleId": "user",
       "roleLabel": "User",
       "regionCode": profile.regionCode,
@@ -135,7 +154,28 @@ class HealthPhApiService {
     );
 
     if (response.statusCode != 201) {
-      throw Exception("Failed to save mobile user to MongoDB: ${response.body}");
+      throw Exception(
+        "Failed to save mobile user to MongoDB: ${response.body}",
+      );
     }
+
+    return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  }
+
+  Future<UserProfile> loginMobileUser({
+    required String email,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/mobile/users/login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email, "password": password}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to login: ${response.body}");
+    }
+
+    return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);
   }
 }

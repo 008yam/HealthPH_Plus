@@ -5,10 +5,10 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-
 class MobileUserCreate(BaseModel):
     fullName: str
     email: str
+    password: str
     roleId: Literal["user"] = "user"
     roleLabel: str = "User"
     regionCode: str
@@ -19,7 +19,21 @@ class MobileUserCreate(BaseModel):
     source: Literal["mobile_registration"] = "mobile_registration"
 
 
-class MobileUserRecord(MobileUserCreate):
+class MobileUserLogin(BaseModel):
+    email: str
+    password: str
+
+class MobileUserRecord(BaseModel):
     id: str
+    fullName: str
+    email: str
+    roleId: Literal["user"] = "user"
+    roleLabel: str
+    regionCode: str
+    regionLabel: str
+    province: str
+    city: str
+    barangay: str
+    source: Literal["mobile_registration"] = "mobile_registration"
     createdAt: datetime
     updatedAt: datetime

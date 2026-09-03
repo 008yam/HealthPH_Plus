@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -50,9 +50,17 @@ class SelfReportCreate(BaseModel):
 
 class SelfReportRecord(SelfReportCreate):
     id: str
+    analyticsEntryId: str | None = None
     status: ReportStatus = "submitted"
     updatedAt: datetime
     syncedAt: datetime | None = None
+
+
+class MobileSelfReportResponse(BaseModel):
+    message: str
+    item: SelfReportRecord
+    mobileUser: dict[str, Any] | None = None
+    analyticsEntryId: str | None = None
 
 
 class SelfReportMapPin(BaseModel):

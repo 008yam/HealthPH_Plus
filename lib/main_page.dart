@@ -84,9 +84,15 @@ class _MainPageState extends State<MainPage> {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(Responsive.pagePadding(context)), //EdgeInsets.fromLTRB
-              child: Column(
-                children: [
+              padding: EdgeInsets.fromLTRB(
+                Responsive.pagePadding(context),
+                Responsive.pagePadding(context),
+                Responsive.pagePadding(context),
+                92,
+                ),
+                child: _HomeContentSurface(
+                  child: Column(
+                    children: [
                   // ====================================================
                   // 1. HEADER SECTION
                   // ====================================================
@@ -380,15 +386,52 @@ class _MainPageState extends State<MainPage> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-          ],
-      ),
+        ),
+      ],
+    ),
       bottomNavigationBar: const FloatingNavBar(selectedIndex: 1),
+    );
+  }
+}
+
+class _HomeContentSurface extends StatelessWidget {
+  final Widget child;
+
+  const _HomeContentSurface({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.isTablet(context) ? 640 : 430,
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(Responsive.isTablet(context) ? 24 : 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.97),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.75),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
     );
   }
 }
@@ -399,9 +442,9 @@ class _MainPageState extends State<MainPage> {
 
 BoxDecoration cardDecoration() {
   return BoxDecoration(
-    color: Colors.white,
+    color: AppTheme.surfaceSoft,
     border: Border.all(color: AppTheme.border),
-    borderRadius: BorderRadius.circular(8),
+    borderRadius: BorderRadius.circular(12),
   );
 }
 
@@ -530,9 +573,9 @@ class QuickActionTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            border: Border.all(color: Colors.black),
-            borderRadius: BorderRadius.circular(5),
+            color: Colors.white,
+            border: Border.all(color: AppTheme.border),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             children: [

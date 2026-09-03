@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'data_collection_page.dart';
 
-import '../widgets/coach_mark.dart';
+import '../models/mobile_survey.dart';
+import '../services/api_config.dart';
+import '../services/sentiment_survey_service.dart';
 import 'sentiment_pulse_page.dart';
+import '../widgets/coach_mark.dart';
 import '../login_page.dart';
 import '../data/app_taxonomy.dart';
 import '../services/profile_store.dart';
@@ -26,6 +29,16 @@ class _SettingsPageState extends State<SettingsPage> {
   final surveyKey = GlobalKey();
   final languageKey = GlobalKey();
 
+  void _logout() {
+    ProfileStore.instance.clearProfile();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,8 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
           CoachMarkStep(
             targetKey: surveyKey,
             title: "Mobile Surveys",
-            description:
-                "Answer active surveys published for mobile users.",
+            description: "Answer active surveys published for mobile users.",
             icon: Icons.poll_outlined,
             color: AppTheme.info,
           ),
@@ -146,6 +158,16 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    _SettingsTile(
+                      icon: Icons.logout_rounded,
+                      title: "Logout",
+                      subtitle: "Clear this session and return to login",
+                      isTablet: isTablet,
+                      accentColor: AppTheme.highRisk,
+                      surfaceColor: const Color(0xFFFFF1F2),
+                      onTap: _logout,
+                    ),
                   ],
                 ),
               ),
@@ -235,10 +257,10 @@ class _ProfileCard extends StatelessWidget {
                 colors: isGuest
                     ? [surfaceStart, surfaceEnd]
                     : [
-                      Colors.white,
-                      const Color(0xFFEFF4FF),
-                      const Color(0xFFFFF7DC),
-                    ],
+                        Colors.white,
+                        const Color(0xFFEFF4FF),
+                        const Color(0xFFFFF7DC),
+                      ],
                 stops: isGuest ? null : const [0, 0.66, 1.0],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -461,31 +483,27 @@ class _MindfulGooeyAccentBar extends StatefulWidget {
 
 class _MindfulGooeyAccentBarState extends State<_MindfulGooeyAccentBar>
     with SingleTickerProviderStateMixin {
-      late final AnimationController controller;
+  late final AnimationController controller;
 
-      @override
-      void initState() {
-        super.initState();
-        controller = AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 2600),
-        )..repeat(reverse: true);
-      }
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat(reverse: true);
+  }
 
-      @override
-      void dispose() {
-        controller.dispose();
-        super.dispose();
-      }
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
-      @override
-      Widget build(BuildContext context) {
-        final colors = widget.isGuest
-            ? [
-            Colors.grey.shade300,
-            Colors.grey.shade100,
-            Colors.grey.shade300,
-          ]
+  @override
+  Widget build(BuildContext context) {
+    final colors = widget.isGuest
+        ? [Colors.grey.shade300, Colors.grey.shade100, Colors.grey.shade300]
         : [
             widget.accent.withValues(alpha: 0.22),
             AppTheme.info.withValues(alpha: 0.42),
@@ -493,26 +511,26 @@ class _MindfulGooeyAccentBarState extends State<_MindfulGooeyAccentBar>
             widget.accent.withValues(alpha: 0.22),
           ];
 
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(999),
-        child: SizedBox(
-          width: double.infinity,
-          height: widget.isTablet ? 9 : 7,
-          child: AnimatedBuilder(
-            animation: controller,
-            builder: (context, _) {
-              final shift = -1.0 + (controller.value * 2.0);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: SizedBox(
+        width: double.infinity,
+        height: widget.isTablet ? 9 : 7,
+        child: AnimatedBuilder(
+          animation: controller,
+          builder: (context, _) {
+            final shift = -1.0 + (controller.value * 2.0);
 
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment(-1.0 + shift, 0),
-                    end: Alignment(1.0 + shift, 0),
-                    colors: colors,
-                  ),
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment(-1.0 + shift, 0),
+                  end: Alignment(1.0 + shift, 0),
+                  colors: colors,
                 ),
-                child : const SizedBox.expand(),
-              );
+              ),
+              child: const SizedBox.expand(),
+            );
           },
         ),
       ),
@@ -586,72 +604,142 @@ class _SelfReportButton extends StatelessWidget {
   }
 }
 
-class _SurveyButton extends StatelessWidget {
+class _SurveyButton extends StatefulWidget {
   final bool isTablet;
 
   const _SurveyButton({required this.isTablet});
 
   @override
-  Widget build(BuildContext context) {
-    const accent = AppTheme.info;
+  State<_SurveyButton> createState() => _SurveyButtonState();
+}
 
-    return Material(
-      color: const Color(0xFFEAF6FF),
-      borderRadius: BorderRadius.circular(16),
-      elevation: 4,
-      shadowColor: Colors.black26,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const SentimentPulsePage(initialTabIndex: 3),
-            ),
-          );
-        },
-        child: Container(
-          height: isTablet ? 155 : 125,
-          padding: EdgeInsets.symmetric(horizontal: isTablet ? 28 : 20),
-          decoration: BoxDecoration(
-            border: Border.all(color: accent, width: 1.4),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: isTablet ? 68 : 56,
-                height: isTablet ? 68 : 56,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(999),
+class _SurveyButtonState extends State<_SurveyButton> {
+  late Future<List<MobileSurvey>> surveyFuture;
+
+  final surveyService = SentimentSurveyService(baseUrl: ApiConfig.baseUrl);
+
+  @override
+  void initState() {
+    super.initState();
+    surveyFuture = surveyService.fetchPublicSurveys();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<MobileSurvey>>(
+      future: surveyFuture,
+      builder: (context, snapshot) {
+        final count = snapshot.data?.length ?? 0;
+        final hasSurvey = count > 0;
+
+        return Material(
+          color: hasSurvey ? const Color(0xFFEAF6FF) : const Color(0xFFF4F7FB),
+          borderRadius: BorderRadius.circular(16),
+          elevation: hasSurvey ? 5 : 2,
+          shadowColor: Colors.black26,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SentimentPulsePage(initialTabIndex: 3),
                 ),
-                child: Icon(
-                  Icons.poll_outlined,
-                  color: accent,
-                  size: isTablet ? 36 : 30,
-                ),
+              );
+            },
+            child: Container(
+              height: widget.isTablet ? 155 : 125,
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.isTablet ? 28 : 20,
               ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Text(
-                  "Mobile Surveys",
-                  style: TextStyle(
-                    color: AppTheme.text,
-                    fontSize: isTablet ? 28 : 23,
-                    fontWeight: FontWeight.bold,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: hasSurvey ? AppTheme.info : AppTheme.border,
+                  width: 1.4,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: widget.isTablet ? 68 : 56,
+                        height: widget.isTablet ? 68 : 56,
+                        decoration: BoxDecoration(
+                          color: AppTheme.info.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Icon(
+                          Icons.poll_outlined,
+                          color: AppTheme.info,
+                          size: widget.isTablet ? 36 : 30,
+                        ),
+                      ),
+                      if (hasSurvey)
+                        Positioned(
+                          right: -4,
+                          top: -4,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: AppTheme.warning,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              "$count",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Mobile Surveys",
+                          style: TextStyle(
+                            color: AppTheme.text,
+                            fontSize: widget.isTablet ? 28 : 23,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          hasSurvey
+                              ? "$count survey ready to answer"
+                              : "Check available surveys",
+                          style: TextStyle(
+                            color: hasSurvey
+                                ? AppTheme.info
+                                : AppTheme.mutedText,
+                            fontSize: widget.isTablet ? 15 : 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: hasSurvey ? AppTheme.info : AppTheme.mutedText,
+                    size: widget.isTablet ? 32 : 28,
+                  ),
+                ],
               ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: accent,
-                size: isTablet ? 32 : 28,
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -661,6 +749,8 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool isTablet;
+  final Color accentColor;
+  final Color surfaceColor;
   final VoidCallback onTap;
 
   const _SettingsTile({
@@ -668,13 +758,15 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.isTablet,
+    this.accentColor = AppTheme.primary,
+    this.surfaceColor = const Color(0xFFF8FAFF),
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFF8FAFF),
+      color: surfaceColor,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -686,7 +778,7 @@ class _SettingsTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, color: AppTheme.primary),
+              Icon(icon, color: accentColor),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

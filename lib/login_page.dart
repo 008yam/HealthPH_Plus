@@ -125,6 +125,8 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final wasRegistering = isRegistering;
+
     if (isRegistering &&
         (selectedRegion == null ||
             (!isNcrSelected && selectedProvince == null) ||
@@ -136,35 +138,54 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    if (isRegistering) {
-      final profile = UserProfile(
-        fullName: fullNameController.text.trim(),
-        email: emailController.text.trim(),
-        roleId: "user",
-        role: "User",
-        regionCode: selectedRegion!.code,
-        regionLabel: selectedRegion!.label,
-        province: selectedProvince?.name ?? selectedRegion!.name,
-        city: selectedCity!.name,
-        barangay: selectedBarangay!.name,
+    try {
+      final api = HealthPhApiService(baseUrl: "http://127.0.0.1:8000");
+      final UserProfile savedProfile;
+
+      if (wasRegistering) {
+        final profile = UserProfile(
+          fullName: fullNameController.text.trim(),
+          email: emailController.text.trim(),
+          roleId: "user",
+          role: "User",
+          regionCode: selectedRegion!.code,
+          regionLabel: selectedRegion!.label,
+          province: selectedProvince?.name ?? selectedRegion!.name,
+          city: selectedCity!.name,
+          barangay: selectedBarangay!.name,
+        );
+
+        savedProfile = await api.registerMobileUser(
+          profile,
+          passwordController.text.trim(),
+        );
+      } else {
+        savedProfile = await api.loginMobileUser(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+      }
+
+      ProfileStore.instance.saveProfile(savedProfile);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(wasRegistering ? "Account Created." : "Logged in."),
+        ),
       );
 
-      ProfileStore.instance.saveProfile(profile);
+      _goToLanguageSelection();
+    } catch (error) {
+      if (!mounted) return;
 
-      await HealthPhApiService(
-        baseUrl: "http://127.0.0.1:8000",
-      ).registerMobileUser(profile);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst("Exception: ", "")),
+        ),
+      );
     }
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(isRegistering ? "Account Created." : "Logging in ..."),
-      ),
-    );
-
-    _goToLanguageSelection();
   }
 
   void _showPasswordResetDialog() {

@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
+import secrets
+from fastapi import HTTPException
+
 from datetime import datetime, timezone
 
 from bson import ObjectId
 from pymongo import MongoClient
 
 from app.core.config import settings
-from app.schemas.mobile_user import MobileUserCreate, MobileUserRecord
+from app.schemas.mobile_user import MobileUserCreate, MobileUserLogin, MobileUserRecord
+
 
 class MongoMobileUserStore:
     def __init__(self) -> None:
@@ -20,16 +26,35 @@ class MongoMobileUserStore:
     def create_mobile_users(self, payload: MobileUserCreate) -> MobileUserRecord:
         now = datetime.now(timezone.utc)
         object_id = ObjectId()
+        email = payload.email.strip().lower()
 
-        data = payload.model_dump()
+        data = payload.model_dump(exclude={"password"})
         data["roleId"] = "user"
-        data['roleLabel'] = "User"
+        data["roleLabel"] = "User"
+        data["email"] = email
 
-        existing = self.collection.find_one({"email": payload.email.lower()})
+        existing = self.collection.find_one({"email": email})
         if existing:
-            existing["_id"] = str(existing["_id"])
-            existing["id"] = existing.pop("_id")
-            return MobileUserRecord(**existing)
+            update_data = {
+                **data,
+                "updatedAt": now,
+            }
+
+            if not existing.get("passwordHash"):
+                update_data["passwordHash"] = self._hash_password(payload.password)
+            elif not self._verify_password(payload.password, existing["passwordHash"]):
+                raise HTTPException(
+                    status_code=409,
+                    detail="Email already exists. Please login using the original password.",
+                )
+
+            self.collection.update_one(
+                {"_id": existing["_id"]},
+                {"$set": update_data},
+            )
+
+            updated = self.collection.find_one({"_id": existing["_id"]})
+            return self._record_from_document(updated)
 
         record = MobileUserRecord(
             **data,
@@ -40,9 +65,56 @@ class MongoMobileUserStore:
 
         document = record.model_dump(mode="python")
         document["_id"] = object_id
-        document["email"] = document["email"].lower()
+        document["passwordHash"] = self._hash_password(payload.password)
 
         self.collection.insert_one(document)
         return record
+
+    def login_mobile_user(self, payload: MobileUserLogin) -> MobileUserRecord:
+        user = self.collection.find_one({"email": payload.email.strip().lower()})
+
+        if not user or not self._verify_password(
+            payload.password,
+            user.get("passwordHash", ""),
+        ):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        return self._record_from_document(user)
+
+    def _record_from_document(self, document: dict | None) -> MobileUserRecord:
+        if document is None:
+            raise HTTPException(status_code=404, detail="Mobile user not found")
+
+        data = dict(document)
+        data["id"] = str(data.pop("_id"))
+        data.pop("passwordHash", None)
+
+        return MobileUserRecord(**data)
+
+    def _hash_password(self, password: str) -> str:
+        salt = secrets.token_hex(16)
+        password_hash = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt.encode("utf-8"),
+            100000,
+        ).hex()
+        return f"{salt}:{password_hash}"
+
+    def _verify_password(self, password: str, stored_password: str) -> bool:
+        try:
+            salt, saved_hash = stored_password.split(":", 1)
+        except ValueError:
+            return False
+
+        password_hash = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt.encode("utf-8"),
+            100000,
+        ).hex()
+
+        return hmac.compare_digest(password_hash, saved_hash)
+
 
 store = MongoMobileUserStore()
