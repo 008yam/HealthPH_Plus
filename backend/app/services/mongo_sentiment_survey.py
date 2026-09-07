@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from uuid import uuid4
 
+from app.services.id_sequence import next_readable_id
 from fastapi import HTTPException
 from pymongo import DESCENDING, MongoClient
 from app.helpers.analytics_entry_helpers import build_survey_response_analytics_entry
@@ -71,7 +71,7 @@ class MongoSentimentSurveyStore:
         *,
         survey_id: str,
         payload: SentimentSurveyResponseCreate,
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
         normalized_platform = payload.platform.strip().lower()
 
         if normalized_platform not in {"mobile", "website"}:
@@ -115,37 +115,78 @@ class MongoSentimentSurveyStore:
             )
 
         now = datetime.now(timezone.utc)
-        response_id = str(uuid4())
+        survey_code = self._survey_code(survey_id)
 
-        response_document = {
-            "id": response_id,
-            "surveyId": survey_id,
-            "answers": payload.answers,
-            "platform": normalized_platform,
-            "visitorId": payload.visitorId,
-            "region": payload.region or "",
-            "metadata": payload.metadata or {},
-            "createdAt": now,
+        questions = serialized.get("questions") or []
+        question_lookup = {
+            str(question.get("id") or ""): (index, question)
+            for index, question in enumerate(questions, start=1)
         }
 
-        self.responses.insert_one(response_document)
+        response_ids = {}
+        analytics_entry_ids = {}
 
-        analytics_entry = build_survey_response_analytics_entry(
-            survey_document=survey,
-            response_document=response_document,
-        )
+        for raw_question_id, answer in payload.answers.items():
+            if not self._has_answer_value(answer):
+                continue
 
-        analytics_entry_id = None
-
-        if analytics_entry:
-            analytics_result = self.analytics_entries.insert_one(analytics_entry)
-            analytics_entry_id = str(analytics_result.inserted_id)
-
-            self.responses.update_one(
-                {"id": response_id},
-                {"$set": {"analyticsEntryId": analytics_entry_id}},
+            question_id = str(raw_question_id)
+            question_number, question = question_lookup.get(
+                question_id,
+                (len(response_ids) + 1, {}),
             )
 
+            question_code = self._question_code(question_id, question_number)
+
+            response_id = next_readable_id(
+                self.db,
+                key=f"survey_responses:{survey_code}:{question_code}",
+                prefix=f"RES-{survey_code}-{question_code}",
+                width=4,
+            )
+
+            response_document = {
+                "id": response_id,
+                "surveyId": survey_id,
+                "questionId": question_id,
+                "questionNumber": question_number,
+                "questionText": question.get("title") or "",
+                "answer": answer,
+                "answers": {question_id: answer},
+                "platform": normalized_platform,
+                "visitorId": payload.visitorId,
+                "region": payload.region or "",
+                "language": payload.language or "",
+                "userId": payload.userId or "",
+                "userLocation": payload.userLocation or {},
+                "metadata": payload.metadata or {},
+                "createdAt": now,
+                "dateAnswered": now,
+            }
+
+            self.responses.insert_one(response_document)
+            response_ids[question_id] = response_id
+
+            analytics_entry = build_survey_response_analytics_entry(
+                survey_document=survey,
+                response_document=response_document,
+            )
+
+            if analytics_entry:
+                analytics_result = self.analytics_entries.insert_one(analytics_entry)
+                analytics_entry_id = str(analytics_result.inserted_id)
+                analytics_entry_ids[question_id] = analytics_entry_id
+
+                self.responses.update_one(
+                    {"id": response_id},
+                    {"$set": {"analyticsEntryId": analytics_entry_id}},
+                )
+
+        if not response_ids:
+            raise HTTPException(
+                status_code=400,
+                detail="answers must not be empty",
+            )
 
         self.surveys.update_one(
             {"id": survey_id},
@@ -157,9 +198,40 @@ class MongoSentimentSurveyStore:
 
         return {
             "message": "Sentiment Pulse survey response recorded",
-            "responseId": response_id,
-            "analyticsEntryId": analytics_entry_id or "",
+            "responseIds": response_ids,
+            "analyticsEntryIds": analytics_entry_ids,
         }
+
+    def _survey_code(self, survey_id: str) -> str:
+        text = str(survey_id or "").strip()
+        return text.replace("-", "")
+
+    def _question_code(self, question_id: str, fallback_number: int) -> str:
+        text = str(question_id or "").strip()
+
+        if text.startswith("Q-") and "-" in text:
+            last_part = text.rsplit("-", 1)[-1]
+
+            if last_part.isdigit():
+                return f"Q{int(last_part):02d}"
+
+        return f"Q{fallback_number:02d}"
+
+    def _has_answer_value(self, value: Any) -> bool:
+        if value is None:
+            return False
+
+        if isinstance(value, str):
+            return bool(value.strip())
+
+        if isinstance(value, dict):
+            return bool(value)
+
+        if isinstance(value, list):
+            return bool(value)
+
+        return True
+
 
     def _serialize_survey(self, row: dict, *, now: datetime) -> dict:
         survey = dict(row)

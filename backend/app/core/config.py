@@ -59,5 +59,6 @@ class Settings:
 
     mongo_mobile_users_collection: str = "mobile_users"
 
+    mongo_id_counters_collection: str = "id_counters"
 
 settings = Settings()

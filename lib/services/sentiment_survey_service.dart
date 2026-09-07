@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'profile_store.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,14 +38,28 @@ class SentimentSurveyService {
     required String surveyId,
     required Map<String, dynamic> answers,
     String? region,
+    String? userId,
+    Map<String, dynamic>? userLocation,
     Map<String, dynamic>? metadata,
   }) async {
     final visitorId = await _getVisitorId();
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString("healthph_selected_language");
+    final profileLanguage = ProfileStore.instance.profile?.language;
 
+    final language = profileLanguage?.isNotEmpty == true
+    ? profileLanguage!
+    : savedLanguage?.isNotEmpty == true
+        ? savedLanguage!
+        : "English";
+        
     final payload = {
       "answers": answers,
       "platform": "mobile",
       "visitorId": visitorId,
+      "language": language,
+      "userId": userId,
+      "userLocation": userLocation ?? {},
       "region": region,
       "metadata": metadata ?? {},
     };

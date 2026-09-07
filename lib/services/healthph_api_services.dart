@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../data/app_taxonomy.dart';
@@ -32,9 +33,18 @@ class HealthPhApiService {
         AppTaxonomy.isGuestRole(profile.roleId) ||
         profile.email == AppTaxonomy.guestEmail;
 
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString(("healhtph_selected_language"));
+
+    final language = profile?.language.isNotEmpty == true
+        ? profile!.language
+        : savedLanguage?.isNotEmpty == true
+            ? savedLanguage!
+            : "English";
+
     final payload = {
       "reporter": {
-        "userId": null,
+        "userId": isGuest ? null : profile.id,
         "reporterType": isGuest ? "guest" : "registered",
         "roleId": isGuest ? "guest" : "user",
         "roleLabel": isGuest ? "Guest" : "User",
@@ -59,6 +69,7 @@ class HealthPhApiService {
       "symptomLabels": report.symptoms,
       "possibleConditionId": report.possibleConditionId,
       "possibleConditionLabel": report.possibleCondition,
+      "language": language,
       "notes": report.notes,
       "source": "mobile_self_report",
       "createdAt": report.createdAt.toIso8601String(),
@@ -117,10 +128,12 @@ class HealthPhApiService {
 
   UserProfile _profileFromJson(Map<String, dynamic> json) {
     return UserProfile(
+      id: json["id"] as String?,
       fullName: json["fullName"] as String? ?? "",
       email: json["email"] as String? ?? "",
       roleId: json["roleId"] as String? ?? "user",
       role: json["roleLabel"] as String? ?? json["role"] as String? ?? "User",
+      language: json["language"] as String? ?? "English",
       regionCode: json["regionCode"] as String? ?? "",
       regionLabel: json["regionLabel"] as String? ?? "",
       province: json["province"] as String? ?? "",
@@ -139,6 +152,7 @@ class HealthPhApiService {
       "password": password,
       "roleId": "user",
       "roleLabel": "User",
+      "language": profile.language,
       "regionCode": profile.regionCode,
       "regionLabel": profile.regionLabel,
       "province": profile.province,
@@ -174,6 +188,23 @@ class HealthPhApiService {
 
     if (response.statusCode != 200) {
       throw Exception("Failed to login: ${response.body}");
+    }
+
+    return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  }
+
+  Future<UserProfile> updatedMobileUserLanguage({
+    required String userId,
+    required String language,
+  }) async {
+    final response = await http.patch(
+      Uri.parse("$baseUrl/api/mobile/users/$userId/language"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"language": language}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to update language: ${response.body}");
     }
 
     return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);

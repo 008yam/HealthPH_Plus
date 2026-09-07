@@ -41,21 +41,9 @@ def _clean_text_value(value: Any) -> str:
 
     return str(value).strip()
 
-
-def _is_analyzable_text(value: Any) -> bool:
-    text = _clean_text_value(value)
-
-    if not text:
-        return False
-
-    if text.isnumeric():
-        return False
-
-    return len(text) >= 3
-
-
 def build_self_report_analytics_entry(report_document: dict[str, Any]) -> dict[str, Any] | None:
-    report_id = str(report_document.get("_id") or report_document.get("id") or "")
+    report_id = _clean_text_value(report_document.get("id") or
+                                  report_document.get("_id"))
     notes = _clean_text_value(report_document.get("notes"))
     symptom_labels = report_document.get("symptomLabels") or []
     possible_condition = _clean_text_value(
@@ -79,6 +67,8 @@ def build_self_report_analytics_entry(report_document: dict[str, Any]) -> dict[s
     location = report_document.get("location") or {}
     created_at = report_document.get("createdAt") or get_ph_datetime()
     collected_at = report_document.get("syncedAt") or created_at
+    language = _clean_text_value(report_document.get("language")) or "English"
+
     raw_location = _clean_text_value(location.get("geocodedAddress"))
 
     if not raw_location:
@@ -98,7 +88,7 @@ def build_self_report_analytics_entry(report_document: dict[str, Any]) -> dict[s
         "source_id": report_id,
         "report_id": report_id,
         "text": text,
-        "language": "",
+        "language": language,
         "source_platform": _clean_text_value(report_document.get("source")),
         "location": {
             "raw": raw_location,
@@ -137,16 +127,33 @@ def build_self_report_analytics_entry(report_document: dict[str, Any]) -> dict[s
         "analyzed_at": None,
     }
 
+def _is_analyzable_text(value: Any) -> bool:
+    text = _clean_text_value(value)
+
+    if not text:
+        return False
+
+    if text.isnumeric():
+        return False
+
+    return len(text) >= 3
+
+
 def build_survey_response_analytics_entry(
-    *,
-    survey_document: dict[str, Any],
-    response_document: dict[str, Any],
-) -> dict[str, Any] | None:
+        *,
+        survey_document: dict[str, Any],
+        response_document: dict[str, Any],
+)-> dict[str, Any] | None:
     response_id = _clean_text_value(response_document.get("id"))
     survey_id = _clean_text_value(response_document.get("surveyId"))
     answers = response_document.get("answers") or {}
     metadata = response_document.get("metadata") or {}
+    user_location = response_document.get("userLocation") or {}
+
+
     created_at = response_document.get("createdAt") or get_ph_datetime()
+    language = _clean_text_value(response_document.get("language"))
+    user_id = _clean_text_value(response_document.get("userId"))
 
     question_lookup = {
         _clean_text_value(question.get("id")): question
@@ -154,12 +161,19 @@ def build_survey_response_analytics_entry(
         if isinstance(question, dict)
     }
 
+    answer_payload = {}
     answer_lines = []
 
     for question_id, answer in answers.items():
         question = question_lookup.get(question_id, {})
         question_title = _clean_text_value(question.get("title") or question_id)
         answer_text = _clean_text_value(answer)
+
+        answer_payload[question_id] = {
+            "question": question_title,
+            "value": answer,
+            "text": answer_text,
+        }
 
         if answer_text:
             answer_lines.append(f"{question_title}: {answer_text}")
@@ -170,22 +184,25 @@ def build_survey_response_analytics_entry(
         return None
 
     return {
-        "source_type": "sentiment_survey_response",
+        "source_type": "survey_response",
+        "source_collection": "survey_responses",
         "source_id": response_id,
+        "id": response_id,
+        "survey_response_id": response_id,
         "survey_id": survey_id,
-        "response_id": response_id,
+        "language": language,
+        "answer": answer_payload,
         "text": text,
-        "language": "",
-        "source_platform": _clean_text_value(response_document.get("platform")),
-        "location": {
-            "raw": _clean_text_value(response_document.get("region")),
-            "region": _clean_text_value(response_document.get("region")),
-            "province": _clean_text_value(metadata.get("province")),
-            "city": _clean_text_value(metadata.get("city")),
-            "barangay": _clean_text_value(metadata.get("barangay")),
-            "latitude": None,
-            "longitude": None,
+        "user_id": user_id,
+        "user_location": {
+            "regionCode": _clean_text_value(user_location.get("regionCode")),
+            "regionLabel": _clean_text_value(user_location.get("regionLabel")),
+            "province": _clean_text_value(user_location.get("province")),
+            "city": _clean_text_value(user_location.get('city')),
+            "barangay": _clean_text_value(user_location.get("barangay")),
         },
+        "date_answered": created_at,
+        "source_platform": _clean_text_value(response_document.get("platform")),
         "event_time": str(created_at),
         "collected_at": str(created_at),
         "analysis_status": "pending",
@@ -205,7 +222,6 @@ def build_survey_response_analytics_entry(
             "survey_title": _clean_text_value(survey_document.get("title")),
             "visitor_id": response_document.get("visitorId"),
             "role_id": metadata.get("roleId", ""),
-            "answers": answers,
         },
         "created_at": created_at,
         "updated_at": None,

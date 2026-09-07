@@ -500,11 +500,17 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
     }
 
     final profile = ProfileStore.instance.profile;
-    final metadata = <String, dynamic>{
-      "roleId": profile?.roleId,
+
+    final userLocation = <String, dynamic>{
+      "regionCode": profile?.regionCode,
+      "regionLabel": profile?.regionLabel,
       "province": profile?.province,
       "city": profile?.city,
       "barangay": profile?.barangay,
+    }..removeWhere((_, value) => value == null || value == "");
+
+    final metadata = <String, dynamic>{
+      "roleId": profile?.roleId,
     }..removeWhere((_, value) => value == null || value == "");
 
     setState(() => isSubmitting = true);
@@ -514,6 +520,8 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
         surveyId: widget.survey.id,
         answers: cleanedAnswers,
         region: profile?.regionLabel,
+        userId: profile?.id,
+        userLocation: userLocation,
         metadata: metadata,
       );
 

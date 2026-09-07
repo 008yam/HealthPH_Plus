@@ -8,6 +8,8 @@ import 'services/profile_store.dart';
 import 'pages/language_selection_page.dart';
 import 'theme/responsive.dart';
 import 'data/app_taxonomy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'pages/intro_tutorial_page.dart';
 
 class LoginPage extends StatefulWidget {
   final bool startAsRegistering;
@@ -30,6 +32,17 @@ class _LoginPageState extends State<LoginPage> {
   bool obscurePassword = true;
   bool locationsLoaded = false;
   AppOption selectedRole = AppTaxonomy.roles.first;
+
+  String? selectedLanguage;
+
+  final List<String> languages = const [
+    "English",
+    "Filipino",
+    "Cebuano",
+    "Ilocano",
+    "Hiligaynon",
+  ];
+
   LocationOption? selectedRegion;
   LocationOption? selectedProvince;
   LocationOption? selectedCity;
@@ -111,6 +124,7 @@ class _LoginPageState extends State<LoginPage> {
         email: AppTaxonomy.guestEmail,
         roleId: AppTaxonomy.guestRole.id,
         role: AppTaxonomy.guestRole.label,
+        language: selectedLanguage ?? "English",
         regionCode: "",
         regionLabel: "",
         province: "",
@@ -150,6 +164,7 @@ class _LoginPageState extends State<LoginPage> {
           role: "User",
           regionCode: selectedRegion!.code,
           regionLabel: selectedRegion!.label,
+          language: selectedLanguage!,
           province: selectedProvince?.name ?? selectedRegion!.name,
           city: selectedCity!.name,
           barangay: selectedBarangay!.name,
@@ -168,6 +183,14 @@ class _LoginPageState extends State<LoginPage> {
 
       ProfileStore.instance.saveProfile(savedProfile);
 
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        "healthph_selected_language",
+        savedProfile.language.isNotEmpty
+            ? savedProfile.language
+            : selectedLanguage ?? "English",
+      );
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -176,7 +199,12 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
-      _goToLanguageSelection();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => wasRegistering ? const IntroTutorialPage() : const MainPage(),
+        ),
+      );
     } catch (error) {
       if (!mounted) return;
 
@@ -424,6 +452,33 @@ class _LoginPageState extends State<LoginPage> {
                               });
                             },
                           ),
+
+                          const SizedBox(height: 12),
+                          
+                          DropdownButtonFormField<String>(
+                            initialValue: selectedLanguage,
+                            decoration: const InputDecoration(
+                              labelText: "Preferred Language",
+                              prefixIcon: Icon(Icons.language),
+                            ),
+                            items: languages.map((language) {
+                              return DropdownMenuItem<String>(
+                                value: language,
+                                child: Text(language),
+                              );
+                            }).toList(),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return "Select your preferred language";
+                              }
+                              return null;
+                            },
+                            onChanged: (value) {
+                              setState(() {
+                                selectedLanguage = value;
+                              });
+                            },
+                          ),
                           const SizedBox(height: 12),
 
                           //DROPDOWN
@@ -512,6 +567,8 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ],
                         ],
+
+                        const SizedBox(height: 12),
 
                         if (!isRegistering) ...[
                           const SizedBox(height: 8),

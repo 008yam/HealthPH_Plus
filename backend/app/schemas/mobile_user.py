@@ -11,6 +11,7 @@ class MobileUserCreate(BaseModel):
     password: str
     roleId: Literal["user"] = "user"
     roleLabel: str = "User"
+    language: str = "English"
     regionCode: str
     regionLabel: str
     province: str
@@ -18,6 +19,8 @@ class MobileUserCreate(BaseModel):
     barangay: str
     source: Literal["mobile_registration"] = "mobile_registration"
 
+class MobileUserLanguageUpdate(BaseModel):
+    language: str
 
 class MobileUserLogin(BaseModel):
     email: str
@@ -31,6 +34,7 @@ class MobileUserRecord(BaseModel):
     roleLabel: str
     regionCode: str
     regionLabel: str
+    language: str = "English"
     province: str
     city: str
     barangay: str

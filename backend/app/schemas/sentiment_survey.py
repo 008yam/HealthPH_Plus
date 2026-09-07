@@ -10,4 +10,7 @@ class SentimentSurveyResponseCreate(BaseModel):
     platform: str = "mobile"
     visitorId: str | None = None
     region: str | None = None
+    language: str | None = None
+    userId: str | None = None
+    userLocation: dict[str, Any] = Field(default_factory=dict)
     metadata: dict[str, Any] = Field(default_factory=dict)

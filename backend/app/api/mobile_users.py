@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.schemas.mobile_user import MobileUserCreate, MobileUserLogin, MobileUserRecord
+from app.schemas.mobile_user import (
+    MobileUserCreate,
+    MobileUserLanguageUpdate,
+    MobileUserLogin,
+    MobileUserRecord,
+)
 from app.services.mongo_mobile_user import store
 
 
@@ -17,3 +22,10 @@ def create_mobile_user(payload: MobileUserCreate) -> MobileUserRecord:
 @router.post("/login", response_model=MobileUserRecord)
 def login_mobile_user(payload: MobileUserLogin) -> MobileUserRecord:
     return store.login_mobile_user(payload)
+
+@router.patch("/{user_id}/language", response_model=MobileUserRecord)
+def update_mobile_user_language(
+    user_id: str,
+    payload: MobileUserLanguageUpdate,
+) -> MobileUserRecord:
+    return store.update_mobile_user_language(user_id, payload.language)

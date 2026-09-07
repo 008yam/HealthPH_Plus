@@ -117,6 +117,15 @@ class CoachMark {
       final offset = renderObject.localToGlobal(Offset.zero);
       return offset & renderObject.size;
     }
+
+    static Future<void> resetAllDiscoveries() async {
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.remove("coach_mark_seen_main_page_v2");
+      await prefs.remove("coach_mark_seen_settings_profile_v3");
+      await prefs.remove("coach_mark_seen_data_collection_v3");
+      await prefs.remove("coach_mark_seen_health_literacy_v2");
+    }
 }
 
 class _CoachMarkOverlay extends StatelessWidget {

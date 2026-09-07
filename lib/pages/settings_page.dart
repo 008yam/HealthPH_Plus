@@ -13,6 +13,7 @@ import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
 import '../widgets/floating_navbar.dart';
 import 'language_selection_page.dart';
+import '../services/app_settings_store.dart';
 
 class SettingsPage extends StatefulWidget {
   final int selectedNavIndex;
@@ -38,6 +39,49 @@ class _SettingsPageState extends State<SettingsPage> {
       (route) => false,
     );
   }
+
+  Future<void> _showAppearancePicker() async {
+  await showModalBottomSheet<void>(
+    context: context,
+    builder: (sheetContext) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: HealthPhVisualMode.values.map((mode) {
+            return ListTile(
+              title: Text(mode.label),
+              trailing: AppSettingsStore.instance.visualMode == mode
+                  ? const Icon(Icons.check, color: AppTheme.primary)
+                  : null,
+              onTap: () async {
+                await AppSettingsStore.instance.setVisualMode(mode);
+                if (sheetContext.mounted) Navigator.pop(sheetContext);
+              },
+            );
+          }).toList(),
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _setPin() async {
+  await AppSettingsStore.instance.markPinConfigured();
+
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("PIN login prepared for prototype testing.")),
+  );
+}
+
+Future<void> _replayCoachMarks() async {
+  await CoachMark.resetAllDiscoveries();
+
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Coach marks will replay when you revisit pages.")),
+  );
+}
 
   @override
   void initState() {
@@ -89,6 +133,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final profile = ProfileStore.instance.profile;
     final isTablet = Responsive.isTablet(context);
     final maxContentWidth = isTablet ? 620.0 : Responsive.formMaxWidth(context);
+    final isProfileTab = widget.selectedNavIndex == 3;
+    final appSettings = AppSettingsStore.instance;
 
     return Scaffold(
       extendBody: true,
@@ -124,50 +170,98 @@ class _SettingsPageState extends State<SettingsPage> {
                         height: isTablet ? 64 : 46,
                       ),
                     ),
-                    SizedBox(height: isTablet ? 28 : 20),
-                    KeyedSubtree(
-                      key: profileKey,
-                      child: _ProfileCard(profile: profile, isTablet: isTablet),
-                    ),
-                    const SizedBox(height: 18),
-                    KeyedSubtree(
-                      key: selfReportKey,
-                      child: _SelfReportButton(isTablet: isTablet),
-                    ),
-                    const SizedBox(height: 12),
-                    KeyedSubtree(
-                      key: surveyKey,
-                      child: _SurveyButton(isTablet: isTablet),
-                    ),
-                    const SizedBox(height: 18),
-                    KeyedSubtree(
-                      key: languageKey,
-                      child: _SettingsTile(
-                        icon: Icons.language,
-                        title: "Language Selection",
-                        subtitle:
-                            "Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon",
-                        isTablet: isTablet,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LanguageSelectionPage(),
-                            ),
-                          );
-                        },
+                    const SizedBox(height: 20),
+                    Text(
+                      isProfileTab ? "Profile" : "Settings",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isTablet ? 34 : 28,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _SettingsTile(
-                      icon: Icons.logout_rounded,
-                      title: "Logout",
-                      subtitle: "Clear this session and return to login",
-                      isTablet: isTablet,
-                      accentColor: AppTheme.highRisk,
-                      surfaceColor: const Color(0xFFFFF1F2),
-                      onTap: _logout,
+                    const SizedBox(height: 6),
+                    Text(
+                      isProfileTab
+                          ? "Account, reports, surveys, and sign-in options"
+                          : "Display, language, and guide preferences",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: isTablet ? 17 : 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+                    const SizedBox(height: 22),
+                    if (isProfileTab) ...[
+                      KeyedSubtree(
+                        key: profileKey,
+                        child: _ProfileCard(profile: profile, isTablet: isTablet),
+                      ),
+                      const SizedBox(height: 18),
+                      KeyedSubtree(
+                        key: selfReportKey,
+                        child: _SelfReportButton(isTablet: isTablet),
+                      ),
+                      const SizedBox(height: 12),
+                      KeyedSubtree(
+                        key: surveyKey,
+                        child: _SurveyButton(isTablet: isTablet),
+                      ),
+                      const SizedBox(height: 18),
+                      _AuthenticationSection(
+                        isTablet: isTablet,
+                        settings: appSettings,
+                        onSetPin: _setPin,
+                      ),
+                      const SizedBox(height: 12),
+                      _SettingsTile(
+                        icon: Icons.logout_rounded,
+                        title: "Logout",
+                        subtitle: "Clear this session and return to login",
+                        isTablet: isTablet,
+                        accentColor: AppTheme.highRisk,
+                        surfaceColor: const Color(0xFFFFF1F2),
+                        onTap: _logout,
+                      ),
+                    ] else ...[
+                      _SettingsSectionTitle(title: "Display", isTablet: isTablet),
+                      _SettingsTile(
+                        icon: Icons.palette_outlined,
+                        title: "Appearance",
+                        subtitle: "Current theme: ${appSettings.visualMode.label}",
+                        isTablet: isTablet,
+                        onTap: _showAppearancePicker,
+                      ),
+                      const SizedBox(height: 12),
+                      _SettingsTile(
+                        icon: Icons.tips_and_updates_outlined,
+                        title: "Replay Coach Marks",
+                        subtitle: "Show guide highlights again",
+                        isTablet: isTablet,
+                        accentColor: AppTheme.info,
+                        onTap: _replayCoachMarks,
+                      ),
+                      const SizedBox(height: 18),
+                      _SettingsSectionTitle(title: "Language", isTablet: isTablet),
+                      KeyedSubtree(
+                        key: languageKey,
+                        child: _SettingsTile(
+                          icon: Icons.language,
+                          title: "Language Selection",
+                          subtitle: "Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon",
+                          isTablet: isTablet,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const LanguageSelectionPage(returnToSettings: true),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -740,6 +834,80 @@ class _SurveyButtonState extends State<_SurveyButton> {
           ),
         );
       },
+    );
+  }
+}
+
+class _SettingsSectionTitle extends StatelessWidget {
+  final String title;
+  final bool isTablet;
+
+  const _SettingsSectionTitle({required this.title, required this.isTablet});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.9),
+          fontSize: isTablet ? 18 : 15,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthenticationSection extends StatelessWidget {
+  final bool isTablet;
+  final AppSettingsStore settings;
+  final VoidCallback onSetPin;
+
+  const _AuthenticationSection({
+    required this.isTablet,
+    required this.settings,
+    required this.onSetPin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _SettingsSectionTitle(title: "Authentications", isTablet: isTablet),
+        _SettingsTile(
+          icon: Icons.pin_outlined,
+          title: "PIN Login",
+          subtitle: settings.hasPin ? "Set up" : "Set PIN first",
+          isTablet: isTablet,
+          onTap: () {
+            AppSettingsStore.instance.setPinLoginEnabled(
+              !settings.pinLoginEnabled,
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        _SettingsTile(
+          icon: Icons.edit_outlined,
+          title: "Set PIN",
+          subtitle: settings.hasPin ? "Update PIN" : "Open",
+          isTablet: isTablet,
+          onTap: onSetPin,
+        ),
+        const SizedBox(height: 12),
+        _SettingsTile(
+          icon: Icons.fingerprint,
+          title: "Fingerprint Login",
+          subtitle: settings.fingerprintLoginEnabled ? "Enabled" : "Available",
+          isTablet: isTablet,
+          onTap: () {
+            AppSettingsStore.instance.setFingerprintLoginEnabled(
+              !settings.fingerprintLoginEnabled,
+            );
+          },
+        ),
+      ],
     );
   }
 }

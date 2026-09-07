@@ -43,6 +43,7 @@ class SelfReportCreate(BaseModel):
     symptomLabels: list[str] = Field(default_factory=list)
     possibleConditionId: str
     possibleConditionLabel: str
+    language: str = "English"
     notes: str = ""
     source: Literal["mobile_self_report"] = "mobile_self_report"
     createdAt: datetime | None = None

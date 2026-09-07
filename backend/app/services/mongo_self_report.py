@@ -10,6 +10,7 @@ from pymongo import MongoClient, DESCENDING
 from app.core.config import settings
 from app.helpers.analytics_entry_helpers import build_self_report_analytics_entry
 from app.schemas.self_report import SelfReportCreate, SelfReportMapPin, SelfReportRecord
+from app.services.id_sequence import next_readable_id
 
 class MongoSelfReportStore:
     def __init__(self) -> None:
@@ -25,11 +26,16 @@ class MongoSelfReportStore:
         now = datetime.now(timezone.utc)
         object_id = ObjectId()
 
+        report_id = next_readable_id(
+            self.db,
+            key="self_reports",
+            prefix="SEL",
+        )
         record_data = payload.model_dump(exclude={"createdAt"})
 
         record = SelfReportRecord(
             **record_data,
-            id=str(object_id),
+            id=report_id,
             status="submitted",
             createdAt=payload.createdAt or now,
             updatedAt=now,

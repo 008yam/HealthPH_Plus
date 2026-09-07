@@ -8,10 +8,11 @@ from fastapi import HTTPException
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
 
 from app.core.config import settings
 from app.schemas.mobile_user import MobileUserCreate, MobileUserLogin, MobileUserRecord
+from app.services.id_sequence import next_readable_id
 
 
 class MongoMobileUserStore:
@@ -56,9 +57,15 @@ class MongoMobileUserStore:
             updated = self.collection.find_one({"_id": existing["_id"]})
             return self._record_from_document(updated)
 
+        user_id = next_readable_id(
+            self.db,
+            key="mobile_users",
+            prefix="MUSER",
+        )
+
         record = MobileUserRecord(
             **data,
-            id=str(object_id),
+            id=user_id,
             createdAt=now,
             updatedAt=now,
         )
@@ -81,13 +88,30 @@ class MongoMobileUserStore:
 
         return self._record_from_document(user)
 
+    def update_mobile_user_language(self, user_id: str, language: str) -> MobileUserRecord:
+        clean_language = language.strip() or "English"
+        now = datetime.now(timezone.utc)
+
+        updated = self.collection.find_one_and_update(
+            {"id": user_id},
+            {"$set": {"language": clean_language, "updatedAt": now}},
+            return_document=ReturnDocument.AFTER,
+        )
+
+        if not updated:
+            raise HTTPException(status_code=404, detail="Mobile user not found")
+
+        return self._record_from_document(updated)
+
     def _record_from_document(self, document: dict | None) -> MobileUserRecord:
         if document is None:
             raise HTTPException(status_code=404, detail="Mobile user not found")
 
         data = dict(document)
-        data["id"] = str(data.pop("_id"))
+        mongo_id = data.pop("_id", None)
+        data["id"] = str(data.get("id") or mongo_id or "")
         data.pop("passwordHash", None)
+        data["language"] = str(data.get("language") or "English")
 
         return MobileUserRecord(**data)
 

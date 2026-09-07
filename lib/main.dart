@@ -4,6 +4,7 @@ import 'landing_page.dart';
 import 'theme/app_theme.dart';
 import 'services/self_report_database.dart';
 import 'services/self_report_store.dart';
+import 'services/app_settings_store.dart';
 
 
 Future<void> main() async {
@@ -12,6 +13,7 @@ Future<void> main() async {
   final savedReports = await SelfReportDatabase.instance.getReports();
   SelfReportStore.instance.replaceReports(savedReports);
 
+  await AppSettingsStore.instance.load();
   runApp(const MyApp());
 }
 
@@ -20,16 +22,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedBuilder(
+  animation: AppSettingsStore.instance,
+  builder: (context, _) {
+    final mode = AppSettingsStore.instance.visualMode;
+
     return MaterialApp(
       title: 'HealthPH+',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+      theme: switch (mode) {
+        HealthPhVisualMode.appDefault => AppTheme.lightTheme,
+        HealthPhVisualMode.light => AppTheme.plainLightTheme,
+        HealthPhVisualMode.grey => AppTheme.greyTheme,
+        HealthPhVisualMode.dark => AppTheme.darkTheme,
+      },
       initialRoute: '/',
       routes: {
         '/': (context) => const LandingPage(),
         '/login': (context) => const LoginPage(),
       },
     );
+  },
+);
   }
 }
 
