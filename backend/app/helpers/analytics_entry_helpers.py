@@ -86,7 +86,7 @@ def build_self_report_analytics_entry(report_document: dict[str, Any]) -> dict[s
     return {
         "source_type": "self_report",
         "source_id": report_id,
-        "report_id": report_id,
+        #"report_id": report_id,
         "text": text,
         "language": language,
         "source_platform": _clean_text_value(report_document.get("source")),
@@ -144,54 +144,32 @@ def build_survey_response_analytics_entry(
         survey_document: dict[str, Any],
         response_document: dict[str, Any],
 )-> dict[str, Any] | None:
+
     response_id = _clean_text_value(response_document.get("id"))
     survey_id = _clean_text_value(response_document.get("surveyId"))
-    answers = response_document.get("answers") or {}
+    answer = response_document.get("answer")
+    answer_text = _clean_text_value(answer)
     metadata = response_document.get("metadata") or {}
     user_location = response_document.get("userLocation") or {}
 
-
     created_at = response_document.get("createdAt") or get_ph_datetime()
-    language = _clean_text_value(response_document.get("language"))
+    language = _clean_text_value(response_document.get("language")) or "English"
     user_id = _clean_text_value(response_document.get("userId"))
 
-    question_lookup = {
-        _clean_text_value(question.get("id")): question
-        for question in survey_document.get("questions", [])
-        if isinstance(question, dict)
-    }
+    text = answer_text
 
-    answer_payload = {}
-    answer_lines = []
-
-    for question_id, answer in answers.items():
-        question = question_lookup.get(question_id, {})
-        question_title = _clean_text_value(question.get("title") or question_id)
-        answer_text = _clean_text_value(answer)
-
-        answer_payload[question_id] = {
-            "question": question_title,
-            "value": answer,
-            "text": answer_text,
-        }
-
-        if answer_text:
-            answer_lines.append(f"{question_title}: {answer_text}")
-
-    text = " ".join(answer_lines)
-
-    if not _is_analyzable_text(text):
+    if not text:
         return None
 
     return {
         "source_type": "survey_response",
         "source_collection": "survey_responses",
         "source_id": response_id,
-        "id": response_id,
-        "survey_response_id": response_id,
+        #"id": response_id,
+        #"survey_response_id": response_id,
         "survey_id": survey_id,
         "language": language,
-        "answer": answer_payload,
+        "answer": answer,
         "text": text,
         "user_id": user_id,
         "user_location": {
@@ -201,7 +179,7 @@ def build_survey_response_analytics_entry(
             "city": _clean_text_value(user_location.get('city')),
             "barangay": _clean_text_value(user_location.get("barangay")),
         },
-        "date_answered": created_at,
+        #"date_answered": created_at,
         "source_platform": _clean_text_value(response_document.get("platform")),
         "event_time": str(created_at),
         "collected_at": str(created_at),

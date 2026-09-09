@@ -23,16 +23,9 @@ class SentimentPulsePage extends StatelessWidget {
       length: 4,
       initialIndex: safeInitialIndex,
       child: Scaffold(
-        backgroundColor: AppTheme.pageBlue,
+        backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/Backdrop1.png',
-                fit: BoxFit.cover,
-                opacity: const AlwaysStoppedAnimation(0.15),
-              ),
-            ),
             Column(
               children: [
                 // HEADER

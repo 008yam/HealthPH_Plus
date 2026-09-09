@@ -373,7 +373,7 @@ class _MapPageState extends State<MapPage> {
     final pinIconSize = isTablet ? 50.0 : 44.0;
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: _pageBlue,
+      backgroundColor: Colors.transparent,
       drawer: _buildDrawer(context),
       body: Stack(
         children: [

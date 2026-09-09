@@ -124,16 +124,9 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
     final activeSoftBackground = activeTutorial.softBackground;
 
     return Scaffold(
-      backgroundColor: AppTheme.pageBlue,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/Backdrop1.png',
-              fit: BoxFit.cover,
-              opacity: const AlwaysStoppedAnimation(0.15),
-            ),
-          ),
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {

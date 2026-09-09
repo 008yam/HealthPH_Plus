@@ -124,7 +124,8 @@ class MongoSentimentSurveyStore:
         }
 
         response_ids = {}
-        analytics_entry_ids = {}
+        response_id_values = []
+        submitted_answers = []
 
         for raw_question_id, answer in payload.answers.items():
             if not self._has_answer_value(answer):
@@ -152,40 +153,61 @@ class MongoSentimentSurveyStore:
                 "questionNumber": question_number,
                 "questionText": question.get("title") or "",
                 "answer": answer,
-                "answers": {question_id: answer},
                 "platform": normalized_platform,
                 "visitorId": payload.visitorId,
-                "region": payload.region or "",
-                "language": payload.language or "",
+                "language": payload.language or "English",
                 "userId": payload.userId or "",
                 "userLocation": payload.userLocation or {},
                 "metadata": payload.metadata or {},
                 "createdAt": now,
-                "dateAnswered": now,
             }
 
             self.responses.insert_one(response_document)
             response_ids[question_id] = response_id
 
-            analytics_entry = build_survey_response_analytics_entry(
-                survey_document=survey,
-                response_document=response_document,
-            )
-
-            if analytics_entry:
-                analytics_result = self.analytics_entries.insert_one(analytics_entry)
-                analytics_entry_id = str(analytics_result.inserted_id)
-                analytics_entry_ids[question_id] = analytics_entry_id
-
-                self.responses.update_one(
-                    {"id": response_id},
-                    {"$set": {"analyticsEntryId": analytics_entry_id}},
-                )
+            response_id_values.append(response_id)
+            submitted_answers.append(answer)
 
         if not response_ids:
             raise HTTPException(
                 status_code=400,
                 detail="answers must not be empty",
+            )
+
+        combined_answer = (
+            submitted_answers[0]
+            if len(submitted_answers) == 1
+            else submitted_answers
+        )
+
+        analytics_source_id = response_id_values[0]
+        analytics_document = {
+            "id": analytics_source_id,
+            "surveyId": survey_id,
+            "answer": combined_answer,
+            "platform": normalized_platform,
+            "visitorId": payload.visitorId,
+            "language": payload.language or "English",
+            "userId": payload.userId or "",
+            "userLocation": payload.userLocation or {},
+            "metadata": payload.metadata or {},
+            "createdAt": now,
+        }
+
+        analytics_entry_id = None
+
+        analytics_entry = build_survey_response_analytics_entry(
+            survey_document=survey,
+            response_document=analytics_document,
+        )
+
+        if analytics_entry:
+            analytics_result = self.analytics_entries.insert_one(analytics_entry)
+            analytics_entry_id = str(analytics_result.inserted_id)
+
+            self.responses.update_many(
+                {"id": {"$in": response_id_values}},
+                {"$set": {"analyticsEntryId": analytics_entry_id}},
             )
 
         self.surveys.update_one(
@@ -199,7 +221,7 @@ class MongoSentimentSurveyStore:
         return {
             "message": "Sentiment Pulse survey response recorded",
             "responseIds": response_ids,
-            "analyticsEntryIds": analytics_entry_ids,
+            "analyticsEntryId": analytics_entry_id or "",
         }
 
     def _survey_code(self, survey_id: str) -> str:

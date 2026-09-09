@@ -34,19 +34,28 @@ class _WeatherWidgetState extends State<WeatherWidget> {
           width: double.infinity,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.black),
-            borderRadius: BorderRadius.circular(8),
+            color: Colors.white.withValues(alpha: 0.94),
+            border: Border.all(color: AppTheme.border),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 weather.city,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: AppTheme.text,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
 
-              const Text("Today", style: TextStyle(fontSize: 10)),
+              const Text(
+                "Today",
+                style: TextStyle(
+                  color: AppTheme.mutedText,
+                  fontSize: 10,
+                ),
+              ),
 
               Center(
                 child: Column(
@@ -174,7 +183,11 @@ class WeatherInfoItem extends StatelessWidget {
           children: [
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              style: const TextStyle(
+                color: AppTheme.text,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              ),
             ),
 
             Text(

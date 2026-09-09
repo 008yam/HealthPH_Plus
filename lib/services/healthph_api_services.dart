@@ -34,7 +34,7 @@ class HealthPhApiService {
         profile.email == AppTaxonomy.guestEmail;
 
     final prefs = await SharedPreferences.getInstance();
-    final savedLanguage = prefs.getString(("healhtph_selected_language"));
+    final savedLanguage = prefs.getString(("healthph_selected_language"));
 
     final language = profile?.language.isNotEmpty == true
         ? profile!.language

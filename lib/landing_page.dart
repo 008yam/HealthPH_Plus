@@ -50,89 +50,34 @@ class _LandingPageState extends State<LandingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 71, 94, 189),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/Backdrop1.png'),
-            fit: BoxFit.cover,
-            opacity: 0.18,
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: Responsive.pagePadding(context)),
-            child: Column(
-              children: [
-                const Spacer(),
-
-                // CENTER LOGO
-                Image.asset(
-                  'assets/images/healthphpluslogo.png',
-                  height: Responsive.splashLogoHeight(context),
-                  fit: BoxFit.contain,
-                ),
-
-                const Spacer(),
-
-                // VERSION AND DEPARTMENT
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text(
-                      "v1.0",
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                    Text(
-                      "Department of Health",
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // ROTATING SPINNER
-                const SizedBox(
-                  width: 34,
-                  height: 34,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    backgroundColor: Color(0x33FFFFFF),
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // CONTINUE BUTTON
-                /* 
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton.icon(
-                    onPressed: goToMainPage,
-                    icon: const Icon(Icons.login),
-                    label: const Text(
-                      "Continue to Login",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.indigo,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                  ),
-                ),*/
-                const SizedBox(height: 29),
-              ],
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/HealthPhPlusLandingPageWithIcon.png',
+              fit: BoxFit.cover,
             ),
           ),
-        ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+              padding: const EdgeInsets.only(bottom: 46),
+              child: SizedBox(
+                width: 34,
+                height: 34,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  backgroundColor: Colors.white.withValues(alpha: 0.35),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Color(0xFF31459B)
+                  ),
+                )
+              ),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }

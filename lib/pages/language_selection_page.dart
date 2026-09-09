@@ -7,6 +7,7 @@ import '../data/app_taxonomy.dart';
 import '../services/api_config.dart';
 import '../services/healthph_api_services.dart';
 import '../services/profile_store.dart';
+import '../services/app_settings_store.dart';
 
 class LanguageSelectionPage extends StatefulWidget {
 
@@ -93,17 +94,12 @@ Future<void> _loadSelectedLanguage() async {
 
   @override
   Widget build(BuildContext context) {
+    final visualMode = AppSettingsStore.instance.visualMode;
+
     return Scaffold(
-      backgroundColor: AppTheme.pageBlue,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/Backdrop3.png',
-              fit: BoxFit.cover,
-              opacity: const AlwaysStoppedAnimation(0.15),
-            ),
-          ),
           SafeArea(
             child: Padding(
               padding: EdgeInsets.fromLTRB(
@@ -115,24 +111,20 @@ Future<void> _loadSelectedLanguage() async {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.asset(
-                    'assets/images/healthphplusbarlogo.png',
-                    height: Responsive.logoHeight(context),
-                  ),
-                  const SizedBox(height: 28),
-                  const Text(
+                  const SizedBox(height: 54),
+                  Text(
                     "Choose Language",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: visualMode.onBackground,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     "Select your preferred language for HealthPH+.",
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: visualMode.onBackgroundMuted,
                       fontSize: 14,
                       height: 1.4,
                     ),

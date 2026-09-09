@@ -297,16 +297,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.pageBlue,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/Backdrop1.png',
-              fit: BoxFit.cover,
-              opacity: const AlwaysStoppedAnimation(0.15),
-            ),
-          ),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -323,9 +316,11 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   padding: const EdgeInsets.all(18),
                   decoration: AppTheme.cardDecoration,
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
+                  child: Theme(
+                    data: AppTheme.lightTheme,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Align(
@@ -343,12 +338,6 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 4),
 
-                        Center(
-                          child: Image.asset(
-                            'assets/images/healthphplusbarlogo.png',
-                            height: Responsive.logoHeight(context),
-                          ),
-                        ),
                         const SizedBox(height: 18),
                         Text(
                           isRegistering ? "Create Account" : "User Login",
@@ -586,10 +575,15 @@ class _LoginPageState extends State<LoginPage> {
                           width: double.infinity,
                           height: Responsive.buttonHeight(context),
                           child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: Colors.white,
+                            ),
                             onPressed: _submit,
                             child: Text(
                               isRegistering ? "Register" : "Login",
                               style: const TextStyle(
+                                color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -634,6 +628,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),

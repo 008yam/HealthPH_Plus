@@ -83,17 +83,9 @@
       final int activeCount = filteredOutbreaks.length;
 
       return Scaffold(
-        backgroundColor: AppTheme.pageBlue,
+        backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/Backdrop2.png',
-                fit: BoxFit.cover,
-                opacity: const AlwaysStoppedAnimation(0.18),
-              ),
-            ),
-
             Column(
               children: [
                 Container(

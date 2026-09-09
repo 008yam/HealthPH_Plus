@@ -41,29 +41,34 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _showAppearancePicker() async {
-  await showModalBottomSheet<void>(
-    context: context,
-    builder: (sheetContext) {
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: HealthPhVisualMode.values.map((mode) {
-            return ListTile(
-              title: Text(mode.label),
-              trailing: AppSettingsStore.instance.visualMode == mode
-                  ? const Icon(Icons.check, color: AppTheme.primary)
-                  : null,
-              onTap: () async {
-                await AppSettingsStore.instance.setVisualMode(mode);
-                if (sheetContext.mounted) Navigator.pop(sheetContext);
-              },
-            );
-          }).toList(),
-        ),
-      );
-    },
-  );
-}
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: HealthPhVisualMode.values.map((mode) {
+                final selected = AppSettingsStore.instance.visualMode == mode;
+
+                return _ThemePreviewTile(
+                  mode: mode,
+                  selected: selected,
+                  onTap: () async {
+                    await AppSettingsStore.instance.setVisualMode(mode);
+                    if (sheetContext.mounted) Navigator.pop(sheetContext);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
 Future<void> _setPin() async {
   await AppSettingsStore.instance.markPinConfigured();
@@ -138,19 +143,8 @@ Future<void> _replayCoachMarks() async {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.pageBlue,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          color: AppTheme.pageBlue,
-          image: DecorationImage(
-            image: AssetImage('assets/images/Backdrop1.png'),
-            fit: BoxFit.cover,
-            opacity: 0.24,
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               Responsive.pagePadding(context),
@@ -164,18 +158,13 @@ Future<void> _replayCoachMarks() async {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Center(
-                      child: Image.asset(
-                        'assets/images/healthphplusbarlogo.png',
-                        height: isTablet ? 64 : 46,
-                      ),
-                    ),
+                   SizedBox(height: isTablet ? 52 : 36),
                     const SizedBox(height: 20),
                     Text(
                       isProfileTab ? "Profile" : "Settings",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: appSettings.visualMode.onBackground,
                         fontSize: isTablet ? 34 : 28,
                         fontWeight: FontWeight.w900,
                       ),
@@ -187,7 +176,7 @@ Future<void> _replayCoachMarks() async {
                           : "Display, language, and guide preferences",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white70,
+                        color: appSettings.visualMode.onBackgroundMuted,
                         fontSize: isTablet ? 17 : 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -231,6 +220,8 @@ Future<void> _replayCoachMarks() async {
                         title: "Appearance",
                         subtitle: "Current theme: ${appSettings.visualMode.label}",
                         isTablet: isTablet,
+                        accentColor: appSettings.visualMode.accentColor,
+                        borderColor: appSettings.visualMode.accentColor.withValues(alpha: 0.45),
                         onTap: _showAppearancePicker,
                       ),
                       const SizedBox(height: 12),
@@ -240,6 +231,7 @@ Future<void> _replayCoachMarks() async {
                         subtitle: "Show guide highlights again",
                         isTablet: isTablet,
                         accentColor: AppTheme.info,
+                        borderColor: AppTheme.warning.withValues(alpha: 0.45),
                         onTap: _replayCoachMarks,
                       ),
                       const SizedBox(height: 18),
@@ -251,6 +243,7 @@ Future<void> _replayCoachMarks() async {
                           title: "Language Selection",
                           subtitle: "Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon",
                           isTablet: isTablet,
+                          borderColor: AppTheme.info.withValues(alpha: 0.45),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -267,7 +260,6 @@ Future<void> _replayCoachMarks() async {
               ),
             ),
           ),
-        ),
       ),
       bottomNavigationBar: FloatingNavBar(
         selectedIndex: widget.selectedNavIndex,
@@ -917,6 +909,7 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool isTablet;
+  final Color borderColor;
   final Color accentColor;
   final Color surfaceColor;
   final VoidCallback onTap;
@@ -926,6 +919,7 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.isTablet,
+    this.borderColor = AppTheme.border,
     this.accentColor = AppTheme.primary,
     this.surfaceColor = const Color(0xFFF8FAFF),
     required this.onTap,
@@ -935,7 +929,10 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: surfaceColor,
-      borderRadius: BorderRadius.circular(8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: borderColor, width: 1.2),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
@@ -976,6 +973,60 @@ class _SettingsTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ThemePreviewTile extends StatelessWidget {
+  final HealthPhVisualMode mode;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ThemePreviewTile({
+    required this.mode,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 240),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: selected ? mode.accentColor : AppTheme.border,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            mode.backgroundAsset,
+            width: 54,
+            height: 54,
+            fit: BoxFit.cover,
+          ),
+        ),
+        title: Text(
+          mode.label,
+          style: const TextStyle(
+            color: AppTheme.text,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          mode.description,
+          style: const TextStyle(color: AppTheme.mutedText),
+        ),
+        trailing: selected
+            ? Icon(Icons.check_circle, color: mode.accentColor)
+            : const Icon(Icons.chevron_right),
       ),
     );
   }

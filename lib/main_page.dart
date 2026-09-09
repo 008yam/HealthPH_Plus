@@ -72,16 +72,9 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     final compactStats = MediaQuery.sizeOf(context).width < 380;
     return Scaffold(
-      backgroundColor: AppTheme.pageBlue,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/Backdrop1.png',
-              fit: BoxFit.cover,
-              opacity: const AlwaysStoppedAnimation(0.15),
-            ),
-          ),
           SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
@@ -98,26 +91,9 @@ class _MainPageState extends State<MainPage> {
                   // ====================================================
                   KeyedSubtree(
                     key: headerKey,
-                    child: Container(
-                      width: double.infinity,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Image.asset(
-                          'assets/images/healthphplusbarlogo.png',
-                          height: Responsive.logoHeight(context),
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
+                    child: const SizedBox(height: 36),
                   ),
-                ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 10),
 
                   // ====================================================
                   // 2. TOP STATUS CARDS
@@ -177,9 +153,9 @@ class _MainPageState extends State<MainPage> {
                   // ====================================================
                   // 3. WEATHER WIDGET
                   // ====================================================
+                  const SizedBox(height: 14),
                   const WeatherWidget(),
-
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 16),
 
                   // ====================================================
                   // 4. QUICK ACTIONS MENU
@@ -196,6 +172,7 @@ class _MainPageState extends State<MainPage> {
                         const Text(
                           "Quick Actions ⓘ",
                           style: TextStyle(
+                            color: AppTheme.text,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -411,24 +388,8 @@ class _HomeContentSurface extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: Responsive.isTablet(context) ? 640 : 430,
         ),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(Responsive.isTablet(context) ? 24 : 14),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.97),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.75),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
+        child: DefaultTextStyle.merge(
+          style: const TextStyle(color: AppTheme.text),
           child: child,
         ),
       ),
@@ -596,6 +557,7 @@ class QuickActionTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
+                        color: AppTheme.text,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -605,7 +567,10 @@ class QuickActionTile extends StatelessWidget {
                       subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 10),
+                      style: const TextStyle(
+                        color: AppTheme.mutedText,
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ),

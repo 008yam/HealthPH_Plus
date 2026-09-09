@@ -5,6 +5,7 @@ import 'theme/app_theme.dart';
 import 'services/self_report_database.dart';
 import 'services/self_report_store.dart';
 import 'services/app_settings_store.dart';
+import 'widgets/themed_background.dart';
 
 
 Future<void> main() async {
@@ -30,6 +31,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'HealthPH+',
       debugShowCheckedModeBanner: false,
+      builder: (context,child) {
+        return ThemedBackground(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       theme: switch (mode) {
         HealthPhVisualMode.appDefault => AppTheme.lightTheme,
         HealthPhVisualMode.light => AppTheme.plainLightTheme,

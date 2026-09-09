@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 
 enum HealthPhVisualMode { appDefault, light, grey, dark }
 
@@ -14,6 +14,90 @@ extension HealthPhVisualModeLabel on HealthPhVisualMode {
         return "Grey";
       case HealthPhVisualMode.dark:
         return "Dark";
+    }
+  }
+
+  String get backgroundAsset {
+    switch (this) {
+      case HealthPhVisualMode.appDefault:
+        return "assets/images/HealthPhPlusDefaultBackground.png";
+      case HealthPhVisualMode.light:
+        return "assets/images/HealthPhPlusLight.png";
+      case HealthPhVisualMode.grey:
+        return "assets/images/HealthPhPlusGreyBackground.png";
+      case HealthPhVisualMode.dark:
+        return "assets/images/HealthPhPlusDarkBackground.png";
+    }
+  }
+
+  Color get accentColor {
+    switch (this) {
+      case HealthPhVisualMode.appDefault:
+        return const Color(0xFF31459B);
+      case HealthPhVisualMode.light:
+        return const Color(0xFF2F80ED);
+      case HealthPhVisualMode.grey:
+        return const Color(0xFF607080);
+      case HealthPhVisualMode.dark:
+        return const Color(0xFF72A7FF);
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case HealthPhVisualMode.appDefault:
+        return "HealthPH+ blue and gold";
+      case HealthPhVisualMode.light:
+        return "Bright clinical layout";
+      case HealthPhVisualMode.grey:
+        return "Soft neutral contrast";
+      case HealthPhVisualMode.dark:
+        return "Low-light dashboard style";
+    }
+  }
+
+  Color get backgroundOverlayColor {
+    switch (this) {
+      case HealthPhVisualMode.appDefault:
+        return Colors.white.withValues(alpha: 0.08);
+      case HealthPhVisualMode.light:
+        return Colors.white.withValues(alpha: 0.12);
+      case HealthPhVisualMode.grey:
+        return Colors.white.withValues(alpha: 0.10);
+      case HealthPhVisualMode.dark:
+        return Colors.black.withValues(alpha: 0.18);
+    }
+  }
+
+  Alignment get backgroundAlignment {
+    switch (this) {
+      case HealthPhVisualMode.appDefault:
+      case HealthPhVisualMode.light:
+      case HealthPhVisualMode.grey:
+      case HealthPhVisualMode.dark:
+        return Alignment.topCenter;
+    }
+  }
+
+  Color get onBackground {
+    switch (this) {
+      case HealthPhVisualMode.dark:
+        return Colors.white;
+      case HealthPhVisualMode.appDefault:
+      case HealthPhVisualMode.light:
+      case HealthPhVisualMode.grey:
+        return const Color(0xFF172033);
+    }
+  }
+
+  Color get onBackgroundMuted {
+    switch (this) {
+      case HealthPhVisualMode.dark:
+        return const Color(0xFFE6EEFF);
+      case HealthPhVisualMode.appDefault:
+      case HealthPhVisualMode.light:
+      case HealthPhVisualMode.grey:
+        return const Color(0xFF4B5875);
     }
   }
 }
