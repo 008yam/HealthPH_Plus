@@ -103,6 +103,38 @@ class MongoMobileUserStore:
 
         return self._record_from_document(updated)
 
+    def update_mobile_user_pin(
+            self,
+            user_id: str,
+            pin: str,
+            current_password: str,
+    ) -> None:
+        document = self.collection.find_one({"id": user_id})
+
+        if document is None:
+            raise HTTPException(status_code=404, detail="Mobile user not found.")
+
+        password_hash = document.get("passwordHash", "")
+
+        if not self._verify_password(current_password, password_hash):
+            raise HTTPException(
+                status_code=401,
+                detail="Current password is incorrect.",
+            )
+
+        result = self.collection.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "pins": self._hash_password(pin),
+                    "updatedAt": datetime.now(timezone.utc),
+                }
+            },
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Mobile user not found.")
+
     def _record_from_document(self, document: dict | None) -> MobileUserRecord:
         if document is None:
             raise HTTPException(status_code=404, detail="Mobile user not found")
@@ -111,6 +143,7 @@ class MongoMobileUserStore:
         mongo_id = data.pop("_id", None)
         data["id"] = str(data.get("id") or mongo_id or "")
         data.pop("passwordHash", None)
+        data.pop("pins", None)
         data["language"] = str(data.get("language") or "English")
 
         return MobileUserRecord(**data)

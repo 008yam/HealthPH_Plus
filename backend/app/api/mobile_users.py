@@ -6,6 +6,7 @@ from app.schemas.mobile_user import (
     MobileUserCreate,
     MobileUserLanguageUpdate,
     MobileUserLogin,
+    MobileUserPinUpdate,
     MobileUserRecord,
 )
 from app.services.mongo_mobile_user import store
@@ -29,3 +30,16 @@ def update_mobile_user_language(
     payload: MobileUserLanguageUpdate,
 ) -> MobileUserRecord:
     return store.update_mobile_user_language(user_id, payload.language)
+
+@router.patch("/{user_id}/pin", response_model=dict[str, bool])
+def updated_mobile_user_pin(
+    user_id: str,
+    payload: MobileUserPinUpdate,
+) -> dict[str, bool]:
+    store.update_mobile_user_pin(
+        user_id=user_id,
+        pin=payload.pin,
+        current_password=payload.currentPassword,
+    )
+
+    return {"pinConfigured": True}

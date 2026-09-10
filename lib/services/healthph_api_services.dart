@@ -193,6 +193,25 @@ class HealthPhApiService {
     return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);
   }
 
+  Future<void> setMobileUserPin({
+    required String userId,
+    required String pin,
+    required String currentPassword,
+  }) async {
+    final response = await http.patch(
+      Uri.parse("$baseUrl/api/mobile/users/$userId/pin"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "pin": pin,
+        "currentPassword": currentPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to set Pin: ${response.body}");
+    }
+  }
+
   Future<UserProfile> updatedMobileUserLanguage({
     required String userId,
     required String language,

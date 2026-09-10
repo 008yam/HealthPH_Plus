@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class MobileUserCreate(BaseModel):
     fullName: str
@@ -21,6 +21,10 @@ class MobileUserCreate(BaseModel):
 
 class MobileUserLanguageUpdate(BaseModel):
     language: str
+
+class MobileUserPinUpdate(BaseModel):
+    currentPassword: str = Field(min_length=1)
+    pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
 
 class MobileUserLogin(BaseModel):
     email: str

@@ -1,8 +1,10 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'data_collection_page.dart';
 
 import '../models/mobile_survey.dart';
 import '../services/api_config.dart';
+import '../services/healthph_api_services.dart';
 import '../services/sentiment_survey_service.dart';
 import 'sentiment_pulse_page.dart';
 import '../widgets/coach_mark.dart';
@@ -71,12 +73,56 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
 Future<void> _setPin() async {
-  await AppSettingsStore.instance.markPinConfigured();
+  final profile = ProfileStore.instance.profile;
+  final userId = profile?.id;
 
-  if (!mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text("PIN login prepared for prototype testing.")),
+  if (userId == null || userId.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please sign in with a registered account first."),
+      ),
+    );
+    return;
+  }
+
+  final result = await showDialog<
+      ({String pin, String currentPassword})>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const _SetPinDialog(),
   );
+
+  if (result == null || !mounted) return;
+
+  try {
+    await HealthPhApiService(
+      baseUrl: ApiConfig.baseUrl,
+    ).setMobileUserPin(
+      userId: userId,
+      pin: result.pin,
+      currentPassword: result.currentPassword,
+    );
+
+    await AppSettingsStore.instance.markPinConfigured();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Your PIN was saved successfully.")),
+    );
+  } catch (error) {
+    debugPrint("Unable to save PIN: $error");
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Unable to save PIN. Check your password and connection.",
+        ),
+      ),
+    );
+  }
 }
 
 Future<void> _replayCoachMarks() async {
@@ -852,6 +898,183 @@ class _SettingsSectionTitle extends StatelessWidget {
   }
 }
 
+class _SetPinDialog extends StatefulWidget {
+  const _SetPinDialog();
+
+  @override
+  State<_SetPinDialog> createState() => _SetPinDialogState();
+}
+
+class _SetPinDialogState extends State<_SetPinDialog> {
+  final pinControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
+
+  final pinFocusNodes = List.generate(
+    6,
+    (_) => FocusNode(),
+  );
+
+  final passwordController = TextEditingController();
+
+  String? errorMessage;
+
+  String get enteredPin {
+    return pinControllers.map((controller) => controller.text).join();
+  }
+
+  void handleDigitChanged(int index, String value) {
+    if (value.isNotEmpty) {
+      if (index < pinFocusNodes.length - 1) {
+        pinFocusNodes[index + 1].requestFocus();
+      } else {
+        pinFocusNodes[index].unfocus();
+      }
+    } else if (index > 0) {
+      pinFocusNodes[index - 1].requestFocus();
+    }
+  }
+
+  void submit() {
+    final pin = enteredPin;
+    final currentPassword = passwordController.text;
+
+    if (!RegExp(r"^\d{6}$").hasMatch(pin)) {
+      setState(() {
+        errorMessage = "Enter all six PIN digits.";
+      });
+      return;
+    }
+
+    if (currentPassword.isEmpty) {
+      setState(() {
+        errorMessage = "Enter your current account password.";
+      });
+      return;
+    }
+
+    Navigator.pop(
+      context,
+      (
+        pin: pin,
+        currentPassword: currentPassword,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    for (final controller in pinControllers) {
+      controller.dispose();
+    }
+
+    for (final focusNode in pinFocusNodes) {
+      focusNode.dispose();
+    }
+
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text("Set six-digit PIN"),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Enter a six-digit numeric PIN. Each digit uses a separate box.",
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: List.generate(6, (index) {
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: index == 5 ? 0 : 6,
+                    ),
+                    child: TextField(
+                      controller: pinControllers[index],
+                      focusNode: pinFocusNodes[index],
+                      autofocus: index == 0,
+                      obscureText: true,
+                      obscuringCharacter: "•",
+                      keyboardType: TextInputType.number,
+                      textInputAction: index == 5
+                          ? TextInputAction.done
+                          : TextInputAction.next,
+                      textAlign: TextAlign.center,
+                      maxLength: 1,
+                      decoration: const InputDecoration(
+                        counterText: "",
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(1),
+                      ],
+                      onTap: () {
+                        final controller = pinControllers[index];
+
+                        controller.selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: controller.text.length,
+                        );
+                      },
+                      onChanged: (value) {
+                        handleDigitChanged(index, value);
+                      },
+                      onSubmitted: (_) {
+                        if (index == 5) submit();
+                      },
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: "Current password",
+                prefixIcon: Icon(Icons.lock_outline),
+              ),
+              onSubmitted: (_) => submit(),
+            ),
+            if (errorMessage != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                errorMessage!,
+                style: const TextStyle(
+                  color: AppTheme.highRisk,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed: submit,
+          child: const Text("Save PIN"),
+        ),
+      ],
+    );
+  }
+}
+
 class _AuthenticationSection extends StatelessWidget {
   final bool isTablet;
   final AppSettingsStore settings;
@@ -869,16 +1092,33 @@ class _AuthenticationSection extends StatelessWidget {
       children: [
         _SettingsSectionTitle(title: "Authentications", isTablet: isTablet),
         _SettingsTile(
-          icon: Icons.pin_outlined,
-          title: "PIN Login",
-          subtitle: settings.hasPin ? "Set up" : "Set PIN first",
-          isTablet: isTablet,
-          onTap: () {
-            AppSettingsStore.instance.setPinLoginEnabled(
-              !settings.pinLoginEnabled,
+        icon: Icons.pin_outlined,
+        title: "PIN Login",
+        subtitle: !settings.hasPin
+            ? "Set PIN first"
+            : settings.pinLoginEnabled
+                ? "Enabled"
+                : "Disabled",
+        isTablet: isTablet,
+        onTap: () {
+          if (!settings.hasPin) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  "You need to set a six-digit PIN before enabling PIN login.",
+                ),
+              ),
             );
-          },
-        ),
+
+            onSetPin();
+            return;
+          }
+
+          AppSettingsStore.instance.setPinLoginEnabled(
+            !settings.pinLoginEnabled,
+          );
+        },
+      ),
         const SizedBox(height: 12),
         _SettingsTile(
           icon: Icons.edit_outlined,
