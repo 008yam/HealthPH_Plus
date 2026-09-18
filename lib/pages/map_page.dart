@@ -19,11 +19,9 @@ class MapPage extends StatefulWidget {
   State<MapPage> createState() => _MapPageState();
 }
 
-
 class _MapPageState extends State<MapPage> {
   static const Color _navy = Color(0xFF243B8F);
   static const Color _deepBlue = Color(0xFF31459B);
-  static const Color _pageBlue = Color(0xFF3B4C98);
   static const Color _lightPurple = Color(0xFFDDE6FF);
   static const Color _yellow = Color(0xFFFFD84D);
 
@@ -96,11 +94,11 @@ class _MapPageState extends State<MapPage> {
     },
   ];
 
-    List<Map<String, dynamic>> get allOutbreaks {
+  List<Map<String, dynamic>> get allOutbreaks {
     return [...outbreaks, ...SelfReportStore.instance.mapReports];
   }
 
-    List<Map<String, dynamic>> get filteredOutbreaks {
+  List<Map<String, dynamic>> get filteredOutbreaks {
     if (selectedFilters.isEmpty) return allOutbreaks;
 
     return allOutbreaks.where((outbreak) {
@@ -333,8 +331,8 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     SelfReportStore.instance.addListener(_refreshSelfReports);
     diseaseFuture = HealthPhApiService(
-    baseUrl: 'http://127.0.0.1:8000',
-  ).fetchDiseasePoints();
+      baseUrl: 'http://127.0.0.1:8000',
+    ).fetchDiseasePoints();
   }
 
   final Map<String, LatLng> regionCenters = {
@@ -362,23 +360,27 @@ class _MapPageState extends State<MapPage> {
     final safeBottom = MediaQuery.of(context).padding.bottom;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isTablet = Responsive.isTablet(context);
+    final isLandscapePhone = Responsive.isLandscapePhone(context);
     final initialZoom = isTablet ? 6.16 : 5.5;
     final headerWidth = isTablet
         ? 390.0
-        : (screenWidth - 148).clamp(180.0, 420.0).toDouble();
+        : (screenWidth - (isLandscapePhone ? 164 : 148))
+              .clamp(180.0, isLandscapePhone ? 360.0 : 420.0)
+              .toDouble();
     final filterWidth = isTablet
         ? 390.0
-        : (screenWidth - 98).clamp(220.0, 430.0).toDouble();
-    final markerSize = isTablet ? 88.0 : 80.0;
-    final pinIconSize = isTablet ? 50.0 : 44.0;
+        : (screenWidth - (isLandscapePhone ? 112 : 98))
+              .clamp(220.0, isLandscapePhone ? 360.0 : 430.0)
+              .toDouble();
+    final markerSize = isTablet ? 88.0 : (isLandscapePhone ? 66.0 : 80.0);
+    final pinIconSize = isTablet ? 50.0 : (isLandscapePhone ? 38.0 : 44.0);
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.transparent,
       drawer: _buildDrawer(context),
       body: Stack(
         children: [
-          Positioned.
-          fill(
+          Positioned.fill(
             child: FlutterMap(
               mapController: mapController,
               options: MapOptions(
@@ -441,14 +443,14 @@ class _MapPageState extends State<MapPage> {
               width: headerWidth,
               child: _MapHeader(
                 reportCount: filteredOutbreaks.length,
-                filterSummary: filterSummary
+                filterSummary: filterSummary,
               ),
             ),
           ),
 
           Positioned(
             left: 16,
-            top: safeTop + 94,
+            top: safeTop + (isLandscapePhone ? 78 : 94),
             child: SizedBox(
               width: filterWidth,
               child: _FilterButton(
@@ -476,11 +478,14 @@ class _MapPageState extends State<MapPage> {
 
           // DATE UPDATE LABEL
           Positioned(
-            left: 12,
-            bottom: safeBottom + 12,
-            right: 12,
+            left: isLandscapePhone ? 96 : 12,
+            bottom: safeBottom + (isLandscapePhone ? 8 : 12),
+            right: isLandscapePhone ? 96 : 12,
             child: Container(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.symmetric(
+                horizontal: isLandscapePhone ? 10 : 10,
+                vertical: isLandscapePhone ? 7 : 10,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(10),
@@ -500,9 +505,9 @@ class _MapPageState extends State<MapPage> {
                   fontSize: isTablet ? 14 : 10,
                   height: 1.3,
                   fontWeight: FontWeight.bold,
-                  color:AppTheme.text,
+                  color: AppTheme.text,
                 ),
-              )
+              ),
             ),
           ),
         ],
@@ -511,35 +516,43 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _buildDrawer(BuildContext context) {
+    final isLandscapePhone = Responsive.isLandscapePhone(context);
+
     return Drawer(
+      width: isLandscapePhone ? 320 : null,
       backgroundColor: Colors.white,
       child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+              padding: EdgeInsets.fromLTRB(
+                18,
+                isLandscapePhone ? 10 : 14,
+                18,
+                isLandscapePhone ? 10 : 16,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Image.asset(
                     'assets/images/healthphplusbarlogo.png',
-                    height: 50,
+                    height: isLandscapePhone ? 36 : 50,
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
+                  SizedBox(height: isLandscapePhone ? 6 : 10),
+                  Text(
                     "Disease Map",
                     style: TextStyle(
                       color: _navy,
-                      fontSize: 18,
+                      fontSize: isLandscapePhone ? 16 : 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
+                  Text(
                     "Respiratory outbreak monitoring",
                     style: TextStyle(
                       color: _deepBlue,
-                      fontSize: 12,
+                      fontSize: isLandscapePhone ? 11 : 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -582,14 +595,13 @@ class _MapPageState extends State<MapPage> {
               onTap: () =>
                   _navigateFromDrawer(context, const DataCollectionPage()),
             ),
-            const Spacer(),
             const Divider(height: 1),
             _DrawerNavTile(
               icon: Icons.settings,
               label: "Settings",
               onTap: () => _navigateFromDrawer(context, const SettingsPage()),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: isLandscapePhone ? 6 : 8),
           ],
         ),
       ),
@@ -767,17 +779,28 @@ class _DrawerNavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscapePhone = Responsive.isLandscapePhone(context);
+
     return ListTile(
+      dense: isLandscapePhone,
+      visualDensity: isLandscapePhone
+          ? const VisualDensity(horizontal: -2, vertical: -3)
+          : VisualDensity.standard,
+      minLeadingWidth: isLandscapePhone ? 28 : null,
       selected: isSelected,
       selectedTileColor: _MapPageState._lightPurple,
       leading: Icon(
         icon,
+        size: isLandscapePhone ? 22 : 24,
         color: isSelected ? _MapPageState._deepBlue : Colors.black54,
       ),
       title: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: isSelected ? _MapPageState._navy : const Color(0xFF1D2450),
+          fontSize: isLandscapePhone ? 14 : 16,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
         ),
       ),
@@ -794,6 +817,8 @@ class MapControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = Responsive.mapControlSize(context);
+
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(8),
@@ -802,9 +827,9 @@ class MapControlButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(icon, color: AppTheme.primary),
+          width: size,
+          height: size,
+          child: Icon(icon, color: AppTheme.primary, size: size * 0.52),
         ),
       ),
     );

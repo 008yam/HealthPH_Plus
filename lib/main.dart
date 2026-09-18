@@ -7,7 +7,6 @@ import 'services/self_report_store.dart';
 import 'services/app_settings_store.dart';
 import 'widgets/themed_background.dart';
 
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -24,32 +23,41 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-  animation: AppSettingsStore.instance,
-  builder: (context, _) {
-    final mode = AppSettingsStore.instance.visualMode;
+      animation: AppSettingsStore.instance,
+      builder: (context, _) {
+        final mode = AppSettingsStore.instance.visualMode;
 
-    return MaterialApp(
-      title: 'HealthPH+',
-      debugShowCheckedModeBanner: false,
-      builder: (context,child) {
-        return ThemedBackground(
-          child: child ?? const SizedBox.shrink(),
+        return MaterialApp(
+          title: 'HealthPH+',
+          debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            final mediaQuery = MediaQuery.of(context);
+            final clampedTextScaler = mediaQuery.textScaler.clamp(
+              minScaleFactor: 0.9,
+              maxScaleFactor: 1.18,
+            );
+
+            return ThemedBackground(
+              child: MediaQuery(
+                data: mediaQuery.copyWith(textScaler: clampedTextScaler),
+                child: child ?? const SizedBox.shrink(),
+              ),
+            );
+          },
+          theme: switch (mode) {
+            HealthPhVisualMode.appDefault => AppTheme.lightTheme,
+            HealthPhVisualMode.light => AppTheme.plainLightTheme,
+            HealthPhVisualMode.grey => AppTheme.greyTheme,
+            HealthPhVisualMode.dark => AppTheme.darkTheme,
+          },
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const LandingPage(),
+            '/login': (context) => const LoginPage(),
+          },
         );
       },
-      theme: switch (mode) {
-        HealthPhVisualMode.appDefault => AppTheme.lightTheme,
-        HealthPhVisualMode.light => AppTheme.plainLightTheme,
-        HealthPhVisualMode.grey => AppTheme.greyTheme,
-        HealthPhVisualMode.dark => AppTheme.darkTheme,
-      },
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const LandingPage(),
-        '/login': (context) => const LoginPage(),
-      },
     );
-  },
-);
   }
 }
 

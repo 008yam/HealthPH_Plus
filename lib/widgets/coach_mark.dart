@@ -149,7 +149,6 @@ class _CoachMarkOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final highlightedRect = targetRect?.inflate(8);
-
     final rawTop = highlightedRect == null
         ? size.height * 0.36
         : highlightedRect.bottom + 14;
@@ -169,12 +168,9 @@ class _CoachMarkOverlay extends StatelessWidget {
           Positioned.fill(
             child: GestureDetector(
               onTap: onNext,
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.56),
-              ),
+              child: Container(color: Colors.black.withValues(alpha: 0.56)),
             ),
           ),
-
           if (highlightedRect != null)
             Positioned(
               left: highlightedRect.left,
@@ -198,7 +194,6 @@ class _CoachMarkOverlay extends StatelessWidget {
                 ),
               ),
             ),
-
           Positioned(
             top: cardTop,
             left: (size.width - cardWidth) / 2,
@@ -210,76 +205,101 @@ class _CoachMarkOverlay extends StatelessWidget {
               builder: (context, scale, child) {
                 return Transform.scale(scale: scale, child: child);
               },
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: step.color.withValues(alpha: 0.35)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: step.color.withValues(alpha: 0.14),
-                          child: Icon(step.icon, color: step.color),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            step.title,
-                            style: const TextStyle(
-                              color: AppTheme.text,
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          "$currentStep/$totalSteps",
-                          style: const TextStyle(
-                            color: AppTheme.mutedText,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      step.description,
-                      style: const TextStyle(
-                        color: AppTheme.mutedText,
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed: onSkip,
-                          child: const Text("Skip"),
-                        ),
-                        const Spacer(),
-                        ElevatedButton(
-                          onPressed: onNext,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: step.color,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text(
-                            currentStep == totalSteps ? "Done" : "Next",
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              child: _CoachMarkCard(
+                step: step,
+                currentStep: currentStep,
+                totalSteps: totalSteps,
+                onNext: onNext,
+                onSkip: onSkip,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoachMarkCard extends StatelessWidget {
+  final CoachMarkStep step;
+  final int currentStep;
+  final int totalSteps;
+  final VoidCallback onNext;
+  final VoidCallback onSkip;
+
+  const _CoachMarkCard({
+    required this.step,
+    required this.currentStep,
+    required this.totalSteps,
+    required this.onNext,
+    required this.onSkip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: step.color.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: step.color.withValues(alpha: 0.14),
+                child: Icon(step.icon, color: step.color),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  step.title,
+                  style: const TextStyle(
+                    color: AppTheme.text,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Text(
+                "$currentStep/$totalSteps",
+                style: const TextStyle(
+                  color: AppTheme.mutedText,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            step.description,
+            style: const TextStyle(
+              color: AppTheme.mutedText,
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              TextButton(
+                onPressed: onSkip,
+                child: const Text("Skip"),
+              ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: onNext,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: step.color,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(currentStep == totalSteps ? "Done" : "Next"),
+              ),
+            ],
           ),
         ],
       ),

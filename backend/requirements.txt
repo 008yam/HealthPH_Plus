@@ -3,3 +3,5 @@ uvicorn[standard]==0.35.0
 pydantic==2.11.7
 pymongo>=4.8,<5
 eval_type_backport>=0.2.2
+bcrypt>=4.2,<5
+python-jose[cryptography]>=3.3,<4

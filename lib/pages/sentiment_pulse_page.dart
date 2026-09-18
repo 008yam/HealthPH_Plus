@@ -7,18 +7,20 @@ import '../services/api_config.dart';
 import '../services/profile_store.dart';
 import '../services/sentiment_survey_service.dart';
 
-
 class SentimentPulsePage extends StatelessWidget {
   final int initialTabIndex;
 
-  const SentimentPulsePage({
-    super.key,
-    this.initialTabIndex = 0,
-  });
+  const SentimentPulsePage({super.key, this.initialTabIndex = 0});
 
   @override
   Widget build(BuildContext context) {
     final safeInitialIndex = initialTabIndex.clamp(0, 3).toInt();
+    final pagePadding = Responsive.pagePadding(context);
+    final headerRadius = Responsive.isLandscapePhone(context) ? 24.0 : 45.0;
+    final contentMargin = Responsive.isLandscapePhone(context)
+        ? EdgeInsets.fromLTRB(pagePadding, 8, pagePadding, 8)
+        : EdgeInsets.all(pagePadding * 0.8);
+
     return DefaultTabController(
       length: 4,
       initialIndex: safeInitialIndex,
@@ -31,17 +33,22 @@ class SentimentPulsePage extends StatelessWidget {
                 // HEADER
                 Container(
                   width: double.infinity,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(45),
-                      bottomRight: Radius.circular(45),
+                      bottomLeft: Radius.circular(headerRadius),
+                      bottomRight: Radius.circular(headerRadius),
                     ),
                   ),
                   child: SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 25),
+                      padding: EdgeInsets.fromLTRB(
+                        pagePadding,
+                        10,
+                        pagePadding,
+                        Responsive.verticalGap(context, 25, compact: 12),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -60,17 +67,25 @@ class SentimentPulsePage extends StatelessWidget {
                             },
                             child: const Text("Back"),
                           ),
-                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: Responsive.verticalGap(
+                              context,
+                              10,
+                              compact: 6,
+                            ),
+                          ),
 
                           Image.asset(
                             'assets/images/healthphplusbarlogo.png',
-                            height: 55,
+                            height: Responsive.logoHeight(context),
                           ),
 
-                          const Text(
+                          Text(
                             "Sentiment Pulse",
                             style: TextStyle(
-                              fontSize: 22,
+                              fontSize: Responsive.isLandscapePhone(context)
+                                  ? 20
+                                  : 22,
                               fontWeight: FontWeight.bold,
                               color: Colors.indigo,
                             ),
@@ -90,7 +105,7 @@ class SentimentPulsePage extends StatelessWidget {
                 ),
                 Expanded(
                   child: Container(
-                    margin: const EdgeInsets.all(16),
+                    margin: contentMargin,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -112,7 +127,7 @@ class SentimentPulsePage extends StatelessWidget {
                               Tab(text: "Overview"),
                               Tab(text: "Trends"),
                               Tab(text: "Regional"),
-                              Tab(text: "Survey")
+                              Tab(text: "Survey"),
                             ],
                           ),
                         ),
@@ -332,12 +347,10 @@ class SurveyTab extends StatefulWidget {
   State<SurveyTab> createState() => _SurveyTabState();
 }
 
-class _SurveyTabState extends State<SurveyTab>{
+class _SurveyTabState extends State<SurveyTab> {
   late Future<List<MobileSurvey>> surveyFuture;
 
-  final surveyService = SentimentSurveyService(
-    baseUrl: ApiConfig.baseUrl
-  );
+  final surveyService = SentimentSurveyService(baseUrl: ApiConfig.baseUrl);
 
   @override
   void initState() {
@@ -433,7 +446,7 @@ class _SurveyTabState extends State<SurveyTab>{
                         color: AppTheme.primary,
                       ),
                     ),
-                    if (survey.subtitle.isNotEmpty) ... [
+                    if (survey.subtitle.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
                         survey.subtitle,
@@ -446,7 +459,7 @@ class _SurveyTabState extends State<SurveyTab>{
                     Text(
                       "${survey.responses} / ${survey.target} responses",
                       style: const TextStyle(fontSize: 11),
-                     ),
+                    ),
                   ],
                 ),
               ),
@@ -483,7 +496,9 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     final cleanedAnswers = Map<String, dynamic>.from(answers)
-      ..removeWhere((_, value) => value == null || value.toString().trim().isEmpty);
+      ..removeWhere(
+        (_, value) => value == null || value.toString().trim().isEmpty,
+      );
 
     if (cleanedAnswers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -502,9 +517,8 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
       "barangay": profile?.barangay,
     }..removeWhere((_, value) => value == null || value == "");
 
-    final metadata = <String, dynamic>{
-      "roleId": profile?.roleId,
-    }..removeWhere((_, value) => value == null || value == "");
+    final metadata = <String, dynamic>{"roleId": profile?.roleId}
+      ..removeWhere((_, value) => value == null || value == "");
 
     setState(() => isSubmitting = true);
 
@@ -647,18 +661,31 @@ class _QuestionCard extends StatelessWidget {
       case "multipleChoice":
         return Column(
           children: question.choices.map((choice) {
-            return RadioListTile<String>(
-              value: choice,
-              groupValue: answer?.toString(),
-              onChanged: isSubmitting
+            final isSelected = answer?.toString() == choice;
+
+            return InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: isSubmitting
                   ? null
-                  : (value) {
-                      answers[question.id] = value;
+                  : () {
+                      answers[question.id] = choice;
                       onChanged();
                     },
-              title: Text(choice),
-              dense: true,
-              contentPadding: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                      color: isSelected ? AppTheme.primary : AppTheme.mutedText,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(choice)),
+                  ],
+                ),
+              ),
             );
           }).toList(),
         );
@@ -698,7 +725,8 @@ class _QuestionCard extends StatelessWidget {
             border: OutlineInputBorder(),
           ),
           validator: (value) {
-            if (question.isRequired && (value == null || value.trim().isEmpty)) {
+            if (question.isRequired &&
+                (value == null || value.trim().isEmpty)) {
               return "This question is required.";
             }
             return null;

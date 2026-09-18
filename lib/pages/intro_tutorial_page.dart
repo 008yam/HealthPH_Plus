@@ -104,21 +104,28 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
   @override
   Widget build(BuildContext context) {
     final isTablet = Responsive.isTablet(context);
+    final isLandscapePhone = Responsive.isLandscapePhone(context);
     final tutorialHeight =
-        (MediaQuery.sizeOf(context).height * (isTablet ? 0.38 : 0.32))
-            .clamp(isTablet ? 320 : 230.0, isTablet ? 500.0 : 340.0)
+        (MediaQuery.sizeOf(context).height *
+                (isTablet ? 0.38 : (isLandscapePhone ? 0.42 : 0.32)))
+            .clamp(
+              isTablet ? 320 : (isLandscapePhone ? 150.0 : 230.0),
+              isTablet ? 500.0 : (isLandscapePhone ? 210.0 : 340.0),
+            )
             .toDouble();
 
     final cardMaxWidth = isTablet ? 720.0 : Responsive.formMaxWidth(context);
-    final cardPadding = isTablet ? 36.0 : 18.0;
+    final cardPadding = isTablet ? 36.0 : (isLandscapePhone ? 14.0 : 18.0);
     final logoHeight = isTablet
         ? 104.0
-        : (Responsive.isSmallPhone(context) ? 62.0 : 72.0);
-    final iconRadius = isTablet ? 64.0 : 34.0;
-    final iconSize = isTablet ? 48.0 : 34.0;
-    final titleSize = isTablet ? 32.0 : 22.0;
-    final descriptionSize = isTablet ? 18.0 : 13.0;
-    final buttonHeight = isTablet ? 52.0 : 46.0;
+        : (isLandscapePhone
+              ? 46.0
+              : (Responsive.isSmallPhone(context) ? 62.0 : 72.0));
+    final iconRadius = isTablet ? 64.0 : (isLandscapePhone ? 28.0 : 34.0);
+    final iconSize = isTablet ? 48.0 : (isLandscapePhone ? 28.0 : 34.0);
+    final titleSize = isTablet ? 32.0 : (isLandscapePhone ? 20.0 : 22.0);
+    final descriptionSize = isTablet ? 18.0 : (isLandscapePhone ? 12.0 : 13.0);
+    final buttonHeight = isTablet ? 52.0 : Responsive.buttonHeight(context);
     final activeTutorial = tutorials[currentIndex];
     final activeAccent = activeTutorial.accent;
     final activeSoftBackground = activeTutorial.softBackground;
@@ -149,11 +156,19 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                           children: [
                             Image.asset(
                               'assets/images/healthphbarlogowhite.png',
-                              width: isTablet ? 420 : 280,
+                              width: isTablet
+                                  ? 420
+                                  : (isLandscapePhone ? 220 : 280),
                               height: logoHeight,
                               fit: BoxFit.contain,
                             ),
-                            SizedBox(height: isTablet ? 36 : 28),
+                            SizedBox(
+                              height: Responsive.verticalGap(
+                                context,
+                                isTablet ? 36 : 28,
+                                compact: 12,
+                              ),
+                            ),
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 320),
                               curve: Curves.easeOut,
@@ -194,69 +209,111 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                         final visibility = (1 - pageDelta.abs())
                                             .clamp(0.0, 1.0)
                                             .toDouble();
-                                        final scale =
-                                            0.92 + (visibility * 0.08);
-                                        final opacity =
-                                            0.55 + (visibility * 0.45);
 
-                                        return Transform.scale(
-                                          scale: scale,
-                                          child: Opacity(
-                                            opacity: opacity,
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
+                                        final scale = 0.9 + (visibility * 0.1);
+                                        final opacity =
+                                            0.42 + (visibility * 0.50);
+                                        final ghostShift = pageDelta * -36;
+                                        final iconShift = pageDelta * 56;
+                                        final titleShift = pageDelta * 32;
+                                        final descriptionShift = pageDelta * 18;
+                                        final verticalLift =
+                                            pageDelta.abs() * 10;
+
+                                        return Opacity(
+                                          opacity: opacity,
+                                          child: Transform.scale(
+                                            scale: scale,
+                                            child: Stack(
+                                              alignment: Alignment.center,
                                               children: [
-                                                Transform.translate(
-                                                  offset: Offset(
-                                                    pageDelta * 42,
-                                                    pageDelta.abs() * -6,
-                                                  ),
-                                                  child: CircleAvatar(
-                                                    radius: iconRadius,
-                                                    backgroundColor: item.accent
+                                                Positioned(
+                                                  right: -24 + ghostShift,
+                                                  top: 16 + verticalLift,
+                                                  child: Icon(
+                                                    item.icon,
+                                                    size: isTablet ? 150 : 108,
+                                                    color: item.accent
                                                         .withValues(
-                                                          alpha: 0.14,
+                                                          alpha: 0.08,
                                                         ),
-                                                    child: Icon(
-                                                      item.icon,
-                                                      size: iconSize,
-                                                      color: item.accent,
-                                                    ),
                                                   ),
                                                 ),
-                                                const SizedBox(height: 18),
-                                                Transform.translate(
-                                                  offset: Offset(
-                                                    pageDelta * 28,
-                                                    0,
-                                                  ),
-                                                  child: Text(
-                                                    item.title,
-                                                    textAlign: TextAlign.center,
-                                                    style: TextStyle(
-                                                      color: AppTheme.navy,
-                                                      fontSize: titleSize,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Transform.translate(
+                                                      offset: Offset(
+                                                        iconShift,
+                                                        -verticalLift,
+                                                      ),
+                                                      child: CircleAvatar(
+                                                        radius: iconRadius,
+                                                        backgroundColor: item
+                                                            .accent
+                                                            .withValues(
+                                                              alpha: 0.14,
+                                                            ),
+                                                        child: Icon(
+                                                          item.icon,
+                                                          size: iconSize,
+                                                          color: item.accent,
+                                                        ),
+                                                      ),
                                                     ),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                Transform.translate(
-                                                  offset: Offset(
-                                                    pageDelta * 16,
-                                                    0,
-                                                  ),
-                                                  child: Text(
-                                                    item.description,
-                                                    textAlign: TextAlign.center,
-                                                    style: TextStyle(
-                                                      color: AppTheme.mutedText,
-                                                      fontSize: descriptionSize,
-                                                      height: 1.45,
+                                                    SizedBox(
+                                                      height:
+                                                          Responsive.verticalGap(
+                                                            context,
+                                                            24,
+                                                            compact: 10,
+                                                          ),
                                                     ),
-                                                  ),
+                                                    Transform.translate(
+                                                      offset: Offset(
+                                                        titleShift,
+                                                        0,
+                                                      ),
+                                                      child: Text(
+                                                        item.title,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          color: AppTheme.text,
+                                                          fontSize: titleSize,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(
+                                                      height:
+                                                          Responsive.verticalGap(
+                                                            context,
+                                                            12,
+                                                            compact: 6,
+                                                          ),
+                                                    ),
+                                                    Transform.translate(
+                                                      offset: Offset(
+                                                        descriptionShift,
+                                                        0,
+                                                      ),
+                                                      child: Text(
+                                                        item.description,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          color: AppTheme
+                                                              .mutedText,
+                                                          fontSize:
+                                                              descriptionSize,
+                                                          height: 1.45,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
@@ -293,7 +350,13 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                       );
                                     }),
                                   ),
-                                  const SizedBox(height: 18),
+                                  SizedBox(
+                                    height: Responsive.verticalGap(
+                                      context,
+                                      18,
+                                      compact: 10,
+                                    ),
+                                  ),
                                   Row(
                                     children: [
                                       TextButton(

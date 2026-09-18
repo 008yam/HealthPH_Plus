@@ -4,6 +4,8 @@ class UserProfile {
   final String? id;
   final String fullName;
   final String email;
+  final String? accessToken;
+  final bool pinConfigured;
   final String roleId;
   final String role;
   final String language;
@@ -17,6 +19,8 @@ class UserProfile {
     this.id,
     required this.fullName,
     required this.email,
+    this.accessToken,
+    this.pinConfigured = false,
     required this.roleId,
     required this.role,
     required this.language,
@@ -27,29 +31,37 @@ class UserProfile {
     required this.barangay,
   });
 
-
   String get locationLabel => "$barangay, $city, $province";
   bool get hasAddress =>
-      regionCode.isNotEmpty && province.isNotEmpty && city.isNotEmpty && barangay.isNotEmpty;
+      regionCode.isNotEmpty &&
+      province.isNotEmpty &&
+      city.isNotEmpty &&
+      barangay.isNotEmpty;
 
-  UserProfile copyWith({String? language}) {
+  UserProfile copyWith({
+    String? language,
+    bool? pinConfigured,
+    String? accessToken,
+  }) {
     return UserProfile(
-    id: id,
-    fullName: fullName,
-    email: email,
-    roleId: roleId,
-    role: role,
-    language: language ?? this.language,
-    regionCode: regionCode,
-    regionLabel: regionLabel,
-    province: province,
-    city: city,
-    barangay: barangay,
+      id: id,
+      fullName: fullName,
+      email: email,
+      accessToken: accessToken ?? this.accessToken,
+      roleId: roleId,
+      role: role,
+      language: language ?? this.language,
+      regionCode: regionCode,
+      regionLabel: regionLabel,
+      province: province,
+      city: city,
+      barangay: barangay,
+      pinConfigured: pinConfigured ?? this.pinConfigured,
     );
   }
 }
 
-class ProfileStore extends ChangeNotifier{
+class ProfileStore extends ChangeNotifier {
   ProfileStore._();
 
   static final ProfileStore instance = ProfileStore._();

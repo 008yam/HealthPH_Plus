@@ -66,5 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+<string>HealthPH+ uses Face ID or fingerprint authentication to unlock your saved account on this device.</string>
 </dict>
 </plist>

@@ -52,7 +52,8 @@ class FloatingNavBar extends StatelessWidget {
 
     _pushWithTransition(context, page, index);
   }
-    void _pushWithTransition(BuildContext context, Widget page, int nextIndex) {
+
+  void _pushWithTransition(BuildContext context, Widget page, int nextIndex) {
     final slideFromRight = nextIndex > selectedIndex;
 
     Navigator.pushReplacement(
@@ -62,19 +63,17 @@ class FloatingNavBar extends StatelessWidget {
         reverseTransitionDuration: _pageTransitionDuration,
         pageBuilder: (_, _, _) => page,
         transitionsBuilder: (_, animation, _, child) {
-          final offsetAnimation = Tween<Offset>(
-            begin: Offset(slideFromRight ? 0.12 : -0.12, 0),
-            end: Offset.zero,
-          ).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-          );
+          final offsetAnimation =
+              Tween<Offset>(
+                begin: Offset(slideFromRight ? 0.12 : -0.12, 0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              );
 
           return FadeTransition(
             opacity: animation,
-            child: SlideTransition(
-              position: offsetAnimation,
-              child: child,
-            ),
+            child: SlideTransition(position: offsetAnimation, child: child),
           );
         },
       ),
@@ -83,15 +82,26 @@ class FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navHeight = Responsive.bottomNavHeight(context);
+    final horizontalPadding = Responsive.isLandscapePhone(context)
+        ? 28.0
+        : 16.0;
+    final verticalPadding = Responsive.isLandscapePhone(context) ? 4.0 : 6.0;
+
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+        padding: EdgeInsets.fromLTRB(
+          horizontalPadding,
+          verticalPadding,
+          horizontalPadding,
+          Responsive.isLandscapePhone(context) ? 6 : 10,
+        ),
         child: Container(
-          height: 60,
+          height: navHeight,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(navHeight / 2),
             border: Border.all(color: AppTheme.border),
             boxShadow: [
               BoxShadow(
@@ -137,7 +147,7 @@ class FloatingNavBar extends StatelessWidget {
       icon: icon,
       label: label,
       isSelected: isSelected,
-      showLabel: isSelected && !Responsive.isSmallPhone(context),
+      showLabel: isSelected && Responsive.showBottomNavLabel(context),
       onTap: () => _navigate(context, index),
     );
   }
@@ -158,33 +168,27 @@ class _FlipNavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       key: ValueKey("${icon.codePoint}-$isSelected"),
-      tween: Tween<double>(
-        begin: 0,
-        end: isSelected ? 1 : 0,
-      ),
+      tween: Tween<double>(begin: 0, end: isSelected ? 1 : 0),
       duration: const Duration(milliseconds: 520),
       curve: Curves.easeOutBack,
       child: Icon(icon, color: color),
       builder: (context, value, child) {
-        final rotation = isSelected ? value * math.pi * 2: 0.0;
+        final rotation = isSelected ? value * math.pi * 2 : 0.0;
         final pop = math.sin(value * math.pi);
         final scale = isSelected
             ? 1.0 + (pop * (FloatingNavBar._iconPopScale - 1.0))
             : 1.0;
         final lift = isSelected ? pop * FloatingNavBar._iconLift : 0.0;
 
-            return Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateY(rotation),
-              child: Transform.translate(
-                offset: Offset(0, lift),
-                child: Transform.scale(
-                  scale: scale,
-                  child: child,
-                ),
-              ),
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.001)
+            ..rotateY(rotation),
+          child: Transform.translate(
+            offset: Offset(0, lift),
+            child: Transform.scale(scale: scale, child: child),
+          ),
         );
       },
     );
@@ -217,7 +221,7 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem> {
     setState(() => isPressed = true);
     await Future.delayed(FloatingNavBar._tapPreviewDelay);
 
-    if(!mounted) return;
+    if (!mounted) return;
 
     setState(() => isPressed = false);
     widget.onTap();
@@ -234,8 +238,8 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem> {
           duration: FloatingNavBar._pillDuration,
           curve: Curves.easeOutCubic,
           padding: EdgeInsets.symmetric(
-            horizontal: widget.isSelected ? 16 : 12,
-            vertical: 8,
+            horizontal: widget.isSelected ? 16 : 10,
+            vertical: Responsive.isLandscapePhone(context) ? 6 : 8,
           ),
           decoration: BoxDecoration(
             color: widget.isSelected ? AppTheme.primary : Colors.transparent,
@@ -247,10 +251,10 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem> {
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
-                ]
+                  ]
                 : null,
           ),
-          child: Row (
+          child: Row(
             children: [
               _FlipNavIcon(
                 icon: widget.icon,
@@ -264,7 +268,7 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem> {
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                   ),
+                  ),
                 ),
               ],
             ],

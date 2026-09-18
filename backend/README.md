@@ -11,6 +11,8 @@ This backend exposes working API endpoints for:
 - Mobile self-report submissions
 - Mobile self-report map pins
 - Mobile self-report CSV export
+- Mobile user JWT login and protected account preferences
+- Authenticated mobile alert inbox, detail, and read acknowledgement
 
 The current implementation uses an in-memory service layer so the API can run immediately. Replace `app/services/data_store.py` with MongoDB-backed repositories when the shared database is ready.
 
@@ -47,6 +49,10 @@ POST /api/mobile/self-reports
 GET  /api/mobile/self-reports/mine
 GET  /api/mobile/self-reports/map-pins
 GET  /api/mobile/self-reports/export
+POST /api/mobile/users/login
+GET  /api/mobile/alerts
+GET  /api/mobile/alerts/{alert_id}
+PATCH /api/mobile/alerts/{alert_id}/read
 ```
 
 ## Deployment
@@ -67,3 +73,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 Set environment variables from `.env.example`.
+
+Use a unique production `SECRET_KEY`. Mobile login tokens use audience `mobile`
+and token type `mobile_access`. The alert inbox reads published assignments from
+`regional_alerts` and `mobile_notification_deliveries` in the configured MongoDB
+database.

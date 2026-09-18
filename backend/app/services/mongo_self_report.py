@@ -69,13 +69,21 @@ class MongoSelfReportStore:
             user_id: str | None = None,
             email: str | None = None,
     ) -> list[SelfReportRecord]:
-        query = {}
+        cleaned_user_id = (user_id or "").strip()
+        cleaned_email = (email or "").strip()
 
-        if user_id:
-            query["reporter.userId"] = user_id
-
-        if email:
-            query["reporter.email"] = email
+        if cleaned_user_id:
+            query = {
+                "reporter.userId": cleaned_user_id,
+                "reporter.reporterType": "registered",
+            }
+        elif cleaned_email:
+            query = {
+                "reporter.email": cleaned_email,
+                "reporter.reporterType": "registered",
+            }
+        else:
+            return []
 
         rows = self.collection.find(query).sort("createdAt", DESCENDING)
         return [self._doc_to_record(row) for row in rows]

@@ -13,29 +13,43 @@ class ThemedBackground extends StatelessWidget {
       animation: AppSettingsStore.instance,
       builder: (context, _) {
         final mode = AppSettingsStore.instance.visualMode;
+        final screen = MediaQuery.sizeOf(context);
+        final isLandscape = screen.width > screen.height;
 
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 450),
+        return SizedBox.expand(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 450),
+                  layoutBuilder: (currentChild, previousChildren) {
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [...previousChildren, ?currentChild],
+                    );
+                  },
                   child: Image.asset(
-                  mode.backgroundAsset,
-                  key: ValueKey(mode.backgroundAsset),
-                  fit: BoxFit.cover,
-                  alignment: mode.backgroundAlignment,
+                    mode.backgroundAsset,
+                    key: ValueKey("${mode.backgroundAsset}-$isLandscape"),
+                    width: screen.width,
+                    height: screen.height,
+                    fit: BoxFit.cover,
+                    alignment: isLandscape
+                        ? Alignment.center
+                        : mode.backgroundAlignment,
+                  ),
                 ),
               ),
-            ),
-            Positioned.fill(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 450),
-                color: mode.backgroundOverlayColor,
+              Positioned.fill(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 450),
+                  color: mode.backgroundOverlayColor,
+                ),
               ),
-            ),
-            child,
-          ],
+              child,
+            ],
+          ),
         );
       },
     );

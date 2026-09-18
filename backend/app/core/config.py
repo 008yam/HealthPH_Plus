@@ -61,4 +61,31 @@ class Settings:
 
     mongo_id_counters_collection: str = "id_counters"
 
+    mongo_regional_alerts_collection: str = "regional_alerts"
+
+    mongo_mobile_notification_deliveries_collection: str = (
+        "mobile_notification_deliveries"
+    )
+
+    mobile_jwt_secret: str = os.getenv(
+        "SECRET_KEY",
+        "development-only-change-this-mobile-jwt-secret",
+    )
+
+    mobile_jwt_algorithm: str = os.getenv("ALGORITHM", "HS256")
+
+    mobile_access_token_expire_minutes: int = int(
+        os.getenv("MOBILE_ACCESS_TOKEN_EXPIRE_MINUTES", "60")
+    )
+
+    mobile_bcrypt_rounds: int = max(
+        int(os.getenv("MOBILE_BCRYPT_ROUNDS", "12")),
+        12,
+    )
+
+    mobile_migrate_pbkdf2_to_bcrypt: bool = os.getenv(
+        "MOBILE_MIGRATE_PBKDF2_TO_BCRYPT",
+        "false",
+    ).strip().lower() in {"1", "true", "yes", "on"}
+
 settings = Settings()

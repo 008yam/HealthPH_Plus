@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'data_collection_page.dart';
 
@@ -6,6 +5,7 @@ import '../models/mobile_survey.dart';
 import '../services/api_config.dart';
 import '../services/healthph_api_services.dart';
 import '../services/sentiment_survey_service.dart';
+import '../services/self_report_store.dart';
 import 'sentiment_pulse_page.dart';
 import '../widgets/coach_mark.dart';
 import '../login_page.dart';
@@ -15,7 +15,10 @@ import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
 import '../widgets/floating_navbar.dart';
 import 'language_selection_page.dart';
+import 'self_report_history_page.dart';
 import '../services/app_settings_store.dart';
+import '../services/biometric_auth_service.dart';
+import '../widgets/six_digit_field.dart';
 
 class SettingsPage extends StatefulWidget {
   final int selectedNavIndex;
@@ -32,8 +35,12 @@ class _SettingsPageState extends State<SettingsPage> {
   final surveyKey = GlobalKey();
   final languageKey = GlobalKey();
 
-  void _logout() {
+  Future<void> _logout() async {
+    await BiometricAuthService.instance.clearSavedProfile();
+    await AppSettingsStore.instance.setFingerprintLoginEnabled(false);
     ProfileStore.instance.clearProfile();
+
+    if (!mounted) return;
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -46,25 +53,39 @@ class _SettingsPageState extends State<SettingsPage> {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: HealthPhVisualMode.values.map((mode) {
-                final selected = AppSettingsStore.instance.visualMode == mode;
+        final screen = MediaQuery.sizeOf(sheetContext);
+        final isLandscapePhone = Responsive.isLandscapePhone(sheetContext);
+        final maxSheetHeight = screen.height * (isLandscapePhone ? 0.86 : 0.72);
 
-                return _ThemePreviewTile(
-                  mode: mode,
-                  selected: selected,
-                  onTap: () async {
-                    await AppSettingsStore.instance.setVisualMode(mode);
-                    if (sheetContext.mounted) Navigator.pop(sheetContext);
-                  },
-                );
-              }).toList(),
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxSheetHeight),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                0,
+                16,
+                isLandscapePhone ? 10 : 18,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: HealthPhVisualMode.values.map((mode) {
+                  final selected = AppSettingsStore.instance.visualMode == mode;
+
+                  return _ThemePreviewTile(
+                    mode: mode,
+                    selected: selected,
+                    compact: isLandscapePhone,
+                    onTap: () async {
+                      await AppSettingsStore.instance.setVisualMode(mode);
+                      if (sheetContext.mounted) Navigator.pop(sheetContext);
+                    },
+                  );
+                }).toList(),
+              ),
             ),
           ),
         );
@@ -72,67 +93,72 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-Future<void> _setPin() async {
-  final profile = ProfileStore.instance.profile;
-  final userId = profile?.id;
+  Future<void> _setPin() async {
+    final profile = ProfileStore.instance.profile;
+    final userId = profile?.id;
 
-  if (userId == null || userId.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Please sign in with a registered account first."),
-      ),
-    );
-    return;
-  }
-
-  final result = await showDialog<
-      ({String pin, String currentPassword})>(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => const _SetPinDialog(),
-  );
-
-  if (result == null || !mounted) return;
-
-  try {
-    await HealthPhApiService(
-      baseUrl: ApiConfig.baseUrl,
-    ).setMobileUserPin(
-      userId: userId,
-      pin: result.pin,
-      currentPassword: result.currentPassword,
-    );
-
-    await AppSettingsStore.instance.markPinConfigured();
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Your PIN was saved successfully.")),
-    );
-  } catch (error) {
-    debugPrint("Unable to save PIN: $error");
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Unable to save PIN. Check your password and connection.",
+    if (userId == null || userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please sign in with a registered account first."),
         ),
+      );
+      return;
+    }
+
+    final result = await showDialog<({String pin, String currentPassword})>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _SetPinDialog(),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      await HealthPhApiService(baseUrl: ApiConfig.baseUrl).setMobileUserPin(
+        userId: userId,
+        pin: result.pin,
+        currentPassword: result.currentPassword,
+        accessToken: profile?.accessToken,
+      );
+
+      await AppSettingsStore.instance.markPinConfigured();
+      if (profile != null) {
+        ProfileStore.instance.saveProfile(
+          profile.copyWith(pinConfigured: true),
+        );
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Your PIN was saved successfully.")),
+      );
+    } catch (error) {
+      debugPrint("Unable to save PIN: $error");
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Unable to save PIN. Check your password and connection.",
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _replayCoachMarks() async {
+    await CoachMark.resetAllDiscoveries();
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Coach marks will replay when you revisit pages."),
       ),
     );
   }
-}
-
-Future<void> _replayCoachMarks() async {
-  await CoachMark.resetAllDiscoveries();
-
-  if (!mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text("Coach marks will replay when you revisit pages.")),
-  );
-}
 
   @override
   void initState() {
@@ -183,7 +209,7 @@ Future<void> _replayCoachMarks() async {
   Widget build(BuildContext context) {
     final profile = ProfileStore.instance.profile;
     final isTablet = Responsive.isTablet(context);
-    final maxContentWidth = isTablet ? 620.0 : Responsive.formMaxWidth(context);
+    final maxContentWidth = Responsive.contentMaxWidth(context);
     final isProfileTab = widget.selectedNavIndex == 3;
     final appSettings = AppSettingsStore.instance;
 
@@ -191,121 +217,131 @@ Future<void> _replayCoachMarks() async {
       extendBody: true,
       backgroundColor: Colors.transparent,
       body: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              Responsive.pagePadding(context),
-              Responsive.pagePadding(context),
-              Responsive.pagePadding(context),
-              96,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxContentWidth),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                   SizedBox(height: isTablet ? 52 : 36),
-                    const SizedBox(height: 20),
-                    Text(
-                      isProfileTab ? "Profile" : "Settings",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: appSettings.visualMode.onBackground,
-                        fontSize: isTablet ? 34 : 28,
-                        fontWeight: FontWeight.w900,
-                      ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            Responsive.pagePadding(context),
+            Responsive.pagePadding(context),
+            Responsive.pagePadding(context),
+            Responsive.bottomNavClearance(context),
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxContentWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: isTablet ? 52 : 36),
+                  const SizedBox(height: 20),
+                  Text(
+                    isProfileTab ? "Profile" : "Settings",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: appSettings.visualMode.onBackground,
+                      fontSize: isTablet ? 34 : 28,
+                      fontWeight: FontWeight.w900,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      isProfileTab
-                          ? "Account, reports, surveys, and sign-in options"
-                          : "Display, language, and guide preferences",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: appSettings.visualMode.onBackgroundMuted,
-                        fontSize: isTablet ? 17 : 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    isProfileTab
+                        ? "Account, reports, surveys, and sign-in options"
+                        : "Display, language, and guide preferences",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: appSettings.visualMode.onBackgroundMuted,
+                      fontSize: isTablet ? 17 : 14,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 22),
-                    if (isProfileTab) ...[
-                      KeyedSubtree(
-                        key: profileKey,
-                        child: _ProfileCard(profile: profile, isTablet: isTablet),
-                      ),
-                      const SizedBox(height: 18),
-                      KeyedSubtree(
-                        key: selfReportKey,
-                        child: _SelfReportButton(isTablet: isTablet),
-                      ),
-                      const SizedBox(height: 12),
-                      KeyedSubtree(
-                        key: surveyKey,
-                        child: _SurveyButton(isTablet: isTablet),
-                      ),
-                      const SizedBox(height: 18),
-                      _AuthenticationSection(
+                  ),
+                  const SizedBox(height: 22),
+                  if (isProfileTab) ...[
+                    KeyedSubtree(
+                      key: profileKey,
+                      child: _ProfileCard(profile: profile, isTablet: isTablet),
+                    ),
+                    const SizedBox(height: 18),
+                    KeyedSubtree(
+                      key: selfReportKey,
+                      child: _SelfReportButton(isTablet: isTablet),
+                    ),
+                    const SizedBox(height: 12),
+                    _SelfReportHistoryButton(isTablet: isTablet),
+                    const SizedBox(height: 12),
+                    KeyedSubtree(
+                      key: surveyKey,
+                      child: _SurveyButton(isTablet: isTablet),
+                    ),
+                    const SizedBox(height: 18),
+                    _AuthenticationSection(
+                      isTablet: isTablet,
+                      settings: appSettings,
+                      onSetPin: _setPin,
+                    ),
+                    const SizedBox(height: 12),
+                    _SettingsTile(
+                      icon: Icons.logout_rounded,
+                      title: "Logout",
+                      subtitle: "Clear this session and return to login",
+                      isTablet: isTablet,
+                      accentColor: AppTheme.highRisk,
+                      surfaceColor: const Color(0xFFFFF1F2),
+                      onTap: _logout,
+                    ),
+                  ] else ...[
+                    _SettingsSectionTitle(title: "Display", isTablet: isTablet),
+                    _SettingsTile(
+                      icon: Icons.palette_outlined,
+                      title: "Appearance",
+                      subtitle:
+                          "Current theme: ${appSettings.visualMode.label}",
+                      isTablet: isTablet,
+                      accentColor: appSettings.visualMode.accentColor,
+                      borderColor: appSettings.visualMode.accentColor
+                          .withValues(alpha: 0.45),
+                      onTap: _showAppearancePicker,
+                    ),
+                    const SizedBox(height: 12),
+                    _SettingsTile(
+                      icon: Icons.tips_and_updates_outlined,
+                      title: "Replay Coach Marks",
+                      subtitle: "Show guide highlights again",
+                      isTablet: isTablet,
+                      accentColor: AppTheme.info,
+                      borderColor: AppTheme.warning.withValues(alpha: 0.45),
+                      onTap: _replayCoachMarks,
+                    ),
+                    const SizedBox(height: 18),
+                    _SettingsSectionTitle(
+                      title: "Language",
+                      isTablet: isTablet,
+                    ),
+                    KeyedSubtree(
+                      key: languageKey,
+                      child: _SettingsTile(
+                        icon: Icons.language,
+                        title: "Language Selection",
+                        subtitle:
+                            "Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon",
                         isTablet: isTablet,
-                        settings: appSettings,
-                        onSetPin: _setPin,
-                      ),
-                      const SizedBox(height: 12),
-                      _SettingsTile(
-                        icon: Icons.logout_rounded,
-                        title: "Logout",
-                        subtitle: "Clear this session and return to login",
-                        isTablet: isTablet,
-                        accentColor: AppTheme.highRisk,
-                        surfaceColor: const Color(0xFFFFF1F2),
-                        onTap: _logout,
-                      ),
-                    ] else ...[
-                      _SettingsSectionTitle(title: "Display", isTablet: isTablet),
-                      _SettingsTile(
-                        icon: Icons.palette_outlined,
-                        title: "Appearance",
-                        subtitle: "Current theme: ${appSettings.visualMode.label}",
-                        isTablet: isTablet,
-                        accentColor: appSettings.visualMode.accentColor,
-                        borderColor: appSettings.visualMode.accentColor.withValues(alpha: 0.45),
-                        onTap: _showAppearancePicker,
-                      ),
-                      const SizedBox(height: 12),
-                      _SettingsTile(
-                        icon: Icons.tips_and_updates_outlined,
-                        title: "Replay Coach Marks",
-                        subtitle: "Show guide highlights again",
-                        isTablet: isTablet,
-                        accentColor: AppTheme.info,
-                        borderColor: AppTheme.warning.withValues(alpha: 0.45),
-                        onTap: _replayCoachMarks,
-                      ),
-                      const SizedBox(height: 18),
-                      _SettingsSectionTitle(title: "Language", isTablet: isTablet),
-                      KeyedSubtree(
-                        key: languageKey,
-                        child: _SettingsTile(
-                          icon: Icons.language,
-                          title: "Language Selection",
-                          subtitle: "Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon",
-                          isTablet: isTablet,
-                          borderColor: AppTheme.info.withValues(alpha: 0.45),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const LanguageSelectionPage(returnToSettings: true),
+                        borderColor: AppTheme.info.withValues(alpha: 0.45),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LanguageSelectionPage(
+                                returnToSettings: true,
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
           ),
+        ),
       ),
       bottomNavigationBar: FloatingNavBar(
         selectedIndex: widget.selectedNavIndex,
@@ -736,6 +772,98 @@ class _SelfReportButton extends StatelessWidget {
   }
 }
 
+class _SelfReportHistoryButton extends StatelessWidget {
+  final bool isTablet;
+
+  const _SelfReportHistoryButton({required this.isTablet});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: SelfReportStore.instance,
+      builder: (context, _) {
+        final localCount = SelfReportStore.instance.reports.length;
+
+        return Material(
+          color: const Color(0xFFEFFAF5),
+          borderRadius: BorderRadius.circular(16),
+          elevation: 3,
+          shadowColor: Colors.black26,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SelfReportHistoryPage(),
+                ),
+              );
+            },
+            child: Container(
+              height: isTablet ? 145 : 116,
+              padding: EdgeInsets.symmetric(horizontal: isTablet ? 28 : 20),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppTheme.success, width: 1.4),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: isTablet ? 64 : 54,
+                    height: isTablet ? 64 : 54,
+                    decoration: BoxDecoration(
+                      color: AppTheme.success.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Icon(
+                      Icons.fact_check_outlined,
+                      color: AppTheme.success,
+                      size: isTablet ? 34 : 28,
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "My Self-Reports",
+                          style: TextStyle(
+                            color: AppTheme.text,
+                            fontSize: isTablet ? 27 : 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          localCount > 0
+                              ? "Review your account contribution"
+                              : "Review your symptom contributions",
+                          style: TextStyle(
+                            color: AppTheme.success,
+                            fontSize: isTablet ? 15 : 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: AppTheme.success,
+                    size: isTablet ? 32 : 28,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _SurveyButton extends StatefulWidget {
   final bool isTablet;
 
@@ -906,35 +1034,15 @@ class _SetPinDialog extends StatefulWidget {
 }
 
 class _SetPinDialogState extends State<_SetPinDialog> {
-  final pinControllers = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-
-  final pinFocusNodes = List.generate(
-    6,
-    (_) => FocusNode(),
-  );
-
+  final pinController = TextEditingController();
   final passwordController = TextEditingController();
+
+  final pinFocusNode = FocusNode();
+  final passwordFocusNode = FocusNode();
 
   String? errorMessage;
 
-  String get enteredPin {
-    return pinControllers.map((controller) => controller.text).join();
-  }
-
-  void handleDigitChanged(int index, String value) {
-    if (value.isNotEmpty) {
-      if (index < pinFocusNodes.length - 1) {
-        pinFocusNodes[index + 1].requestFocus();
-      } else {
-        pinFocusNodes[index].unfocus();
-      }
-    } else if (index > 0) {
-      pinFocusNodes[index - 1].requestFocus();
-    }
-  }
+  String get enteredPin => pinController.text.trim();
 
   void submit() {
     final pin = enteredPin;
@@ -944,6 +1052,7 @@ class _SetPinDialogState extends State<_SetPinDialog> {
       setState(() {
         errorMessage = "Enter all six PIN digits.";
       });
+      pinFocusNode.requestFocus();
       return;
     }
 
@@ -951,29 +1060,19 @@ class _SetPinDialogState extends State<_SetPinDialog> {
       setState(() {
         errorMessage = "Enter your current account password.";
       });
+      passwordFocusNode.requestFocus();
       return;
     }
 
-    Navigator.pop(
-      context,
-      (
-        pin: pin,
-        currentPassword: currentPassword,
-      ),
-    );
+    Navigator.pop(context, (pin: pin, currentPassword: currentPassword));
   }
 
   @override
   void dispose() {
-    for (final controller in pinControllers) {
-      controller.dispose();
-    }
-
-    for (final focusNode in pinFocusNodes) {
-      focusNode.dispose();
-    }
-
+    pinController.dispose();
     passwordController.dispose();
+    pinFocusNode.dispose();
+    passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -989,57 +1088,25 @@ class _SetPinDialogState extends State<_SetPinDialog> {
               "Enter a six-digit numeric PIN. Each digit uses a separate box.",
             ),
             const SizedBox(height: 18),
-            Row(
-              children: List.generate(6, (index) {
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      right: index == 5 ? 0 : 6,
-                    ),
-                    child: TextField(
-                      controller: pinControllers[index],
-                      focusNode: pinFocusNodes[index],
-                      autofocus: index == 0,
-                      obscureText: true,
-                      obscuringCharacter: "•",
-                      keyboardType: TextInputType.number,
-                      textInputAction: index == 5
-                          ? TextInputAction.done
-                          : TextInputAction.next,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      decoration: const InputDecoration(
-                        counterText: "",
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: 14,
-                        ),
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(1),
-                      ],
-                      onTap: () {
-                        final controller = pinControllers[index];
-
-                        controller.selection = TextSelection(
-                          baseOffset: 0,
-                          extentOffset: controller.text.length,
-                        );
-                      },
-                      onChanged: (value) {
-                        handleDigitChanged(index, value);
-                      },
-                      onSubmitted: (_) {
-                        if (index == 5) submit();
-                      },
-                    ),
-                  ),
-                );
-              }),
+            SixDigitPinField(
+              controller: pinController,
+              focusNode: pinFocusNode,
+              autofocus: true,
+              onChanged: (_) {
+                if (errorMessage != null) {
+                  setState(() {
+                    errorMessage = null;
+                  });
+                }
+              },
+              onCompleted: (_) {
+                passwordFocusNode.requestFocus();
+              },
             ),
             const SizedBox(height: 18),
             TextField(
               controller: passwordController,
+              focusNode: passwordFocusNode,
               obscureText: true,
               textInputAction: TextInputAction.done,
               decoration: const InputDecoration(
@@ -1052,10 +1119,7 @@ class _SetPinDialogState extends State<_SetPinDialog> {
               const SizedBox(height: 12),
               Text(
                 errorMessage!,
-                style: const TextStyle(
-                  color: AppTheme.highRisk,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: AppTheme.highRisk, fontSize: 12),
               ),
             ],
           ],
@@ -1066,10 +1130,7 @@ class _SetPinDialogState extends State<_SetPinDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text("Cancel"),
         ),
-        ElevatedButton(
-          onPressed: submit,
-          child: const Text("Save PIN"),
-        ),
+        ElevatedButton(onPressed: submit, child: const Text("Save PIN")),
       ],
     );
   }
@@ -1092,33 +1153,33 @@ class _AuthenticationSection extends StatelessWidget {
       children: [
         _SettingsSectionTitle(title: "Authentications", isTablet: isTablet),
         _SettingsTile(
-        icon: Icons.pin_outlined,
-        title: "PIN Login",
-        subtitle: !settings.hasPin
-            ? "Set PIN first"
-            : settings.pinLoginEnabled
-                ? "Enabled"
-                : "Disabled",
-        isTablet: isTablet,
-        onTap: () {
-          if (!settings.hasPin) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  "You need to set a six-digit PIN before enabling PIN login.",
+          icon: Icons.pin_outlined,
+          title: "PIN Login",
+          subtitle: !settings.hasPin
+              ? "Set PIN first"
+              : settings.pinLoginEnabled
+              ? "Enabled"
+              : "Disabled",
+          isTablet: isTablet,
+          onTap: () {
+            if (!settings.hasPin) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "You need to set a six-digit PIN before enabling PIN login.",
+                  ),
                 ),
-              ),
+              );
+
+              onSetPin();
+              return;
+            }
+
+            AppSettingsStore.instance.setPinLoginEnabled(
+              !settings.pinLoginEnabled,
             );
-
-            onSetPin();
-            return;
-          }
-
-          AppSettingsStore.instance.setPinLoginEnabled(
-            !settings.pinLoginEnabled,
-          );
-        },
-      ),
+          },
+        ),
         const SizedBox(height: 12),
         _SettingsTile(
           icon: Icons.edit_outlined,
@@ -1133,9 +1194,51 @@ class _AuthenticationSection extends StatelessWidget {
           title: "Fingerprint Login",
           subtitle: settings.fingerprintLoginEnabled ? "Enabled" : "Available",
           isTablet: isTablet,
-          onTap: () {
-            AppSettingsStore.instance.setFingerprintLoginEnabled(
-              !settings.fingerprintLoginEnabled,
+          onTap: () async {
+            if (settings.fingerprintLoginEnabled) {
+              await BiometricAuthService.instance.clearSavedProfile();
+              await AppSettingsStore.instance.setFingerprintLoginEnabled(false);
+
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Biometric login disabled.")),
+              );
+              return;
+            }
+
+            final profile = ProfileStore.instance.profile;
+            if (profile == null || profile.id == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Login first before enabling biometrics."),
+                ),
+              );
+              return;
+            }
+
+            final unlocked = await BiometricAuthService.instance.authenticate();
+
+            if (!context.mounted) return;
+
+            if (!unlocked) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Biometrics authentication is unavailable or cancelled.",
+                  ),
+                ),
+              );
+              return;
+            }
+
+            await BiometricAuthService.instance.saveProfileForBiometricLogin(
+              profile,
+            );
+            await AppSettingsStore.instance.setFingerprintLoginEnabled(true);
+
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Biometric login enabled")),
             );
           },
         ),
@@ -1221,19 +1324,23 @@ class _SettingsTile extends StatelessWidget {
 class _ThemePreviewTile extends StatelessWidget {
   final HealthPhVisualMode mode;
   final bool selected;
+  final bool compact;
   final VoidCallback onTap;
 
   const _ThemePreviewTile({
     required this.mode,
     required this.selected,
+    this.compact = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final previewSize = compact ? 42.0 : 54.0;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 240),
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: compact ? 8 : 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1243,26 +1350,42 @@ class _ThemePreviewTile extends StatelessWidget {
         ),
       ),
       child: ListTile(
+        dense: compact,
+        visualDensity: compact
+            ? const VisualDensity(horizontal: -2, vertical: -4)
+            : VisualDensity.standard,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 16,
+          vertical: compact ? 4 : 8,
+        ),
         onTap: onTap,
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Image.asset(
             mode.backgroundAsset,
-            width: 54,
-            height: 54,
+            width: previewSize,
+            height: previewSize,
             fit: BoxFit.cover,
           ),
         ),
         title: Text(
           mode.label,
-          style: const TextStyle(
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
             color: AppTheme.text,
+            fontSize: compact ? 14 : 16,
             fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: Text(
           mode.description,
-          style: const TextStyle(color: AppTheme.mutedText),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: AppTheme.mutedText,
+            fontSize: compact ? 12 : 14,
+          ),
         ),
         trailing: selected
             ? Icon(Icons.check_circle, color: mode.accentColor)

@@ -39,8 +39,8 @@ class HealthPhApiService {
     final language = profile?.language.isNotEmpty == true
         ? profile!.language
         : savedLanguage?.isNotEmpty == true
-            ? savedLanguage!
-            : "English";
+        ? savedLanguage!
+        : "English";
 
     final payload = {
       "reporter": {
@@ -98,6 +98,49 @@ class HealthPhApiService {
     throw Exception('Failed to load self-report map pings');
   }
 
+  Future<List<Map<String, dynamic>>> fetchMySelfReports({
+    String? userId,
+    String? email,
+  }) async {
+    final query = <String, String>{};
+    final cleanedUserId = userId?.trim();
+    final cleanedEmail = email?.trim();
+
+    if (cleanedUserId != null && cleanedUserId.isNotEmpty) {
+      query["user_id"] = cleanedUserId;
+    } else if (cleanedEmail != null && cleanedEmail.isNotEmpty) {
+      query["email"] = cleanedEmail;
+    }
+
+    if (query.isEmpty) {
+      throw ArgumentError("A user id or email is required.");
+    }
+
+    final uri = Uri.parse(
+      "$baseUrl/api/mobile/self-reports/mine",
+    ).replace(queryParameters: query);
+
+    final response = await http.get(uri).timeout(const Duration(seconds: 12));
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is List) {
+        return decoded
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+      }
+
+      return [];
+    }
+
+    throw Exception(
+      "Failed to load your self-reports "
+      "(${response.statusCode}): ${response.body}",
+    );
+  }
+
   Future<List<Map<String, dynamic>>> fetchHealthLiteracyContent() async {
     final response = await http
         .get(Uri.parse('$baseUrl/api/health-literacy/mobile'))
@@ -126,11 +169,16 @@ class HealthPhApiService {
     );
   }
 
-  UserProfile _profileFromJson(Map<String, dynamic> json) {
+  UserProfile _profileFromJson(
+    Map<String, dynamic> json, {
+    String? accessToken,
+  }) {
     return UserProfile(
       id: json["id"] as String?,
       fullName: json["fullName"] as String? ?? "",
       email: json["email"] as String? ?? "",
+      accessToken: accessToken ?? json["accessToken"]?.toString(),
+      pinConfigured: json["pinConfigured"] as bool? ?? false,
       roleId: json["roleId"] as String? ?? "user",
       role: json["roleLabel"] as String? ?? json["role"] as String? ?? "User",
       language: json["language"] as String? ?? "English",
@@ -190,21 +238,31 @@ class HealthPhApiService {
       throw Exception("Failed to login: ${response.body}");
     }
 
-    return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+
+    final token = decoded["access_token"]?.toString();
+    final userPayload = decoded["user"];
+
+    if (userPayload is Map) {
+      return _profileFromJson(
+        Map<String, dynamic>.from(userPayload),
+        accessToken: token,
+      );
+    }
+
+    return _profileFromJson(decoded);
   }
 
   Future<void> setMobileUserPin({
     required String userId,
     required String pin,
     required String currentPassword,
+    required String? accessToken,
   }) async {
     final response = await http.patch(
       Uri.parse("$baseUrl/api/mobile/users/$userId/pin"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "pin": pin,
-        "currentPassword": currentPassword,
-      }),
+      headers: _authenticatedHeaders(accessToken),
+      body: jsonEncode({"pin": pin, "currentPassword": currentPassword}),
     );
 
     if (response.statusCode != 200) {
@@ -212,13 +270,32 @@ class HealthPhApiService {
     }
   }
 
+  Future<UserProfile> verifyMobileUserPin({
+    required String userId,
+    required String pin,
+    required String? accessToken,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/mobile/users/$userId/pin/verify"),
+      headers: _authenticatedHeaders(accessToken),
+      body: jsonEncode({"pin": pin}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to verify PIN: ${response.body}");
+    }
+
+    return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  }
+
   Future<UserProfile> updatedMobileUserLanguage({
     required String userId,
     required String language,
+    required String? accessToken,
   }) async {
     final response = await http.patch(
       Uri.parse("$baseUrl/api/mobile/users/$userId/language"),
-      headers: {"Content-Type": "application/json"},
+      headers: _authenticatedHeaders(accessToken),
       body: jsonEncode({"language": language}),
     );
 
@@ -227,5 +304,32 @@ class HealthPhApiService {
     }
 
     return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  }
+
+  Future<int> fetchMobileUsersCount() async {
+    final response = await http
+        .get(Uri.parse("$baseUrl/api/mobile/users/count"))
+        .timeout(const Duration(seconds: 12));
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      return (decoded["count"] as num?)?.toInt() ?? 0;
+    }
+
+    throw Exception(
+      "Failed to load mobile users count (${response.statusCode}): ${response.body}",
+    );
+  }
+
+  Map<String, String> _authenticatedHeaders(String? accessToken) {
+    final token = accessToken?.trim() ?? "";
+    if (token.isEmpty) {
+      throw StateError("A mobile access token is required.");
+    }
+
+    return {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $token",
+    };
   }
 }

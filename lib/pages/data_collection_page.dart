@@ -11,6 +11,7 @@ import '../theme/responsive.dart';
 import '../services/self_report_database.dart';
 import '../services/self_report_export_service.dart';
 import '../widgets/coach_mark.dart';
+import '../services/api_config.dart';
 import '../services/healthph_api_services.dart';
 
 class DataCollectionPage extends StatefulWidget {
@@ -69,6 +70,12 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final pagePadding = Responsive.pagePadding(context);
+    final headerRadius = Responsive.isLandscapePhone(context) ? 24.0 : 45.0;
+    final contentMargin = Responsive.isLandscapePhone(context)
+        ? EdgeInsets.fromLTRB(pagePadding, 8, pagePadding, 8)
+        : EdgeInsets.all(pagePadding * 0.8);
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -82,18 +89,23 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                   key: dataHeaderKey,
                   child: Container(
                     width: double.infinity,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(45),
-                        bottomRight: Radius.circular(45),
+                        bottomLeft: Radius.circular(headerRadius),
+                        bottomRight: Radius.circular(headerRadius),
                       ),
                     ),
 
                     child: SafeArea(
                       bottom: false,
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                        padding: EdgeInsets.fromLTRB(
+                          pagePadding,
+                          10,
+                          pagePadding,
+                          Responsive.verticalGap(context, 20, compact: 12),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -113,19 +125,25 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                               child: const Text("Back"),
                             ),
 
-                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: Responsive.verticalGap(context, 8),
+                            ),
 
                             Image.asset(
                               'assets/images/healthphplusbarlogo.png',
-                              height: 55,
+                              height: Responsive.logoHeight(context),
                             ),
 
-                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: Responsive.verticalGap(context, 8),
+                            ),
 
-                            const Text(
+                            Text(
                               "Data Collection",
                               style: TextStyle(
-                                fontSize: 22,
+                                fontSize: Responsive.isLandscapePhone(context)
+                                    ? 20
+                                    : 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.indigo,
                               ),
@@ -147,9 +165,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
 
                 Expanded(
                   child: Container(
-                    margin: EdgeInsets.all(
-                      Responsive.pagePadding(context) * 0.8,
-                    ),
+                    margin: contentMargin,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -568,9 +584,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     await SelfReportDatabase.instance.insertReport(report);
 
     try {
-      await HealthPhApiService(
-        baseUrl: "http://127.0.0.1:8000",
-      ). submitSelfReport(
+      await HealthPhApiService(baseUrl: ApiConfig.baseUrl).submitSelfReport(
         report: report,
         regionName: selectedRegion!.name,
         provinceCode: selectedProvince?.code,

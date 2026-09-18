@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
 import '../widgets/coach_mark.dart';
 import '../services/healthph_api_services.dart';
+import '../theme/responsive.dart';
 
 class HealthLiteracyPage extends StatefulWidget {
   const HealthLiteracyPage({super.key});
@@ -201,6 +202,9 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final pagePadding = Responsive.pagePadding(context);
+    final headerRadius = Responsive.isLandscapePhone(context) ? 24.0 : 35.0;
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -214,17 +218,22 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                   key: literacyHeaderKey,
                   child: Container(
                     width: double.infinity,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(35),
-                        bottomRight: Radius.circular(35),
+                        bottomLeft: Radius.circular(headerRadius),
+                        bottomRight: Radius.circular(headerRadius),
                       ),
                     ),
                     child: SafeArea(
                       bottom: false,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 22),
+                        padding: EdgeInsets.fromLTRB(
+                          pagePadding,
+                          10,
+                          pagePadding,
+                          Responsive.verticalGap(context, 22, compact: 12),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -255,17 +264,21 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                               child: const Text("Back"),
                             ),
 
-                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: Responsive.verticalGap(context, 8),
+                            ),
 
                             Image.asset(
                               'assets/images/healthphplusbarlogo.png',
-                              height: 55,
+                              height: Responsive.logoHeight(context),
                             ),
 
-                            const Text(
+                            Text(
                               "Health Literacy Hub",
                               style: TextStyle(
-                                fontSize: 21,
+                                fontSize: Responsive.isLandscapePhone(context)
+                                    ? 19
+                                    : 21,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF243B8F),
                               ),
@@ -280,7 +293,13 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                               ),
                             ),
 
-                            const SizedBox(height: 14),
+                            SizedBox(
+                              height: Responsive.verticalGap(
+                                context,
+                                14,
+                                compact: 8,
+                              ),
+                            ),
 
                             // SEARCH BAR - NOW FUNCTIONAL
                             KeyedSubtree(
@@ -327,7 +346,13 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                               ),
                             ),
 
-                            const SizedBox(height: 10),
+                            SizedBox(
+                              height: Responsive.verticalGap(
+                                context,
+                                10,
+                                compact: 6,
+                              ),
+                            ),
 
                             KeyedSubtree(
                               key: literacyTabsKey,

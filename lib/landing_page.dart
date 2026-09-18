@@ -3,7 +3,6 @@ import 'main_page.dart';
 import 'login_page.dart';
 import 'theme/responsive.dart';
 
-
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
@@ -12,7 +11,6 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
-
   static const Duration _splashDelay = Duration(seconds: 2);
 
   @override
@@ -29,7 +27,7 @@ class _LandingPageState extends State<LandingPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+    );
   }
 
   void goToMainPage() {
@@ -62,21 +60,23 @@ class _LandingPageState extends State<LandingPage> {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-              padding: const EdgeInsets.only(bottom: 46),
-              child: SizedBox(
-                width: 34,
-                height: 34,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  backgroundColor: Colors.white.withValues(alpha: 0.35),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFF31459B)
+                padding: EdgeInsets.only(
+                  bottom: Responsive.verticalGap(context, 46, compact: 24),
+                ),
+                child: SizedBox(
+                  width: 34,
+                  height: 34,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    backgroundColor: Colors.white.withValues(alpha: 0.35),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF31459B),
+                    ),
                   ),
-                )
-              ),
+                ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

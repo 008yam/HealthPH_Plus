@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+
 class MobileUserCreate(BaseModel):
     fullName: str
     email: str
@@ -19,22 +20,31 @@ class MobileUserCreate(BaseModel):
     barangay: str
     source: Literal["mobile_registration"] = "mobile_registration"
 
+
 class MobileUserLanguageUpdate(BaseModel):
     language: str
+
 
 class MobileUserPinUpdate(BaseModel):
     currentPassword: str = Field(min_length=1)
     pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
 
+
+class MobileUserPinVerify(BaseModel):
+    pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
 class MobileUserLogin(BaseModel):
     email: str
     password: str
+
 
 class MobileUserRecord(BaseModel):
     id: str
     fullName: str
     email: str
     roleId: Literal["user"] = "user"
+    pinConfigured: bool = False
     roleLabel: str
     regionCode: str
     regionLabel: str
@@ -45,3 +55,9 @@ class MobileUserRecord(BaseModel):
     source: Literal["mobile_registration"] = "mobile_registration"
     createdAt: datetime
     updatedAt: datetime
+
+
+class MobileUserLoginResponse(BaseModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+    user: MobileUserRecord

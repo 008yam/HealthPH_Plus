@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
+
+import bcrypt
 from fastapi import HTTPException
 
 from datetime import datetime, timezone
@@ -36,14 +38,20 @@ class MongoMobileUserStore:
 
         existing = self.collection.find_one({"email": email})
         if existing:
+            stored_password = (
+                existing.get("passwordHash") or existing.get("password") or ""
+            )
             update_data = {
                 **data,
                 "updatedAt": now,
             }
 
-            if not existing.get("passwordHash"):
+            if not stored_password:
                 update_data["passwordHash"] = self._hash_password(payload.password)
-            elif not self._verify_password(payload.password, existing["passwordHash"]):
+            elif not self._verify_password(
+                payload.password,
+                stored_password,
+            ):
                 raise HTTPException(
                     status_code=409,
                     detail="Email already exists. Please login using the original password.",
@@ -80,15 +88,40 @@ class MongoMobileUserStore:
     def login_mobile_user(self, payload: MobileUserLogin) -> MobileUserRecord:
         user = self.collection.find_one({"email": payload.email.strip().lower()})
 
+        stored_password = (
+            user.get("passwordHash") or user.get("password") or ""
+            if user
+            else ""
+        )
+
         if not user or not self._verify_password(
             payload.password,
-            user.get("passwordHash", ""),
+            stored_password,
         ):
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
+        if (
+            self._is_pbkdf2_hash(stored_password)
+            and settings.mobile_migrate_pbkdf2_to_bcrypt
+        ):
+            migrated_hash = self._hash_password(payload.password)
+            password_field = "passwordHash" if "passwordHash" in user else "password"
+            self.collection.update_one(
+                {"_id": user["_id"]},
+                {"$set": {password_field: migrated_hash}},
+            )
+            user[password_field] = migrated_hash
+
         return self._record_from_document(user)
 
-    def update_mobile_user_language(self, user_id: str, language: str) -> MobileUserRecord:
+    def count_mobile_users(self) -> int:
+        return self.collection.count_documents({})
+
+    def update_mobile_user_language(
+        self,
+        user_id: str,
+        language: str,
+    ) -> MobileUserRecord:
         clean_language = language.strip() or "English"
         now = datetime.now(timezone.utc)
 
@@ -104,17 +137,17 @@ class MongoMobileUserStore:
         return self._record_from_document(updated)
 
     def update_mobile_user_pin(
-            self,
-            user_id: str,
-            pin: str,
-            current_password: str,
+        self,
+        user_id: str,
+        pin: str,
+        current_password: str,
     ) -> None:
         document = self.collection.find_one({"id": user_id})
 
         if document is None:
             raise HTTPException(status_code=404, detail="Mobile user not found.")
 
-        password_hash = document.get("passwordHash", "")
+        password_hash = document.get("passwordHash") or document.get("password") or ""
 
         if not self._verify_password(current_password, password_hash):
             raise HTTPException(
@@ -126,7 +159,7 @@ class MongoMobileUserStore:
             {"id": user_id},
             {
                 "$set": {
-                    "pins": self._hash_password(pin),
+                    "pins": self._hash_pbkdf2_secret(pin),
                     "updatedAt": datetime.now(timezone.utc),
                 }
             },
@@ -134,6 +167,22 @@ class MongoMobileUserStore:
 
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Mobile user not found.")
+
+    def verify_mobile_user_pin(self, user_id: str, pin: str) -> MobileUserRecord:
+        document = self.collection.find_one({"id": user_id})
+
+        if document is None:
+            raise HTTPException(status_code=404, detail="Mobile user not found.")
+
+        stored_pin = document.get("pins", "")
+
+        if not stored_pin:
+            raise HTTPException(status_code=400, detail="PIN is not configured.")
+
+        if not self._verify_pbkdf2_secret(pin, stored_pin):
+            raise HTTPException(status_code=401, detail="Invalid PIN.")
+
+        return self._record_from_document(document)
 
     def _record_from_document(self, document: dict | None) -> MobileUserRecord:
         if document is None:
@@ -143,35 +192,58 @@ class MongoMobileUserStore:
         mongo_id = data.pop("_id", None)
         data["id"] = str(data.get("id") or mongo_id or "")
         data.pop("passwordHash", None)
+        data.pop("password", None)
+        data["pinConfigured"] = bool(data.get("pins"))
         data.pop("pins", None)
         data["language"] = str(data.get("language") or "English")
 
         return MobileUserRecord(**data)
 
     def _hash_password(self, password: str) -> str:
+        return bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt(rounds=settings.mobile_bcrypt_rounds),
+        ).decode("utf-8")
+
+    def _hash_pbkdf2_secret(self, secret: str) -> str:
         salt = secrets.token_hex(16)
         password_hash = hashlib.pbkdf2_hmac(
             "sha256",
-            password.encode("utf-8"),
+            secret.encode("utf-8"),
             salt.encode("utf-8"),
             100000,
         ).hex()
         return f"{salt}:{password_hash}"
 
     def _verify_password(self, password: str, stored_password: str) -> bool:
+        if self._is_pbkdf2_hash(stored_password):
+            return self._verify_pbkdf2_secret(password, stored_password)
+
         try:
-            salt, saved_hash = stored_password.split(":", 1)
-        except ValueError:
+            return bcrypt.checkpw(
+                password.encode("utf-8"),
+                stored_password.encode("utf-8"),
+            )
+        except (AttributeError, TypeError, ValueError):
+            return False
+
+    def _verify_pbkdf2_secret(self, secret: str, stored_secret: str) -> bool:
+        try:
+            salt, saved_hash = stored_secret.split(":", 1)
+        except (AttributeError, TypeError, ValueError):
             return False
 
         password_hash = hashlib.pbkdf2_hmac(
             "sha256",
-            password.encode("utf-8"),
+            secret.encode("utf-8"),
             salt.encode("utf-8"),
             100000,
         ).hex()
 
         return hmac.compare_digest(password_hash, saved_hash)
+
+    def _is_pbkdf2_hash(self, stored_secret: str) -> bool:
+        return isinstance(stored_secret, str) and ":" in stored_secret
 
 
 store = MongoMobileUserStore()
