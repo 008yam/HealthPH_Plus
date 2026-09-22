@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'services/sentiment_survey_service.dart';
 import 'package:flutter/material.dart';
 import 'package:healthphplus/pages/sentiment_pulse_page.dart';
 import 'package:healthphplus/widgets/floating_navbar.dart';
@@ -13,8 +12,10 @@ import 'widgets/coach_mark.dart';
 import 'services/api_config.dart';
 import 'services/healthph_api_services.dart';
 import 'models/mobile_alert.dart';
+import 'services/sentiment_survey_service.dart';
 import 'services/mobile_alert_service.dart';
 import 'services/profile_store.dart';
+import 'widgets/app_skeleton.dart';
 
 //import 'pages/map_page.dart';
 //import 'widgets/floating_navbar.dart';
@@ -110,7 +111,7 @@ class _MainPageState extends State<MainPage> {
       accessToken: ProfileStore.instance.profile?.accessToken,
     );
     mobileAlertCountFuture = mobileAlertsFuture
-        .then((page) => page.unreadCount)
+        .then((page) => page.items.length)
         .catchError((_) => 0);
   }
 
@@ -379,15 +380,9 @@ class _MainPageState extends State<MainPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-
                                 if (snapshot.connectionState ==
-                                    ConnectionState.waiting)
-                                  const Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  )
+                                  ConnectionState.waiting)
+                                  const _RecentAlertsSkeleton()
                                 else if (snapshot.hasError)
                                   Text(
                                     snapshot.error
@@ -563,7 +558,7 @@ class _MainPageState extends State<MainPage> {
                   _CarouselStatCard(
                     number: alertCount,
                     label: "Health Alerts",
-                    subtitle: "Unread inbox alerts",
+                    subtitle: "Recent inbox alerts",
                     icon: Icons.local_hospital,
                     accentColor: AppTheme.warning,
                   ),
@@ -639,6 +634,38 @@ class _MainPageState extends State<MainPage> {
           },
         );
       },
+    );
+  }
+}
+
+class _RecentAlertsSkeleton extends StatelessWidget {
+  const _RecentAlertsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+        3,
+        (index) => Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.88),
+            border: Border.all(color: AppTheme.border),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppSkeleton(height: 15, width: 210),
+              SizedBox(height: 8),
+              AppSkeleton(height: 12, width: 145),
+              SizedBox(height: 14),
+              AppSkeleton(height: 10, width: double.infinity),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

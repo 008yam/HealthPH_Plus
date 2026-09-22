@@ -7,6 +7,7 @@ import '../services/healthph_api_services.dart';
 import '../services/profile_store.dart';
 import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
+import '../widgets/app_skeleton.dart';
 
 class SelfReportHistoryPage extends StatefulWidget {
   const SelfReportHistoryPage({super.key});
@@ -549,11 +550,29 @@ class _LoadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.only(top: 80),
-        child: CircularProgressIndicator(),
-      ),
+    return Column(
+      children: [
+        const AppSkeleton(height: 92, width: double.infinity),
+        const SizedBox(height: 14),
+        ...List.generate(
+          3,
+          (index) => const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppSkeleton(height: 18, width: 190),
+                SizedBox(height: 10),
+                AppSkeleton(height: 13, width: double.infinity),
+                SizedBox(height: 7),
+                AppSkeleton(height: 13, width: 230),
+                SizedBox(height: 12),
+                Divider(),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
