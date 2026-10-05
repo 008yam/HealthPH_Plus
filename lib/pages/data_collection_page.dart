@@ -36,13 +36,13 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
 
         CoachMark.showOnce(
           context,
-          discoveryKey: "data_collection_v3",
+          discoveryKey: "data_collection_v4",
           steps: [
             CoachMarkStep(
               targetKey: dataHeaderKey, //Header Coach Mark
               title: "Data Collection",
               description:
-                  "This page lets users to contribute to disease surveillance by self-reporting symptoms and review submitted reports",
+                  "Contribute symptom information to disease surveillance and review reports connected to your account.",
               icon: Icons.assignment,
               color: AppTheme.primary,
             ),
@@ -50,7 +50,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
               targetKey: dataTabsKey, //Collection Coach Mark
               title: "Collection Tabs",
               description:
-                  "Use these to switch between self-reporting, your reports, and community reports",
+                  "Switch between submitting a self-report, reviewing your reports, and community information.",
               icon: Icons.tab,
               color: AppTheme.info,
             ),
@@ -58,7 +58,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
               targetKey: dataContentKey, //Self-Report Coach Mark
               title: "Self Report Form",
               description:
-                  "Complete your address, symptoms, and notes before submitting a respiratory health report",
+                  "Complete your location, symptoms, duration, severity, and notes before submitting your report.",
               icon: Icons.add_location_alt_outlined,
               color: AppTheme.warning,
             ),
@@ -172,51 +172,54 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                       border: Border.all(color: AppTheme.border),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Column(
-                      children: [
-                        KeyedSubtree(
-                          key: dataTabsKey,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: TabBar(
-                              isScrollable: Responsive.isSmallPhone(context),
-                              labelColor: Colors.black,
-                              unselectedLabelColor: Colors.grey,
-                              indicator: BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: Colors.indigo,
-                                    width: 3,
+                    child: Theme(
+                      data: AppTheme.lightTheme,
+                      child: Column(
+                        children: [
+                          KeyedSubtree(
+                            key: dataTabsKey,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.black),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: TabBar(
+                                isScrollable: Responsive.isSmallPhone(context),
+                                labelColor: Colors.black,
+                                unselectedLabelColor: Colors.grey,
+                                indicator: BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: Colors.indigo,
+                                      width: 3,
+                                    ),
                                   ),
                                 ),
+                                tabs: [
+                                  Tab(text: "Self Report"),
+                                  Tab(text: "My Reports"),
+                                  Tab(text: "Community"),
+                                ],
                               ),
-                              tabs: [
-                                Tab(text: "Self Report"),
-                                Tab(text: "My Reports"),
-                                Tab(text: "Community"),
-                              ],
                             ),
                           ),
-                        ),
 
-                        const SizedBox(height: 14),
+                          const SizedBox(height: 14),
 
-                        Expanded(
-                          child: KeyedSubtree(
-                            key: dataContentKey,
-                            child: TabBarView(
-                              children: [
-                                _SelfReportTab(),
-                                _MyReportsTab(),
-                                _CommunityTab(),
-                              ],
+                          Expanded(
+                            child: KeyedSubtree(
+                              key: dataContentKey,
+                              child: TabBarView(
+                                children: [
+                                  _SelfReportTab(),
+                                  _MyReportsTab(),
+                                  _CommunityTab(),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

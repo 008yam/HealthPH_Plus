@@ -31,7 +31,11 @@ class MongoSelfReportStore:
             key="self_reports",
             prefix="SEL",
         )
-        record_data = payload.model_dump(exclude={"createdAt"})
+
+        record_data = payload.model_dump(
+        exclude={"createdAt"},
+        exclude_none=True,
+        )
 
         record = SelfReportRecord(
             **record_data,

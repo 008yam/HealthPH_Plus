@@ -4,7 +4,11 @@ import '../services/weather_service.dart';
 import '../theme/app_theme.dart';
 
 class WeatherWidget extends StatefulWidget {
-  const WeatherWidget({super.key});
+  final bool compact;
+  const WeatherWidget({
+    super.key,
+    this.compact = false,
+  });
 
   @override
   State<WeatherWidget> createState() => _WeatherWidgetState();
@@ -24,11 +28,35 @@ class _WeatherWidgetState extends State<WeatherWidget> {
     return FutureBuilder(
       future: weatherFuture,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox(
+            height: widget.compact ? 78 : 120,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Container(
+            height: widget.compact ? 78 : 120,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.94),
+              border: Border.all(color: AppTheme.border),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child:  const Text(
+              "Wearher unavailable",
+              style: TextStyle(color: AppTheme.mutedText),
+
+            ),
+          );
         }
 
         final weather = snapshot.data!;
+
+        if (widget.compact) {
+          return _CompactWeatherCard(weather: weather);
+        }
 
         return Container(
           width: double.infinity,
@@ -51,10 +79,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
 
               const Text(
                 "Today",
-                style: TextStyle(
-                  color: AppTheme.mutedText,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: AppTheme.mutedText, fontSize: 10),
               ),
 
               Center(
@@ -154,6 +179,117 @@ class _WeatherWidgetState extends State<WeatherWidget> {
           ),
         );
       },
+    );
+  }
+}
+
+class _CompactWeatherCard extends StatelessWidget {
+  final WeatherModel weather;
+
+  const _CompactWeatherCard({required this.weather});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 78),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        border: Border.all(color: AppTheme.border),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.wb_sunny_rounded,
+              color: Colors.orange,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  weather.city,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppTheme.text,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  "${weather.temperature.round()}°C · Today",
+                  style: const TextStyle(
+                    color: AppTheme.navy,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _CompactMetric(
+                icon: Icons.water_drop_outlined,
+                value: "${weather.humidity}%",
+              ),
+              _CompactMetric(
+                icon: Icons.blur_on_rounded,
+                value: "AQI ${weather.aqi}",
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactMetric extends StatelessWidget {
+  final IconData icon;
+  final String value;
+
+  const _CompactMetric({required this.icon, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: AppTheme.primary),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: AppTheme.text,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 }

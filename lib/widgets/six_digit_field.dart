@@ -82,9 +82,7 @@ class _SixDigitPinFieldState extends State<SixDigitPinField> {
               children: List.generate(6, (index) {
                 final hasDigit = index < pin.length;
                 final isActive =
-                    widget.enabled &&
-                    pin.length < 6 &&
-                    index == pin.length;
+                    widget.enabled && pin.length < 6 && index == pin.length;
 
                 return Expanded(
                   child: Padding(
@@ -140,10 +138,9 @@ class _SixDigitPinFieldState extends State<SixDigitPinField> {
                       border: InputBorder.none,
                     ),
                     onTap: () {
-                      widget.controller.selection =
-                          TextSelection.collapsed(
-                            offset: widget.controller.text.length,
-                          );
+                      widget.controller.selection = TextSelection.collapsed(
+                        offset: widget.controller.text.length,
+                      );
                     },
                   ),
                 ),

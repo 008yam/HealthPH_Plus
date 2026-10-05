@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../services/api_config.dart';
 import '../services/healthph_api_services.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
 import '../theme/responsive.dart';
+import '../widgets/coach_mark.dart';
 
 class DiseaseWatchPage extends StatefulWidget {
   const DiseaseWatchPage({super.key});
@@ -13,6 +15,9 @@ class DiseaseWatchPage extends StatefulWidget {
 
 class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
   final TextEditingController _searchController = TextEditingController();
+  final diseaseHeaderKey = GlobalKey();
+  final diseaseFiltersKey = GlobalKey();
+  final diseaseResultsKey = GlobalKey();
 
   String searchQuery = "";
   String selectedDisease = "All";
@@ -67,8 +72,45 @@ class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
     super.initState();
 
     diseaseFuture = HealthPhApiService(
-      baseUrl: 'http://127.0.0.1:8000',
+      baseUrl: ApiConfig.baseUrl,
     ).fetchDiseasePoints();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 650), () {
+        if (!mounted) return;
+
+        CoachMark.showOnce(
+          context,
+          discoveryKey: "disease_watch_v1",
+          steps: [
+            CoachMarkStep(
+              targetKey: diseaseHeaderKey,
+              title: "Disease Watch",
+              description:
+                  "Monitor reported respiratory disease activity across Philippine regions.",
+              icon: Icons.coronavirus_outlined,
+              color: AppTheme.highRisk,
+            ),
+            CoachMarkStep(
+              targetKey: diseaseFiltersKey,
+              title: "Search and Filter",
+              description:
+                  "Search a region or disease term, then narrow the results by disease category.",
+              icon: Icons.filter_alt_outlined,
+              color: AppTheme.info,
+            ),
+            CoachMarkStep(
+              targetKey: diseaseResultsKey,
+              title: "Regional Reports",
+              description:
+                  "Review each region's report totals and disease breakdown in the results list.",
+              icon: Icons.analytics_outlined,
+              color: AppTheme.warning,
+            ),
+          ],
+        );
+      });
+    });
   }
 
   @override
@@ -93,6 +135,7 @@ class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
           Column(
             children: [
               Container(
+                key: diseaseHeaderKey,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -181,246 +224,270 @@ class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
                     border: Border.all(color: AppTheme.border),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) {
-                                setState(() {
-                                  searchQuery = value.toLowerCase().trim();
-                                });
-                              },
-                              decoration: InputDecoration(
-                                hintText: "Find Diseases",
-                                hintStyle: const TextStyle(fontSize: 11),
-                                prefixIcon: const Icon(Icons.search, size: 18),
-                                filled: true,
-                                fillColor: const Color(0xFFF2F2F2),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue: selectedDisease,
-                              isExpanded: true,
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: const Color(0xFFF2F2F2),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: "All",
-                                  child: Text(
-                                    "Select all that apply",
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: "AURI",
-                                  child: Text(
-                                    "AURI",
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: "PN",
-                                  child: Text(
-                                    "Pneumonia",
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: "TB",
-                                  child: Text(
-                                    "Tuberculosis",
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: "COVID",
-                                  child: Text(
-                                    "COVID",
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedDisease = value!;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
+                  child: Theme(
+                    data: AppTheme.lightTheme,
+                    child: Column(
+                      children: [
+                        Row(
+                          key: diseaseFiltersKey,
                           children: [
                             Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                color: const Color(0xFFF3F3F3),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      "Active Outbreaks",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    CircleAvatar(
-                                      radius: 12,
-                                      backgroundColor: Colors.redAccent,
-                                      child: Text(
-                                        "$activeCount",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                              child: TextField(
+                                controller: _searchController,
+                                style: const TextStyle(color: AppTheme.text),
+                                cursorColor: AppTheme.primary,
+                                onChanged: (value) {
+                                  setState(() {
+                                    searchQuery = value.toLowerCase().trim();
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  hintText: "Find Diseases",
+                                  hintStyle: const TextStyle(
+                                    color: AppTheme.mutedText,
+                                    fontSize: 11,
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    color: AppTheme.mutedText,
+                                    size: 18,
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xFFF2F2F2),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide.none,
+                                  ),
                                 ),
                               ),
                             ),
+
+                            const SizedBox(width: 8),
+
                             Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                              child: DropdownButtonFormField<String>(
+                                initialValue: selectedDisease,
+                                isExpanded: true,
+                                style: const TextStyle(
+                                  color: AppTheme.text,
+                                  fontSize: 10,
                                 ),
-                                child: const Center(
-                                  child: Text(
-                                    "Resolved",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
+                                dropdownColor: Colors.white,
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: const Color(0xFFF2F2F2),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 8,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide.none,
                                   ),
                                 ),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: "All",
+                                    child: Text(
+                                      "Select all that apply",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: "AURI",
+                                    child: Text(
+                                      "AURI",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: "PN",
+                                    child: Text(
+                                      "Pneumonia",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: "TB",
+                                    child: Text(
+                                      "Tuberculosis",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: "COVID",
+                                    child: Text(
+                                      "COVID",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedDisease = value!;
+                                  });
+                                },
                               ),
                             ),
                           ],
                         ),
-                      ),
 
-                      const SizedBox(height: 18),
+                        const SizedBox(height: 10),
 
-                      Expanded(
-                        child: FutureBuilder<Map<String, dynamic>>(
-                          future: diseaseFuture,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-
-                            if (snapshot.hasError) {
-                              return Center(
-                                child: Text(
-                                  "Error: ${snapshot.error}",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  color: const Color(0xFFF3F3F3),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        "Active Outbreaks",
+                                        style: TextStyle(
+                                          color: AppTheme.text,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: Colors.redAccent,
+                                        child: Text(
+                                          "$activeCount",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              );
-                            }
-
-                            final apiData = snapshot.data!;
-                            final regions = apiData["data"] as List;
-
-                            final filteredRegions = regions.where((region) {
-                              final regionName = region["region"]
-                                  .toString()
-                                  .toLowerCase();
-                              final annotations = List<String>.from(
-                                region["annotations"] ?? [],
-                              );
-                              final annotationsText = annotations
-                                  .join(" ")
-                                  .toLowerCase();
-
-                              final matchesSearch =
-                                  regionName.contains(searchQuery) ||
-                                  annotationsText.contains(searchQuery);
-
-                              final matchesCategory =
-                                  selectedDisease == "All" ||
-                                  annotations.contains(selectedDisease);
-
-                              return matchesSearch && matchesCategory;
-                            }).toList();
-
-                            if (filteredRegions.isEmpty) {
-                              return const Center(
-                                child: Text(
-                                  "No outbreaks found.",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      "Resolved",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              );
-                            }
-                            return ListView.builder(
-                              itemCount: filteredRegions.length,
-                              itemBuilder: (context, index) {
-                                final region = filteredRegions[index];
-                                final counts = region["annotations_count"];
-
-                                final int auri = counts["AURI"] ?? 0;
-                                final int pn = counts["PN"] ?? 0;
-                                final int tb = counts["TB"] ?? 0;
-                                final int covid = counts["COVID"] ?? 0;
-
-                                final int totalReports = auri + pn + tb + covid;
-
-                                return OutbreakCard(
-                                  title: "Region ${region["region"]}",
-                                  location:
-                                      "AURI: $auri | PN: $pn | TB: $tb | COVID: $covid",
-                                  percent: totalReports,
-                                  reports: totalReports,
-                                );
-                              },
-                            );
-                          },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+
+                        const SizedBox(height: 18),
+
+                        Expanded(
+                          key: diseaseResultsKey,
+                          child: FutureBuilder<Map<String, dynamic>>(
+                            future: diseaseFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+
+                              if (snapshot.hasError) {
+                                return Center(
+                                  child: Text(
+                                    "Error: ${snapshot.error}",
+                                    style: const TextStyle(
+                                      color: AppTheme.text,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final apiData = snapshot.data!;
+                              final regions = apiData["data"] as List;
+
+                              final filteredRegions = regions.where((region) {
+                                final regionName = region["region"]
+                                    .toString()
+                                    .toLowerCase();
+                                final annotations = List<String>.from(
+                                  region["annotations"] ?? [],
+                                );
+                                final annotationsText = annotations
+                                    .join(" ")
+                                    .toLowerCase();
+
+                                final matchesSearch =
+                                    regionName.contains(searchQuery) ||
+                                    annotationsText.contains(searchQuery);
+
+                                final matchesCategory =
+                                    selectedDisease == "All" ||
+                                    annotations.contains(selectedDisease);
+
+                                return matchesSearch && matchesCategory;
+                              }).toList();
+
+                              if (filteredRegions.isEmpty) {
+                                return const Center(
+                                  child: Text(
+                                    "No outbreaks found.",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }
+                              return ListView.builder(
+                                itemCount: filteredRegions.length,
+                                itemBuilder: (context, index) {
+                                  final region = filteredRegions[index];
+                                  final counts = region["annotations_count"];
+
+                                  final int auri = counts["AURI"] ?? 0;
+                                  final int pn = counts["PN"] ?? 0;
+                                  final int tb = counts["TB"] ?? 0;
+                                  final int covid = counts["COVID"] ?? 0;
+
+                                  final int totalReports =
+                                      auri + pn + tb + covid;
+
+                                  return OutbreakCard(
+                                    title: "Region ${region["region"]}",
+                                    location:
+                                        "AURI: $auri | PN: $pn | TB: $tb | COVID: $covid",
+                                    percent: totalReports,
+                                    reports: totalReports,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -482,6 +549,7 @@ class OutbreakCard extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
+                    color: AppTheme.text,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
@@ -540,6 +608,7 @@ class OutbreakCard extends StatelessWidget {
                           child: Text(
                             "$percent%",
                             style: const TextStyle(
+                              color: AppTheme.text,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -560,6 +629,7 @@ class OutbreakCard extends StatelessWidget {
                         const Text(
                           "Severity Levels",
                           style: TextStyle(
+                            color: AppTheme.text,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),

@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-
+import '../services/app_settings_store.dart';
 import 'package:flutter/material.dart';
 import '../pages/map_page.dart';
 import '../pages/settings_page.dart';
@@ -22,33 +22,12 @@ class FloatingNavBar extends StatelessWidget {
   void _navigate(BuildContext context, int index) {
     if (index == selectedIndex) return;
 
-    if (index == 3) {
-      _pushWithTransition(
-        context,
-        const SettingsPage(selectedNavIndex: 3),
-        index,
-      );
-      return;
-    }
-
-    Widget page;
-
-    switch (index) {
-      case 0:
-        page = const MapPage();
-        break;
-
-      case 1:
-        page = const MainPage();
-        break;
-
-      case 2:
-        page = const SettingsPage(selectedNavIndex: 2);
-        break;
-
-      default:
-        page = const MainPage();
-    }
+    final page = switch (index) {
+      0 => const MainPage(),
+      1 => const MapPage(),
+      2 => const SettingsPage(),
+      _ => const MainPage(),
+    };
 
     _pushWithTransition(context, page, index);
   }
@@ -82,6 +61,14 @@ class FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mode = AppSettingsStore.instance.visualMode;
+    final isDark = mode == HealthPhVisualMode.dark;
+    final navSurface = isDark
+        ? const Color(0xFF1F2937).withValues(alpha: 0.96)
+        : Colors.white;
+    final navBorder = isDark
+        ? Colors.white.withValues(alpha: 0.20)
+        : AppTheme.border;
     final navHeight = Responsive.bottomNavHeight(context);
     final horizontalPadding = Responsive.isLandscapePhone(context)
         ? 28.0
@@ -100,9 +87,9 @@ class FloatingNavBar extends StatelessWidget {
         child: Container(
           height: navHeight,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: navSurface,
             borderRadius: BorderRadius.circular(navHeight / 2),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: navBorder),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.10),
@@ -112,21 +99,33 @@ class FloatingNavBar extends StatelessWidget {
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _navItem(context, index: 0, icon: Icons.map, label: "Map"),
-              _navItem(context, index: 1, icon: Icons.home, label: "Home"),
-              _navItem(
-                context,
-                index: 2,
-                icon: Icons.settings,
-                label: "Settings",
+              Expanded(
+                child: Center(
+                  child: _navItem(
+                    context,
+                    index: 0,
+                    icon: Icons.home,
+                    label: "Home",
+                  ),
+                ),
               ),
-              _navItem(
-                context,
-                index: 3,
-                icon: Icons.person_outline,
-                label: "Profile",
+
+              const SizedBox(width: 8),
+
+              _centerMapButton(context),
+
+              const SizedBox(width: 8),
+
+              Expanded(
+                child: Center(
+                  child: _navItem(
+                    context,
+                    index: 2,
+                    icon: Icons.person_outline,
+                    label: "Profile",
+                  ),
+                ),
               ),
             ],
           ),
@@ -135,6 +134,38 @@ class FloatingNavBar extends StatelessWidget {
     );
   }
 
+  Widget _centerMapButton(BuildContext context) {
+    final selected = selectedIndex == 1;
+    final mode = AppSettingsStore.instance.visualMode;
+    return Tooltip(
+      message: "Disease Map",
+      child: GestureDetector(
+        onTap: () => _navigate(context, 1),
+        child: AnimatedContainer(
+          duration: _pillDuration,
+          width: 68,
+          height: 68,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: mode.accentColor,
+            border: Border.all(
+              color: selected ? AppTheme.warning : Colors.white,
+              width: 4,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.map_rounded, color: Colors.white, size: 32),
+        ),
+      ),
+    );
+  }
+  
   Widget _navItem(
     BuildContext context, {
     required int index,
@@ -229,6 +260,10 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem> {
 
   @override
   Widget build(BuildContext context) {
+    final mode = AppSettingsStore.instance.visualMode;
+    final inactiveColor = mode == HealthPhVisualMode.dark
+        ? Colors.white70
+        : Colors.grey.shade600;
     return GestureDetector(
       onTap: _handleTap,
       child: AnimatedScale(
@@ -238,11 +273,11 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem> {
           duration: FloatingNavBar._pillDuration,
           curve: Curves.easeOutCubic,
           padding: EdgeInsets.symmetric(
-            horizontal: widget.isSelected ? 16 : 10,
+            horizontal: widget.isSelected ? 12 : 10,
             vertical: Responsive.isLandscapePhone(context) ? 6 : 8,
           ),
           decoration: BoxDecoration(
-            color: widget.isSelected ? AppTheme.primary : Colors.transparent,
+            color: widget.isSelected ? mode.accentColor : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
             boxShadow: widget.isSelected
                 ? [
@@ -255,11 +290,12 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem> {
                 : null,
           ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               _FlipNavIcon(
                 icon: widget.icon,
                 isSelected: widget.isSelected || isPressed,
-                color: widget.isSelected ? Colors.white : Colors.grey.shade600,
+                color: widget.isSelected ? Colors.white : inactiveColor,
               ),
               if (widget.showLabel) ...[
                 const SizedBox(width: 6),

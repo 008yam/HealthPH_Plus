@@ -46,17 +46,13 @@ class GeocodingService {
 
     _lastRequestAt = DateTime.now();
 
-final uri = Uri.https(
-  "nominatim.openstreetmap.org",
-  "/search",
-  {
-    "format": "jsonv2",
-    "q": query,
-    "countrycodes": "ph",
-    "limit": "1",
-    "addressdetails": "1",
-    },
-  );
+    final uri = Uri.https("nominatim.openstreetmap.org", "/search", {
+      "format": "jsonv2",
+      "q": query,
+      "countrycodes": "ph",
+      "limit": "1",
+      "addressdetails": "1",
+    });
 
     final response = await http.get(
       uri,
@@ -72,7 +68,7 @@ final uri = Uri.https(
 
     final result = Map<String, dynamic>.from(decoded.first as Map);
     final latitude = double.tryParse(result["lat"]?.toString() ?? "");
-    final longitude = double.tryParse(result["lon"]?.toString() ?? "" );
+    final longitude = double.tryParse(result["lon"]?.toString() ?? "");
 
     if (latitude == null || longitude == null) return null;
 
@@ -80,7 +76,7 @@ final uri = Uri.https(
       latitude: latitude,
       longitude: longitude,
       displayName: result["display_name"]?.toString() ?? query,
-      );
+    );
 
     _cache[query] = geocoded;
     return geocoded;

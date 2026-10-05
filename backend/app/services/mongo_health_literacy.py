@@ -40,13 +40,8 @@ class MongoHealthLiteracyStore:
     ) -> list[HealthLiteracyContent]:
         filters: list[dict[str, Any]] = [
             {"isArchived": {"$ne": True}},
-            {
-                "$or": [
-                    {"publishToMobile": True},
-                    {"publishToWebsite": True},
-                    {"publishToMobile": {"$exists": False}},
-                ],
-            },
+            {"isPublished": {"$ne": False}},
+            {"publishToMobile": True},
         ]
 
         if content_type:
@@ -133,7 +128,18 @@ class MongoHealthLiteracyStore:
         )
         document["publicUrl"] = self._clean_optional_text(document.get("publicUrl"))
         document["shareUrl"] = self._clean_optional_text(document.get("shareUrl"))
-        document["imageUrl"] = self._first_text(document.get("imageUrl"), media_url)
+        media_content_type = (
+            self._clean_optional_text(media.get("contentType"))
+            if isinstance(media, dict)
+            else None
+        )
+        media_is_image = bool(
+            media_content_type and media_content_type.lower().startswith("image/")
+        )
+        document["imageUrl"] = self._first_text(
+            document.get("imageUrl"),
+            media_url if media_is_image else None,
+        )
         document["mediaUrl"] = media_url
         document["media"] = media if isinstance(media, dict) else None
         document["duration"] = self._clean_optional_text(document.get("duration"))

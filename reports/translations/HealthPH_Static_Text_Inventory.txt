@@ -1,0 +1,1416 @@
+HEALTHPH+ STATIC APPLICATION TEXT - TRANSLATION INVENTORY
+Source snapshot: October 5, 2026
+Unique source phrases/templates: 407
+Source language: English
+Translation languages: Filipino, Cebuano, Ilocano, Hiligaynon
+
+HOW TO USE
+- Translate complete phrases, rather than isolated words. Keep each entry ID.
+- Preserve placeholders inside braces, such as {duration} and {reportCount}.
+- Whitespace and line breaks are collapsed for this reference list.
+- Existing spelling/capitalization is preserved so the phrase can be found in code.
+- Repeated exact phrases appear once, with all collected source locations.
+- Source line numbers refer to this snapshot and may shift after later edits.
+- Brand names, geographic names/codes, URLs, assets, database keys, and numeric-only values are excluded.
+- Language names are listed as they appear; choose whether to display their native names.
+- Medical labels and acronyms (AQI, AURI, COVID, PIN, CSV, PDF) need terminology review.
+- Hardcoded example reports are included where they can appear in page widgets.
+- Copy/backup pages and the unused Flutter counter demo are excluded.
+- Service error text is included for review; some errors are wrapped or replaced by page messages.
+- This inventory covers Dart text. Text embedded in images needs separate artwork review.
+- Server-provided article bodies, alert messages, survey questions/options, and user input are not static UI text and are not included.
+- No translations have been guessed or applied to the application.
+
+Suggested translation worksheet columns:
+ID | English | Filipino | Cebuano | Ilocano | Hiligaynon
+
+============================================================
+lib/widgets/weather_widget.dart
+============================================================
+
+[001] Wearher unavailable
+Source: lib/widgets/weather_widget.dart:48
+
+[002] Today
+Source: lib/widgets/weather_widget.dart:81
+
+[003] {weather.temperature.toInt()}°C
+Source: lib/widgets/weather_widget.dart:101
+
+[004] Sunny
+Source: lib/widgets/weather_widget.dart:113
+
+[005] Humidity
+Source: lib/widgets/weather_widget.dart:141; lib/widgets/weather_widget.dart:148
+
+[006] Pressure
+Source: lib/widgets/weather_widget.dart:162
+
+[007] AQI
+Source: lib/widgets/weather_widget.dart:170
+
+[008] {weather.temperature.round()}°C · Today
+Source: lib/widgets/weather_widget.dart:240
+
+[009] AQI {weather.aqi}
+Source: lib/widgets/weather_widget.dart:261
+
+
+============================================================
+lib/widgets/six_digit_field.dart
+============================================================
+
+[010] Six-digit PIN
+Source: lib/widgets/six_digit_field.dart:75
+
+
+============================================================
+lib/widgets/floating_navbar.dart
+============================================================
+
+[011] Home
+Source: lib/widgets/floating_navbar.dart:109; lib/pages/map_page.dart:547
+
+[012] Profile
+Source: lib/widgets/floating_navbar.dart:126; lib/pages/settings_page.dart:165; lib/pages/settings_page.dart:227; lib/pages/map_page.dart:583
+
+[013] Disease Map
+Source: lib/widgets/floating_navbar.dart:141; lib/pages/map_page.dart:526; lib/pages/map_page.dart:552; lib/pages/intro_tutorial_page.dart:29
+
+
+============================================================
+lib/widgets/coach_mark.dart
+============================================================
+
+[014] Skip
+Source: lib/widgets/coach_mark.dart:292; lib/pages/intro_tutorial_page.dart:374
+
+[015] Done
+Source: lib/widgets/coach_mark.dart:300
+
+[016] Next
+Source: lib/widgets/coach_mark.dart:300; lib/pages/intro_tutorial_page.dart:392
+
+
+============================================================
+lib/services/app_settings_store.dart
+============================================================
+
+[017] Default
+Source: lib/services/app_settings_store.dart:10
+
+[018] Light
+Source: lib/services/app_settings_store.dart:12
+
+[019] Grey
+Source: lib/services/app_settings_store.dart:14
+
+[020] Dark
+Source: lib/services/app_settings_store.dart:16
+
+[021] HealthPH+ blue and gold
+Source: lib/services/app_settings_store.dart:49
+
+[022] Bright clinical layout
+Source: lib/services/app_settings_store.dart:51
+
+[023] Soft neutral contrast
+Source: lib/services/app_settings_store.dart:53
+
+[024] Low-light dashboard style
+Source: lib/services/app_settings_store.dart:55
+
+
+============================================================
+lib/services/sentiment_survey_service.dart
+============================================================
+
+[025] Failed to load public surveys: {response.statusCode}
+Source: lib/services/sentiment_survey_service.dart:38
+
+[026] Failed to submit survey response: {response.body}
+Source: lib/services/sentiment_survey_service.dart:72
+
+
+============================================================
+lib/services/mobile_alert_service.dart
+============================================================
+
+[027] Sign in with a registered account to view alerts.
+Source: lib/services/mobile_alert_service.dart:28; lib/services/mobile_alert_service.dart:113
+
+[028] Your session has expired. Please sign in again.
+Source: lib/services/mobile_alert_service.dart:58; lib/services/mobile_alert_service.dart:127
+
+[029] Failed to load mobile alerts ({response.statusCode}): {response.body}
+Source: lib/services/mobile_alert_service.dart:63
+
+[030] Mobile alert request failed ({response.statusCode}): {response.body}
+Source: lib/services/mobile_alert_service.dart:132
+
+
+============================================================
+lib/services/self_report_store.dart
+============================================================
+
+[031] Self-reported on {createdAt.month}/{createdAt.day}/{createdAt.year} at {hour}:{minute}
+Source: lib/services/self_report_store.dart:39
+
+[032] Self-reported respiratory symptoms
+Source: lib/services/self_report_store.dart:96
+
+[033] Exact address geocoded
+Source: lib/services/self_report_store.dart:105
+
+[034] Region-level estimate
+Source: lib/services/self_report_store.dart:106
+
+
+============================================================
+lib/services/biometric_auth_service.dart
+============================================================
+
+[035] Use biometrics to sign in to HealthPH+.
+Source: lib/services/biometric_auth_service.dart:37
+
+
+============================================================
+lib/services/healthph_api_services.dart
+============================================================
+
+[036] Failed to loaod disease points
+Source: lib/services/healthph_api_services.dart:19
+
+[037] Failed to sync self-report to MongoDB
+Source: lib/services/healthph_api_services.dart:75
+
+[038] Failed to load self-report map pings
+Source: lib/services/healthph_api_services.dart:88
+
+[039] A user id or email is required.
+Source: lib/services/healthph_api_services.dart:106
+
+[040] Failed to load your self-reports ({response.statusCode}): {response.body}
+Source: lib/services/healthph_api_services.dart:129
+
+[041] Health literacy response has no items array
+Source: lib/services/healthph_api_services.dart:143
+
+[042] Failed to load health literacy content ({response.statusCode}): {response.body}
+Source: lib/services/healthph_api_services.dart:154
+
+[043] Failed to save mobile user to MongoDB: {response.body}
+Source: lib/services/healthph_api_services.dart:207
+
+[044] Failed to login: {response.body}
+Source: lib/services/healthph_api_services.dart:225
+
+[045] Failed to set Pin: {response.body}
+Source: lib/services/healthph_api_services.dart:256
+
+[046] Failed to verify PIN: {response.body}
+Source: lib/services/healthph_api_services.dart:272
+
+[047] Failed to update language: {response.body}
+Source: lib/services/healthph_api_services.dart:290
+
+[048] Failed to load mobile users count ({response.statusCode}): {response.body}
+Source: lib/services/healthph_api_services.dart:307
+
+[049] A mobile access token is required.
+Source: lib/services/healthph_api_services.dart:314
+
+
+============================================================
+lib/services/self_report_export_service.dart
+============================================================
+
+[050] HealthPH+ self-reports export
+Source: lib/services/self_report_export_service.dart:23
+
+[051] Exported HealthPH+ self-report records.
+Source: lib/services/self_report_export_service.dart:25
+
+
+============================================================
+lib/pages/self_report_history_page.dart
+============================================================
+
+[052] Login with a registered account to view your account self-reports.
+Source: lib/pages/self_report_history_page.dart:41
+
+[053] Unable to load self-reports. Check your backend connection.
+Source: lib/pages/self_report_history_page.dart:109
+
+[054] My Self-Reports
+Source: lib/pages/self_report_history_page.dart:171; lib/main_page.dart:535
+
+[055] Review the symptoms and possible conditions you contributed.
+Source: lib/pages/self_report_history_page.dart:180
+
+[056] No reports yet
+Source: lib/pages/self_report_history_page.dart:204
+
+[057] Local reports
+Source: lib/pages/self_report_history_page.dart:230
+
+[058] Mongo reports
+Source: lib/pages/self_report_history_page.dart:230
+
+[059] Most common concern
+Source: lib/pages/self_report_history_page.dart:239
+
+[060] Latest contribution
+Source: lib/pages/self_report_history_page.dart:249
+
+[061] None
+Source: lib/pages/self_report_history_page.dart:259
+
+[062] Report ID
+Source: lib/pages/self_report_history_page.dart:443
+
+[063] Status
+Source: lib/pages/self_report_history_page.dart:444
+
+[064] Detected Language
+Source: lib/pages/self_report_history_page.dart:447
+
+[065] Location
+Source: lib/pages/self_report_history_page.dart:450
+
+[066] Date
+Source: lib/pages/self_report_history_page.dart:451
+
+[067] Notes
+Source: lib/pages/self_report_history_page.dart:453
+
+[068] Try again
+Source: lib/pages/self_report_history_page.dart:619
+
+[069] No self-reports yet
+Source: lib/pages/self_report_history_page.dart:648
+
+[070] Submitted self-reports will appear here for review.
+Source: lib/pages/self_report_history_page.dart:657
+
+[071] Mongo report
+Source: lib/pages/self_report_history_page.dart:705
+
+[072] submitted
+Source: lib/pages/self_report_history_page.dart:706
+
+[073] Respiratory symptoms
+Source: lib/pages/self_report_history_page.dart:709
+
+[074] Date unavailable
+Source: lib/pages/self_report_history_page.dart:725
+
+[075] {date.month}/{date.day}/{date.year} at {hour}:{minute}
+Source: lib/pages/self_report_history_page.dart:730
+
+[076] Location unavailable
+Source: lib/pages/self_report_history_page.dart:761
+
+
+============================================================
+lib/pages/settings_page.dart
+============================================================
+
+[077] Please sign in with a registered account first.
+Source: lib/pages/settings_page.dart:94
+
+[078] Your PIN was saved successfully.
+Source: lib/pages/settings_page.dart:126
+
+[079] Unable to save PIN. Check your password and connection.
+Source: lib/pages/settings_page.dart:136
+
+[080] Coach marks will replay when you revisit pages.
+Source: lib/pages/settings_page.dart:149
+
+[081] Review the account details and location saved during registration.
+Source: lib/pages/settings_page.dart:167
+
+[082] Appearance
+Source: lib/pages/settings_page.dart:173; lib/pages/settings_page.dart:261
+
+[083] Choose the background and color mode that is most readable for you.
+Source: lib/pages/settings_page.dart:175
+
+[084] Language Selection
+Source: lib/pages/settings_page.dart:181; lib/pages/settings_page.dart:278
+
+[085] Choose the language that is most comfortable for you.
+Source: lib/pages/settings_page.dart:183
+
+[086] Login Security
+Source: lib/pages/settings_page.dart:189
+
+[087] Set your account PIN and manage fingerprint login when your device supports it.
+Source: lib/pages/settings_page.dart:191
+
+[088] Account, preferences, security, and accessibility
+Source: lib/pages/settings_page.dart:237
+
+[089] Preferences
+Source: lib/pages/settings_page.dart:253
+
+[090] Current theme: {appSettings.visualMode.label}
+Source: lib/pages/settings_page.dart:263
+
+[091] Choose your preferred application language
+Source: lib/pages/settings_page.dart:279
+
+[092] Replay Coach Marks
+Source: lib/pages/settings_page.dart:300
+
+[093] Show your guide highlights again
+Source: lib/pages/settings_page.dart:301
+
+[094] Account
+Source: lib/pages/settings_page.dart:318
+
+[095] Logout
+Source: lib/pages/settings_page.dart:322
+
+[096] Clear this session and return to login.
+Source: lib/pages/settings_page.dart:323
+
+[097] Guest User
+Source: lib/pages/settings_page.dart:354
+
+[098] Tap to create your profile
+Source: lib/pages/settings_page.dart:355
+
+[099] Guest Access
+Source: lib/pages/settings_page.dart:356
+
+[100] Complete your address during registration
+Source: lib/pages/settings_page.dart:359
+
+[101] Register
+Source: lib/pages/settings_page.dart:450; lib/login_page.dart:655
+
+[102] Active
+Source: lib/pages/settings_page.dart:450
+
+[103] No saved address
+Source: lib/pages/settings_page.dart:553
+
+[104] No city
+Source: lib/pages/settings_page.dart:558
+
+[105] Mobile Surveys
+Source: lib/pages/settings_page.dart:798; lib/main_page.dart:624
+
+[106] {count} survey ready to answer
+Source: lib/pages/settings_page.dart:808
+
+[107] Check available surveys
+Source: lib/pages/settings_page.dart:809
+
+[108] Enter all six PIN digits.
+Source: lib/pages/settings_page.dart:887
+
+[109] Enter your current account password.
+Source: lib/pages/settings_page.dart:895
+
+[110] Set six-digit PIN
+Source: lib/pages/settings_page.dart:916
+
+[111] Enter a six-digit numeric PIN. Each digit uses a separate box.
+Source: lib/pages/settings_page.dart:922
+
+[112] Current password
+Source: lib/pages/settings_page.dart:947
+
+[113] Cancel
+Source: lib/pages/settings_page.dart:965; lib/login_page.dart:310; lib/login_page.dart:842
+
+[114] Save PIN
+Source: lib/pages/settings_page.dart:967
+
+[115] Authentication
+Source: lib/pages/settings_page.dart:989
+
+[116] PIN Login
+Source: lib/pages/settings_page.dart:992
+
+[117] Set PIN first
+Source: lib/pages/settings_page.dart:994
+
+[118] Enabled
+Source: lib/pages/settings_page.dart:996; lib/pages/settings_page.dart:1030
+
+[119] Disabled
+Source: lib/pages/settings_page.dart:997
+
+[120] You need to set a six-digit PIN before enabling PIN login.
+Source: lib/pages/settings_page.dart:1004
+
+[121] Set PIN
+Source: lib/pages/settings_page.dart:1021
+
+[122] Update PIN
+Source: lib/pages/settings_page.dart:1022
+
+[123] Open
+Source: lib/pages/settings_page.dart:1022
+
+[124] Fingerprint Login
+Source: lib/pages/settings_page.dart:1029
+
+[125] Available
+Source: lib/pages/settings_page.dart:1030
+
+[126] Biometric login disabled.
+Source: lib/pages/settings_page.dart:1039
+
+[127] Login first before enabling biometrics.
+Source: lib/pages/settings_page.dart:1048
+
+[128] Biometrics authentication is unavailable or cancelled.
+Source: lib/pages/settings_page.dart:1062
+
+[129] Biometric login enabled
+Source: lib/pages/settings_page.dart:1076
+
+
+============================================================
+lib/pages/map_page.dart
+============================================================
+
+[130] AURI
+Source: lib/pages/map_page.dart:32; lib/pages/map_page.dart:63; lib/pages/disease_watch_page.dart:302
+
+[131] Cough
+Source: lib/pages/map_page.dart:33; lib/pages/map_page.dart:64; lib/pages/map_page.dart:96; lib/pages/data_collection_page.dart:374; lib/data/app_taxonomy.dart:25
+
+[132] Fever
+Source: lib/pages/map_page.dart:34; lib/pages/map_page.dart:65; lib/pages/map_page.dart:85; lib/pages/data_collection_page.dart:363; lib/data/app_taxonomy.dart:26
+
+[133] Sore throat
+Source: lib/pages/map_page.dart:35; lib/pages/map_page.dart:66; lib/data/app_taxonomy.dart:31
+
+[134] Influenza-like illness
+Source: lib/pages/map_page.dart:36; lib/pages/map_page.dart:67
+
+[135] Pneumonia
+Source: lib/pages/map_page.dart:37; lib/pages/map_page.dart:73; lib/pages/map_page.dart:80; lib/pages/disease_watch_page.dart:36; lib/pages/disease_watch_page.dart:40; lib/pages/disease_watch_page.dart:309
+
+[136] Bronchitis
+Source: lib/pages/map_page.dart:38; lib/pages/map_page.dart:81
+
+[137] Asthma flare-up
+Source: lib/pages/map_page.dart:39; lib/pages/map_page.dart:82
+
+[138] Shortness of breath
+Source: lib/pages/map_page.dart:40; lib/pages/map_page.dart:83; lib/pages/map_page.dart:96; lib/data/app_taxonomy.dart:29
+
+[139] Wheezing
+Source: lib/pages/map_page.dart:41; lib/pages/map_page.dart:84; lib/data/app_taxonomy.dart:33
+
+[140] COVID-like symptoms
+Source: lib/pages/map_page.dart:42; lib/pages/map_page.dart:68
+
+[141] Tuberculosis symptoms
+Source: lib/pages/map_page.dart:43; lib/pages/map_page.dart:96
+
+[142] Acute Upper Respiratory Infection
+Source: lib/pages/map_page.dart:56
+
+[143] Upper Respiratory
+Source: lib/pages/map_page.dart:57
+
+[144] Updated: June 1, 2026
+Source: lib/pages/map_page.dart:59
+
+[145] Lower Respiratory
+Source: lib/pages/map_page.dart:74
+
+[146] Updated: May 31, 2026
+Source: lib/pages/map_page.dart:76
+
+[147] Tuberculosis
+Source: lib/pages/map_page.dart:90; lib/pages/disease_watch_page.dart:43; lib/pages/disease_watch_page.dart:47; lib/pages/disease_watch_page.dart:316
+
+[148] Respiratory
+Source: lib/pages/map_page.dart:91
+
+[149] Updated: May 30, 2026
+Source: lib/pages/map_page.dart:93
+
+[150] All diseases & symptoms
+Source: lib/pages/map_page.dart:114
+
+[151] filter
+Source: lib/pages/map_page.dart:116
+
+[152] filters
+Source: lib/pages/map_page.dart:116
+
+[153] {selectedFilters.length} {filterLabel} selected
+Source: lib/pages/map_page.dart:117
+
+[154] Select Diseases / Symptoms
+Source: lib/pages/map_page.dart:178; lib/pages/map_page.dart:696
+
+[155] Close
+Source: lib/pages/map_page.dart:187; lib/main_page.dart:199
+
+[156] No filters selected. All reports will be shown.
+Source: lib/pages/map_page.dart:195
+
+[157] {draftFilters.length} selected
+Source: lib/pages/map_page.dart:196
+
+[158] Clear All
+Source: lib/pages/map_page.dart:269
+
+[159] Apply
+Source: lib/pages/map_page.dart:296
+
+[160] Respiratory outbreak monitoring
+Source: lib/pages/map_page.dart:534
+
+[161] Disease Watch
+Source: lib/pages/map_page.dart:558; lib/pages/disease_watch_page.dart:88; lib/pages/disease_watch_page.dart:194; lib/pages/intro_tutorial_page.dart:21; lib/main_page.dart:310
+
+[162] Health Literacy
+Source: lib/pages/map_page.dart:564; lib/main_page.dart:324
+
+[163] Sentiment Pulse
+Source: lib/pages/map_page.dart:570; lib/pages/intro_tutorial_page.dart:45; lib/pages/sentiment_pulse_page.dart:84
+
+[164] Data Collection
+Source: lib/pages/map_page.dart:576; lib/pages/data_collection_page.dart:43; lib/pages/data_collection_page.dart:142; lib/pages/intro_tutorial_page.dart:53
+
+[165] Outbreak Map
+Source: lib/pages/map_page.dart:625
+
+[166] {reportCount} active reports
+Source: lib/pages/map_page.dart:635
+
+[167] {outbreak["reports"]} reports
+Source: lib/pages/map_page.dart:860
+
+
+============================================================
+lib/pages/data_collection_page.dart
+============================================================
+
+[168] Contribute symptom information to disease surveillance and review reports connected to your account.
+Source: lib/pages/data_collection_page.dart:45
+
+[169] Collection Tabs
+Source: lib/pages/data_collection_page.dart:51
+
+[170] Switch between submitting a self-report, reviewing your reports, and community information.
+Source: lib/pages/data_collection_page.dart:53
+
+[171] Self Report Form
+Source: lib/pages/data_collection_page.dart:59
+
+[172] Complete your location, symptoms, duration, severity, and notes before submitting your report.
+Source: lib/pages/data_collection_page.dart:61
+
+[173] Back
+Source: lib/pages/data_collection_page.dart:125; lib/pages/disease_watch_page.dart:183; lib/pages/sentiment_pulse_page.dart:68; lib/pages/health_literacy_page.dart:318; lib/login_page.dart:399
+
+[174] Tracks symptoms & outbreaks
+Source: lib/pages/data_collection_page.dart:153
+
+[175] Self Report
+Source: lib/pages/data_collection_page.dart:199
+
+[176] My Reports
+Source: lib/pages/data_collection_page.dart:200
+
+[177] Community
+Source: lib/pages/data_collection_page.dart:201
+
+[178] Self-reports CSV is ready to share.
+Source: lib/pages/data_collection_page.dart:257
+
+[179] Unable to export self-reports CSV.
+Source: lib/pages/data_collection_page.dart:264
+
+[180] Your Recent Reports
+Source: lib/pages/data_collection_page.dart:281
+
+[181] No self-reports submitted yet.
+Source: lib/pages/data_collection_page.dart:286
+
+[182] Your Recent Reports ({reports.length})
+Source: lib/pages/data_collection_page.dart:301
+
+[183] Export CSV
+Source: lib/pages/data_collection_page.dart:310
+
+[184] Self-reported
+Source: lib/pages/data_collection_page.dart:322
+
+[185] For review
+Source: lib/pages/data_collection_page.dart:323
+
+[186] No additional notes provided.
+Source: lib/pages/data_collection_page.dart:326
+
+[187] Community Reports
+Source: lib/pages/data_collection_page.dart:349
+
+[188] View symptom reports shared by other users.
+Source: lib/pages/data_collection_page.dart:356
+
+[189] 2 days
+Source: lib/pages/data_collection_page.dart:365
+
+[190] Moderate
+Source: lib/pages/data_collection_page.dart:366
+
+[191] Reported on May 6, 2025
+Source: lib/pages/data_collection_page.dart:367; lib/pages/data_collection_page.dart:378
+
+[192] User experienced fever and fatigue.
+Source: lib/pages/data_collection_page.dart:368
+
+[193] 4 days
+Source: lib/pages/data_collection_page.dart:376
+
+[194] Mild
+Source: lib/pages/data_collection_page.dart:377; lib/pages/data_collection_page.dart:388
+
+[195] User reported dry cough and throat irritation.
+Source: lib/pages/data_collection_page.dart:379
+
+[196] Headache
+Source: lib/pages/data_collection_page.dart:385; lib/data/app_taxonomy.dart:35
+
+[197] 1 day
+Source: lib/pages/data_collection_page.dart:387
+
+[198] Reported on May 5, 2025
+Source: lib/pages/data_collection_page.dart:389
+
+[199] User reported mild headache and tiredness.
+Source: lib/pages/data_collection_page.dart:390
+
+[200] Complete address and add at least one symptoms
+Source: lib/pages/data_collection_page.dart:543
+
+[201] Self-report submitted successfully.
+Source: lib/pages/data_collection_page.dart:604
+
+[202] Report submitted
+Source: lib/pages/data_collection_page.dart:610
+
+[203] {condition.label} This is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.
+Source: lib/pages/data_collection_page.dart:612
+
+[204] Understood
+Source: lib/pages/data_collection_page.dart:617
+
+[205] Self Report Symptoms
+Source: lib/pages/data_collection_page.dart:642
+
+[206] Report respiratory symptoms to supper surveillance mapping.
+Source: lib/pages/data_collection_page.dart:647
+
+[207] Using your registered address. Adress fields are locked for account consistency.
+Source: lib/pages/data_collection_page.dart:668
+
+[208] Region
+Source: lib/pages/data_collection_page.dart:679; lib/login_page.dart:549
+
+[209] Province
+Source: lib/pages/data_collection_page.dart:701; lib/pages/data_collection_page.dart:708; lib/login_page.dart:570; lib/login_page.dart:579
+
+[210] City / Municipality
+Source: lib/pages/data_collection_page.dart:726; lib/login_page.dart:598
+
+[211] Barangay
+Source: lib/pages/data_collection_page.dart:749; lib/login_page.dart:617
+
+[212] Symptoms
+Source: lib/pages/data_collection_page.dart:766
+
+[213] Additional notes (optional)
+Source: lib/pages/data_collection_page.dart:799
+
+[214] Location Address...
+Source: lib/pages/data_collection_page.dart:812
+
+[215] Submit Self Report
+Source: lib/pages/data_collection_page.dart:812
+
+[216] Duration: {duration}
+Source: lib/pages/data_collection_page.dart:883
+
+[217] Possible / Consideration: {consideration}
+Source: lib/pages/data_collection_page.dart:918
+
+[218] Why Report Symptoms Your reports help public health officials track and monitor its origin.
+Source: lib/pages/data_collection_page.dart:980
+
+
+============================================================
+lib/pages/disease_watch_page.dart
+============================================================
+
+[219] Respiratory Infection Cluster
+Source: lib/pages/disease_watch_page.dart:29
+
+[220] Upper Respiratory Disease
+Source: lib/pages/disease_watch_page.dart:33
+
+[221] Monitor reported respiratory disease activity across Philippine regions.
+Source: lib/pages/disease_watch_page.dart:90
+
+[222] Search and Filter
+Source: lib/pages/disease_watch_page.dart:96
+
+[223] Search a region or disease term, then narrow the results by disease category.
+Source: lib/pages/disease_watch_page.dart:98
+
+[224] Regional Reports
+Source: lib/pages/disease_watch_page.dart:104
+
+[225] Review each region's report totals and disease breakdown in the results list.
+Source: lib/pages/disease_watch_page.dart:106
+
+[226] Outbreak monitoring across the Philippines
+Source: lib/pages/disease_watch_page.dart:205
+
+[227] Find Diseases
+Source: lib/pages/disease_watch_page.dart:245
+
+[228] Select all that apply
+Source: lib/pages/disease_watch_page.dart:295
+
+[229] COVID
+Source: lib/pages/disease_watch_page.dart:323
+
+[230] Active Outbreaks
+Source: lib/pages/disease_watch_page.dart:357; lib/main_page.dart:595
+
+[231] Resolved
+Source: lib/pages/disease_watch_page.dart:388
+
+[232] Error: {snapshot.error}
+Source: lib/pages/disease_watch_page.dart:419
+
+[233] No outbreaks found.
+Source: lib/pages/disease_watch_page.dart:456
+
+[234] Region {region["region"]}
+Source: lib/pages/disease_watch_page.dart:478
+
+[235] AURI: {auri} | PN: {pn} | TB: {tb} | COVID: {covid}
+Source: lib/pages/disease_watch_page.dart:480
+
+[236] Severity Levels
+Source: lib/pages/disease_watch_page.dart:630
+
+[237] {reports} reports
+Source: lib/pages/disease_watch_page.dart:638
+
+[238] View Details
+Source: lib/pages/disease_watch_page.dart:651; lib/main_page.dart:1208
+
+
+============================================================
+lib/pages/intro_tutorial_page.dart
+============================================================
+
+[239] Monitor outbreak reports, active cases, and disease risk signals across regions.
+Source: lib/pages/intro_tutorial_page.dart:23
+
+[240] View outbreak activity geographically and identify affected areas faster.
+Source: lib/pages/intro_tutorial_page.dart:31
+
+[241] Health Literacy Hub
+Source: lib/pages/intro_tutorial_page.dart:37; lib/pages/health_literacy_page.dart:47; lib/pages/health_literacy_page.dart:331
+
+[242] Read evidence-based health articles and review fact-checking information.
+Source: lib/pages/intro_tutorial_page.dart:39
+
+[243] Understand public concern, misinformation, and health behavior trends.
+Source: lib/pages/intro_tutorial_page.dart:47
+
+[244] Submit and review symptom reports that support public health monitoring.
+Source: lib/pages/intro_tutorial_page.dart:55
+
+[245] Continue
+Source: lib/pages/intro_tutorial_page.dart:392; lib/pages/language_selection_page.dart:242
+
+
+============================================================
+lib/pages/language_selection_page.dart
+============================================================
+
+[246] English
+Source: lib/pages/language_selection_page.dart:26; lib/login_page.dart:43
+
+[247] Filipino
+Source: lib/pages/language_selection_page.dart:27; lib/login_page.dart:44
+
+[248] Cebuano
+Source: lib/pages/language_selection_page.dart:28; lib/login_page.dart:45
+
+[249] Ilocano
+Source: lib/pages/language_selection_page.dart:29; lib/login_page.dart:46
+
+[250] Hiligaynon
+Source: lib/pages/language_selection_page.dart:30; lib/login_page.dart:47
+
+[251] Choose Language
+Source: lib/pages/language_selection_page.dart:127
+
+[252] Select your preferred language for HealthPH+.
+Source: lib/pages/language_selection_page.dart:136
+
+[253] This is your selected language
+Source: lib/pages/language_selection_page.dart:210
+
+
+============================================================
+lib/pages/sentiment_pulse_page.dart
+============================================================
+
+[254] Evidence-based health infomration and fact-checking
+Source: lib/pages/sentiment_pulse_page.dart:95
+
+[255] Overview
+Source: lib/pages/sentiment_pulse_page.dart:129
+
+[256] Trends
+Source: lib/pages/sentiment_pulse_page.dart:130
+
+[257] Regional
+Source: lib/pages/sentiment_pulse_page.dart:131
+
+[258] Survey
+Source: lib/pages/sentiment_pulse_page.dart:132
+
+[259] Overall Sentiment
+Source: lib/pages/sentiment_pulse_page.dart:172
+
+[260] Concerned
+Source: lib/pages/sentiment_pulse_page.dart:186; lib/pages/sentiment_pulse_page.dart:272
+
+[261] Misinformed
+Source: lib/pages/sentiment_pulse_page.dart:195
+
+[262] Neutral
+Source: lib/pages/sentiment_pulse_page.dart:208
+
+[263] Proactive
+Source: lib/pages/sentiment_pulse_page.dart:215; lib/pages/sentiment_pulse_page.dart:279
+
+[264] Sentiment Trends
+Source: lib/pages/sentiment_pulse_page.dart:239
+
+[265] Sentiment changes over time
+Source: lib/pages/sentiment_pulse_page.dart:248
+
+[266] Trends Insights
+Source: lib/pages/sentiment_pulse_page.dart:259
+
+[267] Increase from last week
+Source: lib/pages/sentiment_pulse_page.dart:274; lib/pages/sentiment_pulse_page.dart:281
+
+[268] Region Trend Changes
+Source: lib/pages/sentiment_pulse_page.dart:290
+
+[269] Regional Sentiment
+Source: lib/pages/sentiment_pulse_page.dart:325
+
+[270] Dominant sentiment by region
+Source: lib/pages/sentiment_pulse_page.dart:334
+
+[271] Unable to load surveys.
+Source: lib/pages/sentiment_pulse_page.dart:429
+
+[272] No active mobile surveys currently available.
+Source: lib/pages/sentiment_pulse_page.dart:443
+
+[273] {survey.responses} / {survey.target} responses
+Source: lib/pages/sentiment_pulse_page.dart:495
+
+[274] Please answer at least one question.
+Source: lib/pages/sentiment_pulse_page.dart:543
+
+[275] Survey response submitted.
+Source: lib/pages/sentiment_pulse_page.dart:578
+
+[276] Unable to submit survey response.
+Source: lib/pages/sentiment_pulse_page.dart:585
+
+[277] Submitting...
+Source: lib/pages/sentiment_pulse_page.dart:644
+
+[278] Submit
+Source: lib/pages/sentiment_pulse_page.dart:644
+
+[279] Type your answer
+Source: lib/pages/sentiment_pulse_page.dart:775
+
+[280] This question is required.
+Source: lib/pages/sentiment_pulse_page.dart:782
+
+[281] {percent}% of the population
+Source: lib/pages/sentiment_pulse_page.dart:1128
+
+
+============================================================
+lib/pages/health_literacy_page.dart
+============================================================
+
+[282] Browse published articles, videos, and infographics from trusted health sources.
+Source: lib/pages/health_literacy_page.dart:49
+
+[283] Search Health Topics
+Source: lib/pages/health_literacy_page.dart:56
+
+[284] Filter the current tab by title, topic, source, disease, or keyword.
+Source: lib/pages/health_literacy_page.dart:58
+
+[285] Content Categories
+Source: lib/pages/health_literacy_page.dart:64
+
+[286] Switch between articles, playable videos, and downloadable infographics.
+Source: lib/pages/health_literacy_page.dart:66
+
+[287] Learning Content
+Source: lib/pages/health_literacy_page.dart:72
+
+[288] Tap a card action to read an article, open a PDF, view an image, or play a video.
+Source: lib/pages/health_literacy_page.dart:74
+
+[289] Unable to load content.
+Source: lib/pages/health_literacy_page.dart:181
+
+[290] Retry
+Source: lib/pages/health_literacy_page.dart:190
+
+[291] Untitled content
+Source: lib/pages/health_literacy_page.dart:244
+
+[292] Evidence-based health information and fact-checking
+Source: lib/pages/health_literacy_page.dart:342
+
+[293] Search articles, topics, claims...
+Source: lib/pages/health_literacy_page.dart:372
+
+[294] Articles
+Source: lib/pages/health_literacy_page.dart:442
+
+[295] Videos
+Source: lib/pages/health_literacy_page.dart:443
+
+[296] Infographics
+Source: lib/pages/health_literacy_page.dart:444
+
+[297] No articles found.
+Source: lib/pages/health_literacy_page.dart:465
+
+[298] No videos found.
+Source: lib/pages/health_literacy_page.dart:469
+
+[299] No infographics found.
+Source: lib/pages/health_literacy_page.dart:473
+
+[300] Video is unavailable.
+Source: lib/pages/health_literacy_page.dart:523
+
+[301] Video
+Source: lib/pages/health_literacy_page.dart:672
+
+[302] Watch video
+Source: lib/pages/health_literacy_page.dart:790
+
+[303] Open PDF
+Source: lib/pages/health_literacy_page.dart:792
+
+[304] View
+Source: lib/pages/health_literacy_page.dart:795
+
+[305] Read more
+Source: lib/pages/health_literacy_page.dart:796
+
+[306] Unable to play video. URL: {widget.videoUrl} Error: {snapshot.error}
+Source: lib/pages/health_literacy_page.dart:902
+
+[307] Verdict:
+Source: lib/pages/health_literacy_page.dart:1078
+
+
+============================================================
+lib/data/app_taxonomy.dart
+============================================================
+
+[308] Citizen
+Source: lib/data/app_taxonomy.dart:12
+
+[309] Field Health Worker
+Source: lib/data/app_taxonomy.dart:13
+
+[310] LGU/DOH User
+Source: lib/data/app_taxonomy.dart:14
+
+[311] Guest Tester
+Source: lib/data/app_taxonomy.dart:17
+
+[312] Guest
+Source: lib/data/app_taxonomy.dart:20
+
+[313] Registered
+Source: lib/data/app_taxonomy.dart:21
+
+[314] Chills
+Source: lib/data/app_taxonomy.dart:27
+
+[315] Fatigue
+Source: lib/data/app_taxonomy.dart:28
+
+[316] Chest Pain
+Source: lib/data/app_taxonomy.dart:30
+
+[317] Runny nose
+Source: lib/data/app_taxonomy.dart:32
+
+[318] Loss of taste or smell
+Source: lib/data/app_taxonomy.dart:34
+
+[319] Body aches
+Source: lib/data/app_taxonomy.dart:36
+
+[320] Cough for 2+ weeks
+Source: lib/data/app_taxonomy.dart:37
+
+[321] Night sweats
+Source: lib/data/app_taxonomy.dart:38
+
+[322] Weight loss
+Source: lib/data/app_taxonomy.dart:39
+
+[323] Possible COVID-like respiratory symptom pattern
+Source: lib/data/app_taxonomy.dart:45
+
+[324] Possible pneumonia pattern
+Source: lib/data/app_taxonomy.dart:47
+
+[325] Possible tuberculosis symptom pattern
+Source: lib/data/app_taxonomy.dart:50
+
+[326] Possible acute respiratory infection pattern
+Source: lib/data/app_taxonomy.dart:54
+
+[327] Respiratory symptoms reported
+Source: lib/data/app_taxonomy.dart:58
+
+
+============================================================
+lib/login_page.dart
+============================================================
+
+[328] Complete your address.
+Source: lib/login_page.dart:166
+
+[329] Account Created.
+Source: lib/login_page.dart:235
+
+[330] Logged in.
+Source: lib/login_page.dart:235
+
+[331] Biometric login is unavailable. Please use password login.
+Source: lib/login_page.dart:266
+
+[332] Reset Password
+Source: lib/login_page.dart:298
+
+[333] Email Address
+Source: lib/login_page.dart:303
+
+[334] Pass reset link sent.
+Source: lib/login_page.dart:316
+
+[335] Send Link
+Source: lib/login_page.dart:319
+
+[336] Enter {label}
+Source: lib/login_page.dart:329
+
+[337] Enter your email
+Source: lib/login_page.dart:336
+
+[338] Enter a valid email
+Source: lib/login_page.dart:340
+
+[339] Enter your password
+Source: lib/login_page.dart:348
+
+[340] Password must be at least 6 characters
+Source: lib/login_page.dart:352
+
+[341] Passowrd do not match
+Source: lib/login_page.dart:361
+
+[342] Create Account
+Source: lib/login_page.dart:413
+
+[343] User Login
+Source: lib/login_page.dart:413
+
+[344] Register your basic HeathPH+ profile.
+Source: lib/login_page.dart:423
+
+[345] Sign in using your email and password.
+Source: lib/login_page.dart:424
+
+[346] Full Name
+Source: lib/login_page.dart:437
+
+[347] your full name
+Source: lib/login_page.dart:441
+
+[348] Email
+Source: lib/login_page.dart:451
+
+[349] Password
+Source: lib/login_page.dart:465
+
+[350] Confirm Password
+Source: lib/login_page.dart:490
+
+[351] Role
+Source: lib/login_page.dart:499
+
+[352] Preferred Language
+Source: lib/login_page.dart:521
+
+[353] Select your preferred language
+Source: lib/login_page.dart:532
+
+[354] Forgot password?
+Source: lib/login_page.dart:639
+
+[355] Login
+Source: lib/login_page.dart:655
+
+[356] Login with Biometrics
+Source: lib/login_page.dart:676
+
+[357] Continue as Guest
+Source: lib/login_page.dart:694
+
+[358] Already have an account? Login
+Source: lib/login_page.dart:710
+
+[359] New User? Create an account
+Source: lib/login_page.dart:711
+
+[360] Account ID is missing. Please login again.
+Source: lib/login_page.dart:759
+
+[361] Enter your complete six-digit PIN.
+Source: lib/login_page.dart:766
+
+[362] Incorrect PIN. Please try again.
+Source: lib/login_page.dart:791
+
+[363] Enter PIN
+Source: lib/login_page.dart:806
+
+[364] Enter the six-digit PIN for {widget.profile.email}.
+Source: lib/login_page.dart:812
+
+[365] Verify
+Source: lib/login_page.dart:852
+
+
+============================================================
+lib/models/mobile_survey.dart
+============================================================
+
+[366] Untitled Survey
+Source: lib/models/mobile_survey.dart:23
+
+[367] Question
+Source: lib/models/mobile_survey.dart:62
+
+
+============================================================
+lib/models/mobile_alert.dart
+============================================================
+
+[368] HealthAlert
+Source: lib/models/mobile_alert.dart:57
+
+[369] {windowMinutes ~/ 60}h window
+Source: lib/models/mobile_alert.dart:73
+
+[370] {windowMinutes}m window
+Source: lib/models/mobile_alert.dart:74
+
+[371] {reportCount} reports
+Source: lib/models/mobile_alert.dart:77
+
+
+============================================================
+lib/main_page.dart
+============================================================
+
+[372] Live Health Summary
+Source: lib/main_page.dart:82
+
+[373] Swipe through current outbreaks, health alerts, registered users, and available mobile surveys.
+Source: lib/main_page.dart:84
+
+[374] Your Contributions
+Source: lib/main_page.dart:90
+
+[375] Submit a self-report, review your previous reports, or answer an available mobile survey.
+Source: lib/main_page.dart:92
+
+[376] Quick Actions
+Source: lib/main_page.dart:98
+
+[377] Open Disease Watch for outbreaks or Health Literacy for trusted learning resources.
+Source: lib/main_page.dart:100
+
+[378] Recent Alerts
+Source: lib/main_page.dart:106
+
+[379] Review the latest respiratory health alerts and outbreaks
+Source: lib/main_page.dart:108
+
+[380] Publication time unavailable
+Source: lib/main_page.dart:156
+
+[381] Published {published.year}-{published.month.toString().padLeft(2, '0')}-{published.day.toString().padLeft(2, '0')} {published.hour.toString().padLeft(2, '0')}:{published.minute.toString().padLeft(2, '0')}
+Source: lib/main_page.dart:157
+
+[382] No additional alert details were provided.
+Source: lib/main_page.dart:182
+
+[383] Unable to open this alert right now.
+Source: lib/main_page.dart:210
+
+[384] Quick Actions ⓘ
+Source: lib/main_page.dart:299
+
+[385] Track outbreaks and alerts
+Source: lib/main_page.dart:311
+
+[386] Public attitude insights
+Source: lib/main_page.dart:325
+
+[387] Recent Alerts ⓘ
+Source: lib/main_page.dart:361
+
+[388] Unable to load alerts.
+Source: lib/main_page.dart:377
+
+[389] No recent alerts right now.
+Source: lib/main_page.dart:386
+
+[390] Health Tips 📖
+Source: lib/main_page.dart:425
+
+[391] Stay Protected
+Source: lib/main_page.dart:446
+
+[392] Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated
+Source: lib/main_page.dart:457
+
+[393] More Health Tips
+Source: lib/main_page.dart:480
+
+[394] Your Health Contribution
+Source: lib/main_page.dart:511
+
+[395] Report symptoms, review contribution, or answer surveys
+Source: lib/main_page.dart:520
+
+[396] Data Collection and Self-Report
+Source: lib/main_page.dart:525
+
+[397] Submit symptoms and health information
+Source: lib/main_page.dart:526
+
+[398] Review your previous contributions
+Source: lib/main_page.dart:536
+
+[399] Sentiment Pulse and Mobile Survey
+Source: lib/main_page.dart:545
+
+[400] View surveys available for mobile users
+Source: lib/main_page.dart:546
+
+[401] Regional disease signals
+Source: lib/main_page.dart:596
+
+[402] Health Alerts
+Source: lib/main_page.dart:610
+
+[403] Recent inbox alerts
+Source: lib/main_page.dart:611
+
+[404] Active Users
+Source: lib/main_page.dart:617
+
+[405] Registered mobile users
+Source: lib/main_page.dart:618
+
+[406] Available public surveys
+Source: lib/main_page.dart:625
+
+[407] Severity level
+Source: lib/main_page.dart:1199
+
+============================================================
+ENGLISH COPY TO REVIEW BEFORE TRANSLATING
+============================================================
+These are suggestions only; application source has not been edited.
+
+Current: Wearher unavailable
+Suggested: Weather unavailable
+
+Current: Passowrd do not match
+Suggested: Passwords do not match
+
+Current: Pass reset link sent.
+Suggested: Password reset link sent.
+
+Current: Register your basic HeathPH+ profile.
+Suggested: Register your basic HealthPH+ profile.
+
+Current: Evidence-based health infomration and fact-checking
+Suggested: Evidence-based health information and fact-checking
+
+Current: Complete address and add at least one symptoms
+Suggested: Complete your address and add at least one symptom.
+
+Current: Report respiratory symptoms to supper surveillance mapping.
+Suggested: Report respiratory symptoms to support surveillance mapping.
+
+Current: Using your registered address. Adress fields are locked for account consistency.
+Suggested: Using your registered address. Address fields are locked for account consistency.
+
+Current: Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated
+Suggested: Remember to wash your hands frequently, wear a mask in crowded places, and keep your living spaces well-ventilated.
+
+Current: Location Address...
+Suggested: Locating address... (confirm the intended loading-state meaning)
+
+Current: Failed to loaod disease points
+Suggested: Failed to load disease points
+
+Current: Failed to load self-report map pings
+Suggested: Failed to load self-report map pins
+
+Current: Biometrics authentication is unavailable or cancelled.
+Suggested: Biometric authentication is unavailable or cancelled.
+
+Also review singular/plural templates, including survey/surveys, report/reports, and filter/filters.

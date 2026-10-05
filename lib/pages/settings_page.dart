@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'data_collection_page.dart';
-
 import '../models/mobile_survey.dart';
 import '../services/api_config.dart';
 import '../services/healthph_api_services.dart';
 import '../services/sentiment_survey_service.dart';
-import '../services/self_report_store.dart';
 import 'sentiment_pulse_page.dart';
 import '../widgets/coach_mark.dart';
 import '../login_page.dart';
@@ -15,15 +12,12 @@ import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
 import '../widgets/floating_navbar.dart';
 import 'language_selection_page.dart';
-import 'self_report_history_page.dart';
 import '../services/app_settings_store.dart';
 import '../services/biometric_auth_service.dart';
 import '../widgets/six_digit_field.dart';
 
 class SettingsPage extends StatefulWidget {
-  final int selectedNavIndex;
-
-  const SettingsPage({super.key, this.selectedNavIndex = 2});
+  const SettingsPage({super.key});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -31,9 +25,9 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final profileKey = GlobalKey();
-  final selfReportKey = GlobalKey();
-  final surveyKey = GlobalKey();
+  final appearanceKey = GlobalKey();
   final languageKey = GlobalKey();
+  final authenticationKey = GlobalKey();
 
   Future<void> _logout() async {
     await BiometricAuthService.instance.clearSavedProfile();
@@ -54,39 +48,36 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       backgroundColor: Colors.white,
       isScrollControlled: true,
+      useSafeArea: true,
       showDragHandle: true,
       builder: (sheetContext) {
         final screen = MediaQuery.sizeOf(sheetContext);
         final isLandscapePhone = Responsive.isLandscapePhone(sheetContext);
-        final maxSheetHeight = screen.height * (isLandscapePhone ? 0.86 : 0.72);
 
-        return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxSheetHeight),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                0,
-                16,
-                isLandscapePhone ? 10 : 18,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: HealthPhVisualMode.values.map((mode) {
-                  final selected = AppSettingsStore.instance.visualMode == mode;
+        final sheetHeight = screen.height * (isLandscapePhone ? 0.86 : 0.72);
 
-                  return _ThemePreviewTile(
-                    mode: mode,
-                    selected: selected,
-                    compact: isLandscapePhone,
-                    onTap: () async {
-                      await AppSettingsStore.instance.setVisualMode(mode);
-                      if (sheetContext.mounted) Navigator.pop(sheetContext);
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
+        return SizedBox(
+          height: sheetHeight,
+          child: ListView.builder(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, isLandscapePhone ? 12 : 20),
+            itemCount: HealthPhVisualMode.values.length,
+            itemBuilder: (context, index) {
+              final mode = HealthPhVisualMode.values[index];
+              final selected = AppSettingsStore.instance.visualMode == mode;
+
+              return _ThemePreviewTile(
+                mode: mode,
+                selected: selected,
+                compact: isLandscapePhone,
+                onTap: () async {
+                  await AppSettingsStore.instance.setVisualMode(mode);
+
+                  if (sheetContext.mounted) {
+                    Navigator.pop(sheetContext);
+                  }
+                },
+              );
+            },
           ),
         );
       },
@@ -167,29 +158,22 @@ class _SettingsPageState extends State<SettingsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       CoachMark.showOnce(
         context,
-        discoveryKey: "settings_profile_v3",
+        discoveryKey: "settings_profile_v4",
         steps: [
           CoachMarkStep(
             targetKey: profileKey,
             title: "Profile",
             description:
-                "This section shows the details saved from registration.",
+                "Review the account details and location saved during registration.",
             icon: Icons.person_outline,
             color: AppTheme.primary,
           ),
           CoachMarkStep(
-            targetKey: surveyKey,
-            title: "Mobile Surveys",
-            description: "Answer active surveys published for mobile users.",
-            icon: Icons.poll_outlined,
-            color: AppTheme.info,
-          ),
-          CoachMarkStep(
-            targetKey: selfReportKey,
-            title: "Self Reporting",
+            targetKey: appearanceKey,
+            title: "Appearance",
             description:
-                "Use this to report symptoms and support respiratory surveillance.",
-            icon: Icons.assignment_add,
+                "Choose the background and color mode that is most readable for you.",
+            icon: Icons.palette_outlined,
             color: AppTheme.warning,
           ),
           CoachMarkStep(
@@ -197,8 +181,16 @@ class _SettingsPageState extends State<SettingsPage> {
             title: "Language Selection",
             description:
                 "Choose the language that is most comfortable for you.",
-            icon: Icons.language,
+            icon: Icons.language_rounded,
             color: AppTheme.info,
+          ),
+          CoachMarkStep(
+            targetKey: authenticationKey,
+            title: "Login Security",
+            description:
+                "Set your account PIN and manage fingerprint login when your device supports it.",
+            icon: Icons.security_outlined,
+            color: AppTheme.success,
           ),
         ],
       );
@@ -210,7 +202,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final profile = ProfileStore.instance.profile;
     final isTablet = Responsive.isTablet(context);
     final maxContentWidth = Responsive.contentMaxWidth(context);
-    final isProfileTab = widget.selectedNavIndex == 3;
     final appSettings = AppSettingsStore.instance;
 
     return Scaffold(
@@ -233,63 +224,39 @@ class _SettingsPageState extends State<SettingsPage> {
                   SizedBox(height: isTablet ? 52 : 36),
                   const SizedBox(height: 20),
                   Text(
-                    isProfileTab ? "Profile" : "Settings",
+                    "Profile",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: appSettings.visualMode.onBackground,
-                      fontSize: isTablet ? 34 : 28,
+                      fontSize: 28,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    isProfileTab
-                        ? "Account, reports, surveys, and sign-in options"
-                        : "Display, language, and guide preferences",
+                    "Account, preferences, security, and accessibility",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: appSettings.visualMode.onBackgroundMuted,
+                      color: appSettings.visualMode.onBackground,
                       fontSize: isTablet ? 17 : 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 22),
-                  if (isProfileTab) ...[
-                    KeyedSubtree(
-                      key: profileKey,
-                      child: _ProfileCard(profile: profile, isTablet: isTablet),
-                    ),
-                    const SizedBox(height: 18),
-                    KeyedSubtree(
-                      key: selfReportKey,
-                      child: _SelfReportButton(isTablet: isTablet),
-                    ),
-                    const SizedBox(height: 12),
-                    _SelfReportHistoryButton(isTablet: isTablet),
-                    const SizedBox(height: 12),
-                    KeyedSubtree(
-                      key: surveyKey,
-                      child: _SurveyButton(isTablet: isTablet),
-                    ),
-                    const SizedBox(height: 18),
-                    _AuthenticationSection(
-                      isTablet: isTablet,
-                      settings: appSettings,
-                      onSetPin: _setPin,
-                    ),
-                    const SizedBox(height: 12),
-                    _SettingsTile(
-                      icon: Icons.logout_rounded,
-                      title: "Logout",
-                      subtitle: "Clear this session and return to login",
-                      isTablet: isTablet,
-                      accentColor: AppTheme.highRisk,
-                      surfaceColor: const Color(0xFFFFF1F2),
-                      onTap: _logout,
-                    ),
-                  ] else ...[
-                    _SettingsSectionTitle(title: "Display", isTablet: isTablet),
-                    _SettingsTile(
+                  KeyedSubtree(
+                    key: profileKey,
+                    child: _ProfileCard(profile: profile, isTablet: isTablet),
+                  ),
+                  const SizedBox(height: 24),
+
+                  _SettingsSectionTitle(
+                    title: "Preferences",
+                    isTablet: isTablet,
+                  ),
+
+                  KeyedSubtree(
+                    key: appearanceKey,
+                    child: _SettingsTile(
                       icon: Icons.palette_outlined,
                       title: "Appearance",
                       subtitle:
@@ -300,52 +267,72 @@ class _SettingsPageState extends State<SettingsPage> {
                           .withValues(alpha: 0.45),
                       onTap: _showAppearancePicker,
                     ),
-                    const SizedBox(height: 12),
-                    _SettingsTile(
-                      icon: Icons.tips_and_updates_outlined,
-                      title: "Replay Coach Marks",
-                      subtitle: "Show guide highlights again",
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  KeyedSubtree(
+                    key: languageKey,
+                    child: _SettingsTile(
+                      icon: Icons.language_rounded,
+                      title: "Language Selection",
+                      subtitle: "Choose your preferred application language",
                       isTablet: isTablet,
                       accentColor: AppTheme.info,
-                      borderColor: AppTheme.warning.withValues(alpha: 0.45),
-                      onTap: _replayCoachMarks,
-                    ),
-                    const SizedBox(height: 18),
-                    _SettingsSectionTitle(
-                      title: "Language",
-                      isTablet: isTablet,
-                    ),
-                    KeyedSubtree(
-                      key: languageKey,
-                      child: _SettingsTile(
-                        icon: Icons.language,
-                        title: "Language Selection",
-                        subtitle:
-                            "Choose English, Filipino, Cebuano, Ilocano, or Hiligaynon",
-                        isTablet: isTablet,
-                        borderColor: AppTheme.info.withValues(alpha: 0.45),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LanguageSelectionPage(
-                                returnToSettings: true,
-                              ),
+                      borderColor: AppTheme.info.withValues(alpha: 0.45),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LanguageSelectionPage(
+                              returnToSettings: true,
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
-                  ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _SettingsTile(
+                    icon: Icons.tips_and_updates_outlined,
+                    title: "Replay Coach Marks",
+                    subtitle: "Show your guide highlights again",
+                    isTablet: isTablet,
+                    onTap: _replayCoachMarks,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  KeyedSubtree(
+                    key: authenticationKey,
+                    child: _AuthenticationSection(
+                      isTablet: isTablet,
+                      settings: appSettings,
+                      onSetPin: _setPin,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  _SettingsSectionTitle(title: "Account", isTablet: isTablet),
+
+                  _SettingsTile(
+                    icon: Icons.logout_rounded,
+                    title: "Logout",
+                    subtitle: "Clear this session and return to login.",
+                    isTablet: isTablet,
+                    accentColor: AppTheme.highRisk,
+                    surfaceColor: const Color(0xFFFFF1F2),
+                    onTap: _logout,
+                  ),
                 ],
               ),
             ),
           ),
         ),
       ),
-      bottomNavigationBar: FloatingNavBar(
-        selectedIndex: widget.selectedNavIndex,
-      ),
+      bottomNavigationBar: const FloatingNavBar(selectedIndex: 2),
     );
   }
 }
@@ -706,164 +693,6 @@ class _MindfulGooeyAccentBarState extends State<_MindfulGooeyAccentBar>
   }
 }
 
-class _SelfReportButton extends StatelessWidget {
-  final bool isTablet;
-
-  const _SelfReportButton({required this.isTablet});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFFFF4D6),
-      borderRadius: BorderRadius.circular(16),
-      elevation: 4,
-      shadowColor: Colors.black26,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const DataCollectionPage()),
-          );
-        },
-        child: Container(
-          height: isTablet ? 155 : 125,
-          padding: EdgeInsets.symmetric(horizontal: isTablet ? 28 : 20),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppTheme.warning, width: 1.4),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: isTablet ? 68 : 56,
-                height: isTablet ? 68 : 56,
-                decoration: BoxDecoration(
-                  color: AppTheme.warning.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Icon(
-                  Icons.assignment_add,
-                  color: AppTheme.warning,
-                  size: isTablet ? 36 : 30,
-                ),
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Text(
-                  "Self-Reporting",
-                  style: TextStyle(
-                    color: AppTheme.text,
-                    fontSize: isTablet ? 28 : 23,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: AppTheme.warning,
-                size: isTablet ? 32 : 28,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SelfReportHistoryButton extends StatelessWidget {
-  final bool isTablet;
-
-  const _SelfReportHistoryButton({required this.isTablet});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: SelfReportStore.instance,
-      builder: (context, _) {
-        final localCount = SelfReportStore.instance.reports.length;
-
-        return Material(
-          color: const Color(0xFFEFFAF5),
-          borderRadius: BorderRadius.circular(16),
-          elevation: 3,
-          shadowColor: Colors.black26,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const SelfReportHistoryPage(),
-                ),
-              );
-            },
-            child: Container(
-              height: isTablet ? 145 : 116,
-              padding: EdgeInsets.symmetric(horizontal: isTablet ? 28 : 20),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.success, width: 1.4),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: isTablet ? 64 : 54,
-                    height: isTablet ? 64 : 54,
-                    decoration: BoxDecoration(
-                      color: AppTheme.success.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Icon(
-                      Icons.fact_check_outlined,
-                      color: AppTheme.success,
-                      size: isTablet ? 34 : 28,
-                    ),
-                  ),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "My Self-Reports",
-                          style: TextStyle(
-                            color: AppTheme.text,
-                            fontSize: isTablet ? 27 : 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          localCount > 0
-                              ? "Review your account contribution"
-                              : "Review your symptom contributions",
-                          style: TextStyle(
-                            color: AppTheme.success,
-                            fontSize: isTablet ? 15 : 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: AppTheme.success,
-                    size: isTablet ? 32 : 28,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 class _SurveyButton extends StatefulWidget {
   final bool isTablet;
 
@@ -1012,14 +841,19 @@ class _SettingsSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mode = AppSettingsStore.instance.visualMode;
+
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: mode.onBackground,
           fontSize: isTablet ? 18 : 15,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w800,
+          shadows: mode == HealthPhVisualMode.dark
+              ? const [Shadow(color: Colors.black45, blurRadius: 3)]
+              : null,
         ),
       ),
     );
@@ -1150,8 +984,9 @@ class _AuthenticationSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SettingsSectionTitle(title: "Authentications", isTablet: isTablet),
+        _SettingsSectionTitle(title: "Authentication", isTablet: isTablet),
         _SettingsTile(
           icon: Icons.pin_outlined,
           title: "PIN Login",
@@ -1352,11 +1187,11 @@ class _ThemePreviewTile extends StatelessWidget {
       child: ListTile(
         dense: compact,
         visualDensity: compact
-            ? const VisualDensity(horizontal: -2, vertical: -4)
+            ? const VisualDensity(horizontal: -1, vertical: -2)
             : VisualDensity.standard,
         contentPadding: EdgeInsets.symmetric(
           horizontal: compact ? 10 : 16,
-          vertical: compact ? 4 : 8,
+          vertical: compact ? 6 : 8,
         ),
         onTap: onTap,
         leading: ClipRRect(

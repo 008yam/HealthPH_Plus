@@ -112,39 +112,42 @@ class SentimentPulsePage extends StatelessWidget {
                       border: Border.all(color: AppTheme.border),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Column(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(8),
+                    child: Theme(
+                      data: AppTheme.lightTheme,
+                      child: Column(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const TabBar(
+                              labelColor: Colors.black,
+                              unselectedLabelColor: Colors.grey,
+                              indicatorColor: Colors.indigo,
+                              tabs: [
+                                Tab(text: "Overview"),
+                                Tab(text: "Trends"),
+                                Tab(text: "Regional"),
+                                Tab(text: "Survey"),
+                              ],
+                            ),
                           ),
-                          child: const TabBar(
-                            labelColor: Colors.black,
-                            unselectedLabelColor: Colors.grey,
-                            indicatorColor: Colors.indigo,
-                            tabs: [
-                              Tab(text: "Overview"),
-                              Tab(text: "Trends"),
-                              Tab(text: "Regional"),
-                              Tab(text: "Survey"),
-                            ],
-                          ),
-                        ),
 
-                        const SizedBox(height: 14),
+                          const SizedBox(height: 14),
 
-                        Expanded(
-                          child: TabBarView(
-                            children: [
-                              OverviewTab(),
-                              TrendsTab(),
-                              RegionalTab(),
-                              SurveyTab(),
-                            ],
+                          Expanded(
+                            child: TabBarView(
+                              children: [
+                                OverviewTab(),
+                                TrendsTab(),
+                                RegionalTab(),
+                                SurveyTab(),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -167,7 +170,11 @@ class OverviewTab extends StatelessWidget {
       children: const [
         Text(
           "Overall Sentiment",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.text,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
 
         SizedBox(height: 12),
@@ -230,10 +237,17 @@ class TrendsTab extends StatelessWidget {
       children: const [
         Text(
           "Sentiment Trends",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.text,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
 
-        Text("Sentiment changes over time", style: TextStyle(fontSize: 12)),
+        Text(
+          "Sentiment changes over time",
+          style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
+        ),
 
         SizedBox(height: 12),
 
@@ -243,7 +257,11 @@ class TrendsTab extends StatelessWidget {
 
         Text(
           "Trends Insights",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.text,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
 
         SizedBox(height: 8),
@@ -270,7 +288,11 @@ class TrendsTab extends StatelessWidget {
 
         Text(
           "Region Trend Changes",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.text,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
 
         SizedBox(height: 8),
@@ -301,10 +323,17 @@ class RegionalTab extends StatelessWidget {
       children: const [
         Text(
           "Regional Sentiment",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.text,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
 
-        Text("Dominant sentiment by region", style: TextStyle(fontSize: 12)),
+        Text(
+          "Dominant sentiment by region",
+          style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
+        ),
 
         SizedBox(height: 12),
 
@@ -373,10 +402,13 @@ class _SurveyTabState extends State<SurveyTab> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       builder: (_) {
-        return SurveyResponseSheet(
-          survey: survey,
-          surveyService: surveyService,
-          onSubmitted: _refreshSurveys,
+        return Theme(
+          data: AppTheme.lightTheme,
+          child: SurveyResponseSheet(
+            survey: survey,
+            surveyService: surveyService,
+            onSubmitted: _refreshSurveys,
+          ),
         );
       },
     );
@@ -450,7 +482,10 @@ class _SurveyTabState extends State<SurveyTab> {
                       const SizedBox(height: 4),
                       Text(
                         survey.subtitle,
-                        style: const TextStyle(fontSize: 12),
+                        style: const TextStyle(
+                          color: AppTheme.mutedText,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 10),
@@ -458,7 +493,10 @@ class _SurveyTabState extends State<SurveyTab> {
                     const SizedBox(height: 6),
                     Text(
                       "${survey.responses} / ${survey.target} responses",
-                      style: const TextStyle(fontSize: 11),
+                      style: const TextStyle(
+                        color: AppTheme.mutedText,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -575,7 +613,10 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
               ),
               if (widget.survey.subtitle.isNotEmpty) ...[
                 const SizedBox(height: 6),
-                Text(widget.survey.subtitle),
+                Text(
+                  widget.survey.subtitle,
+                  style: const TextStyle(color: AppTheme.mutedText),
+                ),
               ],
               const SizedBox(height: 16),
               ...List.generate(widget.survey.questions.length, (index) {
@@ -682,7 +723,12 @@ class _QuestionCard extends StatelessWidget {
                       color: isSelected ? AppTheme.primary : AppTheme.mutedText,
                     ),
                     const SizedBox(width: 10),
-                    Expanded(child: Text(choice)),
+                    Expanded(
+                      child: Text(
+                        choice,
+                        style: const TextStyle(color: AppTheme.text),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -701,7 +747,10 @@ class _QuestionCard extends StatelessWidget {
             final isSelected = answer == value;
 
             return ChoiceChip(
-              label: Text("$value"),
+              label: Text(
+                "$value",
+                style: const TextStyle(color: AppTheme.text),
+              ),
               selected: isSelected,
               onSelected: isSubmitting
                   ? null
@@ -717,11 +766,14 @@ class _QuestionCard extends StatelessWidget {
       default:
         return TextFormField(
           enabled: !isSubmitting,
+          style: const TextStyle(color: AppTheme.text),
+          cursorColor: AppTheme.primary,
           minLines: 2,
           maxLines: 4,
           initialValue: answer?.toString(),
           decoration: const InputDecoration(
             hintText: "Type your answer",
+            hintStyle: TextStyle(color: AppTheme.mutedText),
             border: OutlineInputBorder(),
           ),
           validator: (value) {
@@ -773,6 +825,7 @@ class SentimentBox extends StatelessWidget {
                   Text(
                     percent,
                     style: const TextStyle(
+                      color: AppTheme.text,
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
                     ),
@@ -824,7 +877,10 @@ class BarGraphCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text("$value%"),
+                Text(
+                  "$value%",
+                  style: const TextStyle(color: AppTheme.text),
+                ),
                 Container(
                   height: value * 3,
                   width: 34,
@@ -836,7 +892,10 @@ class BarGraphCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   item["label"].toString(),
-                  style: const TextStyle(fontSize: 10),
+                  style: const TextStyle(
+                    color: AppTheme.text,
+                    fontSize: 10,
+                  ),
                 ),
               ],
             ),
@@ -877,8 +936,13 @@ class TrendLineCard extends StatelessWidget {
         children: [
           Container(width: 14, height: 14, color: color),
           const SizedBox(width: 8),
-          Expanded(child: Text(label)),
-          Text(value),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: AppTheme.text),
+            ),
+          ),
+          Text(value, style: const TextStyle(color: AppTheme.text)),
         ],
       ),
     );
@@ -911,12 +975,28 @@ class InsightCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(
+                color: AppTheme.text,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             Text(
               value,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: AppTheme.text,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            Text(description, style: const TextStyle(fontSize: 10)),
+            Text(
+              description,
+              style: const TextStyle(
+                color: AppTheme.text,
+                fontSize: 10,
+              ),
+            ),
           ],
         ),
       ),
@@ -939,10 +1019,14 @@ class RegionMiniCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: AppTheme.surface,
       child: ListTile(
         dense: true,
-        title: Text(region),
-        subtitle: Text(sentiment),
+        title: Text(region, style: const TextStyle(color: AppTheme.text)),
+        subtitle: Text(
+          sentiment,
+          style: const TextStyle(color: AppTheme.mutedText),
+        ),
         trailing: Text(
           change,
           style: const TextStyle(
@@ -972,6 +1056,7 @@ class RegionalSentimentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: AppTheme.surface,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         side: const BorderSide(color: Colors.black),
@@ -982,7 +1067,13 @@ class RegionalSentimentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(region, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              region,
+              style: const TextStyle(
+                color: AppTheme.text,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
 
             const SizedBox(height: 8),
 

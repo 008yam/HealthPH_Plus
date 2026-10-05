@@ -21,111 +21,114 @@ class CoachMarkStep {
 class CoachMark {
   static Future<void> show(
     BuildContext context, {
-      required List<CoachMarkStep> steps,
-      VoidCallback? onFinished,
-    }) async {
-      if (steps.isEmpty || !context.mounted) return;
+    required List<CoachMarkStep> steps,
+    VoidCallback? onFinished,
+  }) async {
+    if (steps.isEmpty || !context.mounted) return;
 
-      var currentIndex = 0;
-      late OverlayEntry entry;
-      var isClosed = false;
+    var currentIndex = 0;
+    late OverlayEntry entry;
+    var isClosed = false;
 
+    await _scrollToTarget(steps[currentIndex].targetKey);
+
+    if (!context.mounted) return;
+
+    void close() {
+      if (isClosed) return;
+      isClosed = true;
+      entry.remove();
+      onFinished?.call();
+    }
+
+    Future<void> next() async {
+      if (currentIndex == steps.length - 1) {
+        close();
+        return;
+      }
+
+      currentIndex++;
       await _scrollToTarget(steps[currentIndex].targetKey);
 
-      if(!context.mounted) return;
-
-      void close() {
-        if (isClosed) return;
-        isClosed = true;
-        entry.remove();
-        onFinished?.call();
-      }
-
-      Future<void> next() async {
-        if (currentIndex == steps.length - 1) {
-          close();
-          return;
-        } 
-
-        currentIndex++;
-        await _scrollToTarget(steps[currentIndex].targetKey);
-
-        if(isClosed) return;
-        entry.markNeedsBuild();
-      }
-
-      entry = OverlayEntry(
-        builder: (context) {
-          final step = steps[currentIndex];
-          final targetRect = _targetRect(step.targetKey);
-
-          return _CoachMarkOverlay(
-            step: step,
-            targetRect: targetRect,
-            currentStep: currentIndex + 1,
-            totalSteps: steps.length,
-            onNext: next,
-            onSkip: close,
-          );
-        },
-      );
-
-      Overlay.of(context).insert(entry);
+      if (isClosed) return;
+      entry.markNeedsBuild();
     }
 
-    static Future<void> showOnce(
-      BuildContext context, {
-        required String discoveryKey,
-        required List<CoachMarkStep> steps,
-      }) async {
-        final prefs = await SharedPreferences.getInstance();
-        final storageKey = "coach_mark_seen_$discoveryKey";
-        final hasSeen = prefs.getBool(storageKey) ?? false;
+    entry = OverlayEntry(
+      builder: (context) {
+        final step = steps[currentIndex];
+        final targetRect = _targetRect(step.targetKey);
 
-        if (hasSeen || !context.mounted) return;
+        return _CoachMarkOverlay(
+          step: step,
+          targetRect: targetRect,
+          currentStep: currentIndex + 1,
+          totalSteps: steps.length,
+          onNext: next,
+          onSkip: close,
+        );
+      },
+    );
 
-        show(context,
-        steps: steps,
-        onFinished: () {
-          prefs.setBool(storageKey, true);
-        },
-      );
+    Overlay.of(context).insert(entry);
+  }
+
+  static Future<void> showOnce(
+    BuildContext context, {
+    required String discoveryKey,
+    required List<CoachMarkStep> steps,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final storageKey = "coach_mark_seen_$discoveryKey";
+    final hasSeen = prefs.getBool(storageKey) ?? false;
+
+    if (hasSeen || !context.mounted) return;
+
+    show(
+      context,
+      steps: steps,
+      onFinished: () {
+        prefs.setBool(storageKey, true);
+      },
+    );
+  }
+
+  static Future<void> _scrollToTarget(GlobalKey key) async {
+    final targetContext = key.currentContext;
+    if (targetContext == null) return;
+
+    await Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeInOutCubic,
+      alignment: 0.22,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+    );
+
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+  }
+
+  static Rect? _targetRect(GlobalKey key) {
+    final renderObject = key.currentContext?.findRenderObject();
+
+    if (renderObject is! RenderBox || !renderObject.hasSize) {
+      return null;
     }
 
-    static Future<void> _scrollToTarget(GlobalKey key) async {
-      final targetContext = key.currentContext;
-      if (targetContext == null) return;
+    final offset = renderObject.localToGlobal(Offset.zero);
+    return offset & renderObject.size;
+  }
 
-      await Scrollable.ensureVisible(
-        targetContext,
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeInOutCubic,
-        alignment: 0.22,
-        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
-      );
+  static Future<void> resetAllDiscoveries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final discoveryKeys = prefs.getKeys().where(
+      (key) => key.startsWith("coach_mark_seen_"),
+    );
 
-      await Future<void>.delayed(const Duration(microseconds: 80));
+    for (final key in discoveryKeys) {
+      await prefs.remove(key);
     }
-
-    static Rect? _targetRect(GlobalKey key) {
-      final renderObject = key.currentContext?.findRenderObject();
-
-      if (renderObject is! RenderBox || !renderObject.hasSize) {
-        return null;
-      }
-
-      final offset = renderObject.localToGlobal(Offset.zero);
-      return offset & renderObject.size;
-    }
-
-    static Future<void> resetAllDiscoveries() async {
-      final prefs = await SharedPreferences.getInstance();
-
-      await prefs.remove("coach_mark_seen_main_page_v2");
-      await prefs.remove("coach_mark_seen_settings_profile_v3");
-      await prefs.remove("coach_mark_seen_data_collection_v3");
-      await prefs.remove("coach_mark_seen_health_literacy_v2");
-    }
+  }
 }
 
 class _CoachMarkOverlay extends StatelessWidget {
@@ -155,8 +158,8 @@ class _CoachMarkOverlay extends StatelessWidget {
 
     final cardTop = rawTop > size.height - 230
         ? ((highlightedRect?.top ?? 260) - 210)
-            .clamp(72.0, size.height - 230.0)
-            .toDouble()
+              .clamp(72.0, size.height - 230.0)
+              .toDouble()
         : rawTop.clamp(72.0, size.height - 230.0).toDouble();
 
     final cardWidth = size.width > 430 ? 360.0 : size.width - 32;
@@ -286,10 +289,7 @@ class _CoachMarkCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              TextButton(
-                onPressed: onSkip,
-                child: const Text("Skip"),
-              ),
+              TextButton(onPressed: onSkip, child: const Text("Skip")),
               const Spacer(),
               ElevatedButton(
                 onPressed: onNext,

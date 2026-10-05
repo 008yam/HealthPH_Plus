@@ -442,7 +442,11 @@ class _ContributionCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 _DetailRow(label: "Report ID", value: report.id),
                 _DetailRow(label: "Status", value: report.status),
-                _DetailRow(label: "Language", value: report.language),
+                if (report.language.isNotEmpty)
+                  _DetailRow(
+                    label: "Detected Language",
+                    value: report.language,
+                  ),
                 _DetailRow(label: "Location", value: report.location),
                 _DetailRow(label: "Date", value: report.dateLabel),
                 if (report.notes.isNotEmpty)
@@ -709,7 +713,7 @@ class _ContributionReport {
         location["cityName"],
         location["provinceName"],
       ]),
-      language: _text(json["language"], fallback: "English"),
+      language: _text(json["language"]),
       notes: _text(json["notes"]),
       createdAt: createdAt,
       symptoms: _stringList(json["symptomLabels"]),

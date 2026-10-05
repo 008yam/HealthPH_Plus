@@ -27,7 +27,10 @@ class MobileSurvey {
       status: json["status"]?.toString() ?? "",
       questions: (json["questions"] as List? ?? [])
           .whereType<Map>()
-          .map((item) => MobileSurveyQuestion.fromJson(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                MobileSurveyQuestion.fromJson(Map<String, dynamic>.from(item)),
+          )
           .toList(),
     );
   }

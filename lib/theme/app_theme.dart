@@ -47,7 +47,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceSoft,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: border),
@@ -61,36 +64,34 @@ class AppTheme {
   }
 
   static ThemeData get plainLightTheme {
-  return lightTheme.copyWith(
-    scaffoldBackgroundColor: Colors.white,
-    colorScheme: lightTheme.colorScheme.copyWith(
-      surface: Colors.white,
-    ),
-  );
-}
+    return lightTheme.copyWith(
+      scaffoldBackgroundColor: Colors.white,
+      colorScheme: lightTheme.colorScheme.copyWith(surface: Colors.white),
+    );
+  }
 
-static ThemeData get greyTheme {
-  return lightTheme.copyWith(
-    scaffoldBackgroundColor: const Color(0xFFE9EDF3),
-    colorScheme: lightTheme.colorScheme.copyWith(
-      surface: const Color(0xFFF6F7FA),
-    ),
-  );
-}
+  static ThemeData get greyTheme {
+    return lightTheme.copyWith(
+      scaffoldBackgroundColor: const Color(0xFFE9EDF3),
+      colorScheme: lightTheme.colorScheme.copyWith(
+        surface: const Color(0xFFF6F7FA),
+      ),
+    );
+  }
 
-static ThemeData get darkTheme {
-  return ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: const Color(0xFF111827),
-    colorScheme: const ColorScheme.dark(
-      primary: info,
-      secondary: warning,
-      surface: Color(0xFF1F2937),
-      error: highRisk,
-    ),
-  );
-}
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF111827),
+      colorScheme: const ColorScheme.dark(
+        primary: info,
+        secondary: warning,
+        surface: Color(0xFF1F2937),
+        error: highRisk,
+      ),
+    );
+  }
 
   static BoxDecoration get cardDecoration {
     return BoxDecoration(

@@ -21,7 +21,6 @@ class LocationAutocompleteField extends StatefulWidget {
     this.refreshKey,
   });
 
-
   @override
   State<LocationAutocompleteField> createState() =>
       _LocationAutocompleteFieldState();
@@ -77,17 +76,17 @@ class _LocationAutocompleteFieldState extends State<LocationAutocompleteField> {
       focusNode: _focusNode,
       displayStringForOption: (option) => option.label,
       optionsBuilder: (value) {
-        if(!widget.enabled) return const Iterable<LocationOption>.empty();
+        if (!widget.enabled) return const Iterable<LocationOption>.empty();
 
         final query = value.text.trim().toLowerCase();
 
-        if(query.isEmpty) {
+        if (query.isEmpty) {
           return widget.options.take(25);
         }
 
         return widget.options
-          .where((option) => option.label.toLowerCase().contains(query))
-          .take(30);
+            .where((option) => option.label.toLowerCase().contains(query))
+            .take(30);
       },
       onSelected: widget.onSelected,
       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
@@ -119,7 +118,7 @@ class _LocationAutocompleteFieldState extends State<LocationAutocompleteField> {
                   return ListTile(
                     dense: true,
                     title: Text(option.label),
-                    onTap:  () => onSelected(option),
+                    onTap: () => onSelected(option),
                   );
                 },
               ),

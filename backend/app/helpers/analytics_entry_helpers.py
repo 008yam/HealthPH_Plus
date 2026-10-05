@@ -67,7 +67,6 @@ def build_self_report_analytics_entry(report_document: dict[str, Any]) -> dict[s
     location = report_document.get("location") or {}
     created_at = report_document.get("createdAt") or get_ph_datetime()
     collected_at = report_document.get("syncedAt") or created_at
-    language = _clean_text_value(report_document.get("language")) or "English"
 
     raw_location = _clean_text_value(location.get("geocodedAddress"))
 
@@ -88,7 +87,6 @@ def build_self_report_analytics_entry(report_document: dict[str, Any]) -> dict[s
         "source_id": report_id,
         #"report_id": report_id,
         "text": text,
-        "language": language,
         "source_platform": _clean_text_value(report_document.get("source")),
         "location": {
             "raw": raw_location,
@@ -153,7 +151,6 @@ def build_survey_response_analytics_entry(
     user_location = response_document.get("userLocation") or {}
 
     created_at = response_document.get("createdAt") or get_ph_datetime()
-    language = _clean_text_value(response_document.get("language")) or "English"
     user_id = _clean_text_value(response_document.get("userId"))
 
     text = answer_text
@@ -168,7 +165,6 @@ def build_survey_response_analytics_entry(
         #"id": response_id,
         #"survey_response_id": response_id,
         "survey_id": survey_id,
-        "language": language,
         "answer": answer,
         "text": text,
         "user_id": user_id,

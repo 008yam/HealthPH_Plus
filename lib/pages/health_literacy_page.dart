@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
 import '../widgets/coach_mark.dart';
 import '../services/healthph_api_services.dart';
+import '../services/api_config.dart';
 import '../theme/responsive.dart';
 
 class HealthLiteracyPage extends StatefulWidget {
@@ -30,22 +31,22 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
     super.initState();
 
     healthLiteracyFuture = HealthPhApiService(
-      baseUrl: "http://127.0.0.1:8000",
+      baseUrl: ApiConfig.healthLiteracyBaseUrl,
     ).fetchHealthLiteracyContent();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(microseconds: 650), () {
+      Future.delayed(const Duration(milliseconds: 650), () {
         if (!mounted) return;
 
         CoachMark.showOnce(
           context,
-          discoveryKey: "health_literacy_v2",
+          discoveryKey: "health_literacy_v3",
           steps: [
             CoachMarkStep(
               targetKey: literacyHeaderKey, //Coach Mark for Header
               title: "Health Literacy Hub",
               description:
-                  "Read trusted respiratory health articles and fact-checking content here.",
+                  "Browse published articles, videos, and infographics from trusted health sources.",
               icon: Icons.article_outlined,
               color: AppTheme.success,
             ),
@@ -54,15 +55,15 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
               targetKey: literacySearchKey,
               title: "Search Health Topics",
               description:
-                  "Search Articles by topic, claim, disease, or keyword",
+                  "Filter the current tab by title, topic, source, disease, or keyword.",
               icon: Icons.search,
               color: AppTheme.info,
             ),
             CoachMarkStep(
               targetKey: literacyTabsKey,
-              title: "Articles and Fact Checks",
+              title: "Content Categories",
               description:
-                  "Switch between health artilces and quick fact-checking cards",
+                  "Switch between articles, playable videos, and downloadable infographics.",
               icon: Icons.tab,
               color: AppTheme.primary,
             ),
@@ -70,8 +71,8 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
               targetKey: literacyContentKey,
               title: "Learning Content",
               description:
-                  "Tab an article card to open the full health resource",
-              icon: Icons.search,
+                  "Tap a card action to read an article, open a PDF, view an image, or play a video.",
+              icon: Icons.touch_app_outlined,
               color: AppTheme.warning,
             ),
           ],
@@ -93,28 +94,63 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
     });
   }
 
+  Future<void> _refreshHealthLiteracy() async {
+    final nextFuture = HealthPhApiService(
+      baseUrl: ApiConfig.healthLiteracyBaseUrl,
+    ).fetchHealthLiteracyContent();
+
+    setState(() {
+      healthLiteracyFuture = nextFuture;
+    });
+
+    try {
+      await nextFuture;
+    } catch (_) {
+      // The FutureBuilder renders the error state and keeps Retry available.
+    }
+  }
+
   String _joinList(dynamic value) {
     if (value is List) return value.join(" ");
     return "";
   }
 
+  String _resolveUrl(dynamic rawValue) {
+    final value = rawValue?.toString().trim() ?? "";
+    if (value.isEmpty || value == "null") return "";
+    if (value.startsWith("/")) {
+      return "${ApiConfig.healthLiteracyBaseUrl}$value";
+    }
+    return value;
+  }
+
   String _resolveMediaUrl(Map<String, dynamic> item) {
-    String value = "";
+    final media = item["media"];
+    final nestedUrl = media is Map ? media["url"] : null;
+    final resolvedNestedUrl = _resolveUrl(nestedUrl);
+    return resolvedNestedUrl.isNotEmpty
+        ? resolvedNestedUrl
+        : _resolveUrl(item["mediaUrl"]);
+  }
+
+  String _resolveImageUrl(Map<String, dynamic> item) {
+    final directImageUrl = _resolveUrl(item["imageUrl"]);
+    if (directImageUrl.isNotEmpty) return directImageUrl;
 
     final media = item["media"];
-    if (media is Map && media["url"] != null) {
-      value = media["url"].toString();
-    }
+    final mediaType = media is Map
+        ? (media["contentType"] ?? "").toString().toLowerCase()
+        : "";
+    return mediaType.startsWith("image/")
+        ? _resolveUrl(media is Map ? media["url"] : null)
+        : "";
+  }
 
-    if (value.isEmpty) {
-      value = (item["mediaUrl"] ?? item["imageUrl"] ?? "").toString();
-    }
-
-    if (value.startsWith("/")) {
-      return "http://127.0.0.1:8000$value";
-    }
-
-    return value;
+  String _resolveMediaContentType(Map<String, dynamic> item) {
+    final media = item["media"];
+    return media is Map
+        ? (media["contentType"] ?? "").toString().toLowerCase()
+        : "";
   }
 
   String _resolveOpenUrl(Map<String, dynamic> item) {
@@ -123,7 +159,9 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
       return externalUrl;
     }
 
-    return _resolveMediaUrl(item);
+    final mediaUrl = _resolveMediaUrl(item);
+    if (mediaUrl.isNotEmpty) return mediaUrl;
+    return _resolveImageUrl(item);
   }
 
   Widget _buildContentList(List<String> allowedTypes, String emptyMessage) {
@@ -135,13 +173,23 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
         }
 
         if (snapshot.hasError) {
-          return const Center(
-            child: Text(
-              "Unable to load content.",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Unable to load content.",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _refreshHealthLiteracy,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text("Retry"),
+                ),
+              ],
             ),
           );
         }
@@ -170,33 +218,39 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
             child: Text(
               emptyMessage,
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
             ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-          itemCount: filtered.length,
-          itemBuilder: (context, index) {
-            final item = filtered[index];
-            final type = item["contentType"].toString().toLowerCase();
-            final mediaUrl = _resolveMediaUrl(item);
+        return RefreshIndicator(
+          onRefresh: _refreshHealthLiteracy,
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            itemCount: filtered.length,
+            itemBuilder: (context, index) {
+              final item = filtered[index];
+              final type = item["contentType"].toString().toLowerCase();
+              final mediaUrl = _resolveMediaUrl(item);
 
-            return HealthArticleCard(
-              contentType: type,
-              mediaUrl: mediaUrl,
-              title: (item["title"] ?? "Untitled content").toString(),
-              source: (item["source"] ?? "HealthPH+").toString(),
-              description: (item["description"] ?? "").toString(),
-              articleUrl: _resolveOpenUrl(item),
-              tags: List<String>.from(item["tags"] ?? []),
-            );
-          },
+              return HealthArticleCard(
+                contentType: type,
+                mediaUrl: mediaUrl,
+                imageUrl: _resolveImageUrl(item),
+                mediaContentType: _resolveMediaContentType(item),
+                title: (item["title"] ?? "Untitled content").toString(),
+                source: (item["source"] ?? "HealthPH+").toString(),
+                description: (item["description"] ?? "").toString(),
+                articleUrl: _resolveOpenUrl(item),
+                tags: List<String>.from(item["tags"] ?? []),
+              );
+            },
+          ),
         );
-      },
+      }
     );
   }
 
@@ -306,6 +360,8 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                               key: literacySearchKey,
                               child: TextField(
                                 controller: _searchController,
+                                style: const TextStyle(color: AppTheme.text),
+                                cursorColor: AppTheme.primary,
                                 onChanged: (value) {
                                   setState(() {
                                     searchQuery = value.toLowerCase().trim();
@@ -314,14 +370,21 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                                 decoration: InputDecoration(
                                   hintText:
                                       "Search articles, topics, claims...",
-                                  hintStyle: const TextStyle(fontSize: 11),
+                                  hintStyle: const TextStyle(
+                                    color: AppTheme.mutedText,
+                                    fontSize: 11,
+                                  ),
                                   prefixIcon: const Icon(
                                     Icons.search,
+                                    color: AppTheme.mutedText,
                                     size: 22,
                                   ),
                                   suffixIcon: searchQuery.isNotEmpty
                                       ? IconButton(
-                                          icon: const Icon(Icons.clear),
+                                          icon: const Icon(
+                                            Icons.clear,
+                                            color: AppTheme.mutedText,
+                                          ),
                                           onPressed: _clearSearch,
                                         )
                                       : null,
@@ -398,6 +461,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                         _buildContentList([
                           "article",
                           "articles",
+                          "fact_check",
                         ], "No articles found."),
                         _buildContentList([
                           "video",
@@ -423,6 +487,8 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
 class HealthArticleCard extends StatelessWidget {
   final String contentType;
   final String mediaUrl;
+  final String imageUrl;
+  final String mediaContentType;
   final String title;
   final String source;
   final String description;
@@ -433,6 +499,8 @@ class HealthArticleCard extends StatelessWidget {
     super.key,
     required this.contentType,
     required this.mediaUrl,
+    required this.imageUrl,
+    required this.mediaContentType,
     required this.title,
     required this.source,
     required this.description,
@@ -440,7 +508,12 @@ class HealthArticleCard extends StatelessWidget {
     required this.tags,
   });
 
-  bool get _isVideo => contentType == "video" || contentType == "videos";
+  bool get _isVideo =>
+      mediaContentType.startsWith("video/") ||
+      (mediaContentType.isEmpty &&
+          (contentType == "video" || contentType == "videos"));
+
+  bool get _isPdf => mediaContentType == "application/pdf";
 
   Future<void> _openContent(BuildContext context) async {
     if (_isVideo) {
@@ -461,8 +534,62 @@ class HealthArticleCard extends StatelessWidget {
     }
 
     if (articleUrl.isEmpty || articleUrl == "null") {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Content Link is unavailable.")),
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.white,
+        showDragHandle: true,
+        builder: (sheetContext) {
+          return Theme(
+            data: AppTheme.lightTheme,
+            child: SafeArea(
+              child: DraggableScrollableSheet(
+                expand: false,
+                initialChildSize: 0.82,
+                minChildSize: 0.50,
+                maxChildSize: 0.95,
+                builder: (context, scrollController) {
+                  return SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            color: AppTheme.text,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            height: 1.25,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          source,
+                          style: const TextStyle(
+                            color: AppTheme.mutedText,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          description,
+                          style: const TextStyle(
+                            color: AppTheme.text,
+                            fontSize: 15,
+                            height: 1.55,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
       );
       return;
     }
@@ -475,62 +602,7 @@ class HealthArticleCard extends StatelessWidget {
   }
 
   Widget _buildMediaPreview() {
-    final isVideo = contentType == "video" || contentType == "videos";
-    final hasNetworkMedia = mediaUrl.startsWith("http");
-
-    if (isVideo) {
-      return Container(
-        height: 230,
-        width: double.infinity,
-        color: const Color(0xFF1D2450),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            const Icon(Icons.play_circle_fill, color: Colors.white, size: 62),
-            Positioned(
-              left: 12,
-              bottom: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  "Video",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (hasNetworkMedia) {
-      return Image.network(
-        mediaUrl,
-        height: 230,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) {
-          return Image.asset(
-            "assets/images/lunghealtharticle.png",
-            height: 230,
-            width: double.infinity,
-            fit: BoxFit.cover,
-          );
-        },
-      );
-    }
-
+  Widget buildFallback() {
     return Image.asset(
       "assets/images/lunghealtharticle.png",
       height: 230,
@@ -538,6 +610,78 @@ class HealthArticleCard extends StatelessWidget {
       fit: BoxFit.cover,
     );
   }
+
+  Widget buildThumbnail() {
+    if (imageUrl.isEmpty) {
+      return buildFallback();
+    }
+
+    return Image.network(
+      imageUrl,
+      height: 230,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+
+        return const SizedBox(
+          height: 230,
+          child: Center(child: CircularProgressIndicator()),
+        );
+      },
+      errorBuilder: (_, _, _) => buildFallback(),
+    );
+  }
+
+  final thumbnail = buildThumbnail();
+
+  if (!_isVideo) {
+    return thumbnail;
+  }
+
+  return SizedBox(
+    height: 230,
+    width: double.infinity,
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        thumbnail,
+        Container(
+          color: Colors.black.withValues(alpha: 0.22),
+        ),
+        const Center(
+          child: Icon(
+            Icons.play_circle_fill,
+            color: Colors.white,
+            size: 62,
+          ),
+        ),
+        Positioned(
+          left: 12,
+          bottom: 12,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 5,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.70),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              "Video",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -564,25 +708,35 @@ class HealthArticleCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 13,
+                      color: AppTheme.text,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
+                      height: 1.25,
                     ),
-                  ),
-
-                  const SizedBox(height: 3),
-
-                  Text(
-                    source,
-                    style: const TextStyle(fontSize: 10, color: Colors.black87),
                   ),
 
                   const SizedBox(height: 5),
 
                   Text(
+                    source,
+                    style: const TextStyle(
+                      color: AppTheme.mutedText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
                     description,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 9, height: 1.3),
+                    style: const TextStyle(
+                      color: AppTheme.text,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
                   ),
 
                   const SizedBox(height: 8),
@@ -632,8 +786,10 @@ class HealthArticleCard extends StatelessWidget {
                         ),
                         onPressed: () => _openContent(context),
                         child: Text(
-                          contentType == "video" || contentType == "videos"
+                          _isVideo
                               ? "Watch video"
+                              : _isPdf
+                              ? "Open PDF"
                               : contentType == "infographic" ||
                                     contentType == "infographics"
                               ? "View"
@@ -763,21 +919,34 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
                     ? 16 / 9
                     : _controller.value.aspectRatio;
 
-                return Stack(
-                  alignment: Alignment.center,
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    AspectRatio(
-                      aspectRatio: aspectRatio,
-                      child: VideoPlayer(_controller),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AspectRatio(
+                          aspectRatio: aspectRatio,
+                          child: VideoPlayer(_controller),
+                        ),
+                        IconButton(
+                          onPressed: _togglePlayback,
+                          iconSize: 64,
+                          icon: Icon(
+                            _controller.value.isPlaying
+                                ? Icons.pause_circle_filled
+                                : Icons.play_circle_fill,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      onPressed: _togglePlayback,
-                      iconSize: 64,
-                      icon: Icon(
-                        _controller.value.isPlaying
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_fill,
-                        color: Colors.white.withValues(alpha: 0.9),
+                    VideoProgressIndicator(
+                      _controller,
+                      allowScrubbing: true,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
                       ),
                     ),
                   ],
@@ -866,6 +1035,7 @@ class FactCheckCard extends StatelessWidget {
                     Text(
                       claim,
                       style: const TextStyle(
+                        color: AppTheme.text,
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                         height: 1.3,
@@ -906,7 +1076,11 @@ class FactCheckCard extends StatelessWidget {
 
                 const Text(
                   "Verdict:",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                  style: TextStyle(
+                    color: AppTheme.text,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
                 ),
 
                 const SizedBox(width: 6),

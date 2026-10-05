@@ -1,4 +1,3 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../data/app_taxonomy.dart';
@@ -33,14 +32,6 @@ class HealthPhApiService {
         AppTaxonomy.isGuestRole(profile.roleId) ||
         profile.email == AppTaxonomy.guestEmail;
 
-    final prefs = await SharedPreferences.getInstance();
-    final savedLanguage = prefs.getString(("healthph_selected_language"));
-
-    final language = profile?.language.isNotEmpty == true
-        ? profile!.language
-        : savedLanguage?.isNotEmpty == true
-        ? savedLanguage!
-        : "English";
 
     final payload = {
       "reporter": {
@@ -69,7 +60,6 @@ class HealthPhApiService {
       "symptomLabels": report.symptoms,
       "possibleConditionId": report.possibleConditionId,
       "possibleConditionLabel": report.possibleCondition,
-      "language": language,
       "notes": report.notes,
       "source": "mobile_self_report",
       "createdAt": report.createdAt.toIso8601String(),
@@ -144,19 +134,16 @@ class HealthPhApiService {
   Future<List<Map<String, dynamic>>> fetchHealthLiteracyContent() async {
     final response = await http
         .get(Uri.parse('$baseUrl/api/health-literacy/mobile'))
-        .timeout(const Duration(seconds: 12));
+        .timeout(const Duration(seconds: 30));
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-
-      final List<dynamic> items;
-      if (decoded is List) {
-        items = decoded;
-      } else if (decoded is Map && decoded["items"] is List) {
-        items = decoded["items"] as List;
-      } else {
-        items = [];
+      if (decoded is! Map || decoded["items"] is! List) {
+        throw const FormatException(
+          "Health literacy response has no items array",
+        );
       }
+      final items = decoded["items"] as List;
 
       return items
           .map((item) => Map<String, dynamic>.from(item as Map))

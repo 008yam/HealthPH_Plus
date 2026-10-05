@@ -8,9 +8,12 @@ import 'health_literacy_page.dart';
 import 'sentiment_pulse_page.dart';
 import 'settings_page.dart';
 import '../services/healthph_api_services.dart';
+import '../services/api_config.dart';
 import '../theme/app_theme.dart';
 import '../services/self_report_store.dart';
 import '../theme/responsive.dart';
+import '../widgets/weather_widget.dart';
+import '../widgets/floating_navbar.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -331,7 +334,7 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     SelfReportStore.instance.addListener(_refreshSelfReports);
     diseaseFuture = HealthPhApiService(
-      baseUrl: 'http://127.0.0.1:8000',
+      baseUrl: ApiConfig.baseUrl,
     ).fetchDiseasePoints();
   }
 
@@ -357,7 +360,6 @@ class _MapPageState extends State<MapPage> {
   @override //build()
   Widget build(BuildContext context) {
     final safeTop = MediaQuery.of(context).padding.top;
-    final safeBottom = MediaQuery.of(context).padding.bottom;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isTablet = Responsive.isTablet(context);
     final isLandscapePhone = Responsive.isLandscapePhone(context);
@@ -476,42 +478,22 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
 
-          // DATE UPDATE LABEL
+          // COMPACT WEATHER OVERLAY
           Positioned(
-            left: isLandscapePhone ? 96 : 12,
-            bottom: safeBottom + (isLandscapePhone ? 8 : 12),
-            right: isLandscapePhone ? 96 : 12,
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: isLandscapePhone ? 10 : 10,
-                vertical: isLandscapePhone ? 7 : 10,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.black),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Text(
-                "Map data updates show latest reported outbreak activity.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: isTablet ? 14 : 10,
-                  height: 1.3,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.text,
-                ),
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 380),
+                child: const WeatherWidget(compact: true),
               ),
             ),
           ),
         ],
       ),
+      bottomNavigationBar: const FloatingNavBar(selectedIndex: 1),
     );
   }
 
@@ -597,8 +579,8 @@ class _MapPageState extends State<MapPage> {
             ),
             const Divider(height: 1),
             _DrawerNavTile(
-              icon: Icons.settings,
-              label: "Settings",
+              icon: Icons.person_outline,
+              label: "Profile",
               onTap: () => _navigateFromDrawer(context, const SettingsPage()),
             ),
             SizedBox(height: isLandscapePhone ? 6 : 8),

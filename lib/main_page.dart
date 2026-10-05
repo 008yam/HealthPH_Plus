@@ -5,7 +5,7 @@ import 'package:healthphplus/widgets/floating_navbar.dart';
 import 'pages/health_literacy_page.dart';
 import 'pages/data_collection_page.dart';
 import 'pages/disease_watch_page.dart';
-import 'widgets/weather_widget.dart';
+import 'pages/self_report_history_page.dart';
 import 'theme/app_theme.dart';
 import 'theme/responsive.dart';
 import 'widgets/coach_mark.dart';
@@ -35,6 +35,8 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   final headerKey = GlobalKey();
+  final statsCarouselKey = GlobalKey();
+  final contributionActionsKey = GlobalKey();
   final quickActionKey = GlobalKey();
   final recentAlertKey = GlobalKey();
 
@@ -73,21 +75,29 @@ class _MainPageState extends State<MainPage> {
 
         CoachMark.showOnce(
           context,
-          discoveryKey: "main_page_v2",
+          discoveryKey: "main_page_v4",
           steps: [
             CoachMarkStep(
-              targetKey: headerKey,
-              title: "HealthPH+ Home",
+              targetKey: statsCarouselKey,
+              title: "Live Health Summary",
               description:
-                  "This is your main dashboard for respiratory health updates",
-              icon: Icons.home,
+                  "Swipe through current outbreaks, health alerts, registered users, and available mobile surveys.",
+              icon: Icons.view_carousel_outlined,
               color: AppTheme.primary,
+            ),
+            CoachMarkStep(
+              targetKey: contributionActionsKey,
+              title: "Your Contributions",
+              description:
+                  "Submit a self-report, review your previous reports, or answer an available mobile survey.",
+              icon: Icons.assignment_outlined,
+              color: AppTheme.success,
             ),
             CoachMarkStep(
               targetKey: quickActionKey,
               title: "Quick Actions",
               description:
-                  "Open Disease, Health Literacy, Sentiment Pulse, Data Collection",
+                  "Open Disease Watch for outbreaks or Health Literacy for trusted learning resources.",
               icon: Icons.touch_app_outlined,
               color: AppTheme.info,
             ),
@@ -260,12 +270,18 @@ class _MainPageState extends State<MainPage> {
                     // ====================================================
                     // 2. TOP STATUS CARDS
                     // ====================================================
-                    _buildStatsCarousel(),
+                    KeyedSubtree(
+                      key: statsCarouselKey,
+                      child: _buildStatsCarousel(),
+                    ),
                     const SizedBox(height: 14),
                     // ====================================================
                     // 3. WEATHER WIDGET
                     // ====================================================
-                    const WeatherWidget(),
+                    KeyedSubtree(
+                      key: contributionActionsKey,
+                      child: _buildContributionActions(),
+                    ),
                     const SizedBox(height: 16),
                     // ====================================================
                     // 4. QUICK ACTIONS MENU
@@ -318,36 +334,6 @@ class _MainPageState extends State<MainPage> {
                                 );
                               },
                             ),
-
-                            QuickActionTile(
-                              title: "Sentiment Pulse",
-                              subtitle: "Public attitude insights",
-                              icon: Icons.analytics,
-                              iconColor: Colors.blue,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const SentimentPulsePage(),
-                                  ),
-                                );
-                              },
-                            ),
-
-                            QuickActionTile(
-                              title: "Data Collection",
-                              subtitle: "Report symptoms & data",
-                              icon: Icons.assignment,
-                              iconColor: Colors.orange,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const DataCollectionPage(),
-                                  ),
-                                );
-                              },
-                            ),
                           ],
                         ),
                       ),
@@ -381,7 +367,7 @@ class _MainPageState extends State<MainPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 if (snapshot.connectionState ==
-                                  ConnectionState.waiting)
+                                    ConnectionState.waiting)
                                   const _RecentAlertsSkeleton()
                                 else if (snapshot.hasError)
                                   Text(
@@ -438,6 +424,7 @@ class _MainPageState extends State<MainPage> {
                           const Text(
                             "Health Tips 📖",
                             style: TextStyle(
+                              color: AppTheme.text,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -458,6 +445,7 @@ class _MainPageState extends State<MainPage> {
                                 const Text(
                                   "Stay Protected",
                                   style: TextStyle(
+                                    color: AppTheme.text,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),
@@ -467,7 +455,10 @@ class _MainPageState extends State<MainPage> {
 
                                 const Text(
                                   "Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated",
-                                  style: TextStyle(fontSize: 10),
+                                  style: TextStyle(
+                                    color: AppTheme.text,
+                                    fontSize: 10,
+                                  ),
                                 ),
 
                                 const SizedBox(height: 8),
@@ -504,7 +495,66 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
       ),
-      bottomNavigationBar: const FloatingNavBar(selectedIndex: 1),
+      bottomNavigationBar: const FloatingNavBar(selectedIndex: 0),
+    );
+  }
+
+  Widget _buildContributionActions() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Your Health Contribution",
+            style: TextStyle(
+              color: AppTheme.text,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            "Report symptoms, review contribution, or answer surveys",
+            style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          QuickActionTile(
+            title: "Data Collection and Self-Report",
+            subtitle: "Submit symptoms and health information",
+            icon: Icons.assignment_add,
+            iconColor: AppTheme.warning,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DataCollectionPage()),
+            ),
+          ),
+          QuickActionTile(
+            title: "My Self-Reports",
+            subtitle: "Review your previous contributions",
+            icon: Icons.fact_check_outlined,
+            iconColor: AppTheme.success,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SelfReportHistoryPage()),
+            ),
+          ),
+          QuickActionTile(
+            title: "Sentiment Pulse and Mobile Survey",
+            subtitle: "View surveys available for mobile users",
+            icon: Icons.poll_outlined,
+            iconColor: AppTheme.info,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const SentimentPulsePage(initialTabIndex: 3),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
