@@ -116,10 +116,30 @@ class AppSettingsStore extends ChangeNotifier {
   bool hasPin = false;
   bool pinLoginEnabled = false;
   bool fingerprintLoginEnabled = false;
+  static const supportedLanguages = [
+    'English',
+    'Filipino',
+    'Cebuano',
+    'Ilocano',
+    'Hiligaynon',
+  ];
+  String language = 'English';
+
+  Future<void> setLanguage(String value) async {
+    final resolved = supportedLanguages.contains(value) ? value : 'English';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('healthph_selected_language', resolved);
+    language = resolved;
+    notifyListeners();
+  }
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     final savedMode = prefs.getString(_themeKey);
+    final savedLanguage = prefs.getString('healthph_selected_language');
+    language = supportedLanguages.contains(savedLanguage)
+        ? savedLanguage!
+        : 'English';
 
     visualMode = HealthPhVisualMode.values.firstWhere(
       (mode) => mode.name == savedMode,

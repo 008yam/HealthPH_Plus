@@ -6,7 +6,6 @@ from typing import Any
 from app.services.id_sequence import next_readable_id
 from fastapi import HTTPException
 from pymongo import DESCENDING, MongoClient
-from app.helpers.analytics_entry_helpers import build_survey_response_analytics_entry
 
 from app.core.config import settings
 from app.schemas.sentiment_survey import SentimentSurveyResponseCreate
@@ -23,7 +22,6 @@ class MongoSentimentSurveyStore:
         self.responses = self.db[
             settings.mongo_sentiment_survey_responses_collection
         ]
-        self.analytics_entries = self.db[settings.mongo_analytics_entries_collection]
 
     def list_public_surveys(self, platform: str = "mobile") -> list[dict]:
         normalized_platform = platform.strip().lower()
@@ -117,96 +115,37 @@ class MongoSentimentSurveyStore:
         now = datetime.now(timezone.utc)
         survey_code = self._survey_code(survey_id)
 
-        questions = serialized.get("questions") or []
-        question_lookup = {
-            str(question.get("id") or ""): (index, question)
-            for index, question in enumerate(questions, start=1)
+        answers = {
+            str(question_id): answer
+            for question_id, answer in payload.answers.items()
+            if self._has_answer_value(answer)
         }
-
-        response_ids = {}
-        response_id_values = []
-        submitted_answers = []
-
-        for raw_question_id, answer in payload.answers.items():
-            if not self._has_answer_value(answer):
-                continue
-
-            question_id = str(raw_question_id)
-            question_number, question = question_lookup.get(
-                question_id,
-                (len(response_ids) + 1, {}),
-            )
-
-            question_code = self._question_code(question_id, question_number)
-
-            response_id = next_readable_id(
-                self.db,
-                key=f"survey_responses:{survey_code}:{question_code}",
-                prefix=f"RES-{survey_code}-{question_code}",
-                width=4,
-            )
-
-            response_document = {
-                "id": response_id,
-                "surveyId": survey_id,
-                "questionId": question_id,
-                "questionNumber": question_number,
-                "questionText": question.get("title") or "",
-                "answer": answer,
-                "platform": normalized_platform,
-                "visitorId": payload.visitorId,
-                "userId": payload.userId or "",
-                "userLocation": payload.userLocation or {},
-                "metadata": payload.metadata or {},
-                "createdAt": now,
-            }
-
-            self.responses.insert_one(response_document)
-            response_ids[question_id] = response_id
-
-            response_id_values.append(response_id)
-            submitted_answers.append(answer)
-
-        if not response_ids:
+        if not answers:
             raise HTTPException(
                 status_code=400,
                 detail="answers must not be empty",
             )
 
-        combined_answer = (
-            submitted_answers[0]
-            if len(submitted_answers) == 1
-            else submitted_answers
+        # Allocate once per submission, independently of legacy question counters.
+        response_id = next_readable_id(
+            self.db,
+            key=f"survey_responses:{survey_code}:submission",
+            prefix=f"{self._response_survey_prefix(survey_id)}-RES",
+            width=4,
+            separator="",
         )
-
-        analytics_source_id = response_id_values[0]
-        analytics_document = {
-            "id": analytics_source_id,
+        self.responses.insert_one({
+            "id": response_id,
             "surveyId": survey_id,
-            "answer": combined_answer,
+            "answers": answers,
             "platform": normalized_platform,
             "visitorId": payload.visitorId,
+            "region": payload.region or "",
             "userId": payload.userId or "",
             "userLocation": payload.userLocation or {},
             "metadata": payload.metadata or {},
             "createdAt": now,
-        }
-
-        analytics_entry_id = None
-
-        analytics_entry = build_survey_response_analytics_entry(
-            survey_document=survey,
-            response_document=analytics_document,
-        )
-
-        if analytics_entry:
-            analytics_result = self.analytics_entries.insert_one(analytics_entry)
-            analytics_entry_id = str(analytics_result.inserted_id)
-
-            self.responses.update_many(
-                {"id": {"$in": response_id_values}},
-                {"$set": {"analyticsEntryId": analytics_entry_id}},
-            )
+        })
 
         self.surveys.update_one(
             {"id": survey_id},
@@ -218,24 +157,28 @@ class MongoSentimentSurveyStore:
 
         return {
             "message": "Sentiment Pulse survey response recorded",
-            "responseIds": response_ids,
-            "analyticsEntryId": analytics_entry_id or "",
+            "responseId": response_id,
         }
+
+    def _response_survey_prefix(self, survey_id: str) -> str:
+        text = str(survey_id or "").strip()
+
+        if text.startswith("SUR-"):
+            number = text[4:]
+        elif text.startswith("SUR"):
+            number = text[3:]
+        else:
+            number = ""
+
+        if number.isascii() and number.isdigit():
+            return f"SUR-{int(number):06d}"
+
+        # Preserve older UUID-based survey identifiers.
+        return text
 
     def _survey_code(self, survey_id: str) -> str:
         text = str(survey_id or "").strip()
         return text.replace("-", "")
-
-    def _question_code(self, question_id: str, fallback_number: int) -> str:
-        text = str(question_id or "").strip()
-
-        if text.startswith("Q-") and "-" in text:
-            last_part = text.rsplit("-", 1)[-1]
-
-            if last_part.isdigit():
-                return f"Q{int(last_part):02d}"
-
-        return f"Q{fallback_number:02d}"
 
     def _has_answer_value(self, value: Any) -> bool:
         if value is None:

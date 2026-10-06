@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../localization/app_translations.dart';
 import '../services/app_settings_store.dart';
 import 'package:flutter/material.dart';
 import '../pages/map_page.dart';
@@ -106,7 +107,7 @@ class FloatingNavBar extends StatelessWidget {
                     context,
                     index: 0,
                     icon: Icons.home,
-                    label: "Home",
+                    label: context.tr("Home"),
                   ),
                 ),
               ),
@@ -123,7 +124,7 @@ class FloatingNavBar extends StatelessWidget {
                     context,
                     index: 2,
                     icon: Icons.person_outline,
-                    label: "Profile",
+                    label: context.tr("Profile"),
                   ),
                 ),
               ),
@@ -138,7 +139,7 @@ class FloatingNavBar extends StatelessWidget {
     final selected = selectedIndex == 1;
     final mode = AppSettingsStore.instance.visualMode;
     return Tooltip(
-      message: "Disease Map",
+      message: context.tr("Disease Map"),
       child: GestureDetector(
         onTap: () => _navigate(context, 1),
         child: AnimatedContainer(

@@ -8,7 +8,6 @@ import 'services/profile_store.dart';
 import 'pages/language_selection_page.dart';
 import 'theme/responsive.dart';
 import 'data/app_taxonomy.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/intro_tutorial_page.dart';
 import 'services/app_settings_store.dart';
 import 'services/biometric_auth_service.dart';
@@ -220,9 +219,7 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        "healthph_selected_language",
+      await AppSettingsStore.instance.setLanguage(
         profileForSession.language.isNotEmpty
             ? profileForSession.language
             : selectedLanguage ?? "English",
@@ -272,9 +269,7 @@ class _LoginPageState extends State<LoginPage> {
 
     ProfileStore.instance.saveProfile(profile);
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      "healthph_selected_language",
+    await AppSettingsStore.instance.setLanguage(
       profile.language.isNotEmpty ? profile.language : "English",
     );
 

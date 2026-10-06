@@ -33,8 +33,8 @@ class MongoSelfReportStore:
         )
 
         record_data = payload.model_dump(
-        exclude={"createdAt"},
-        exclude_none=True,
+            exclude={"createdAt"},
+            exclude_none=True,
         )
 
         record = SelfReportRecord(
@@ -46,7 +46,11 @@ class MongoSelfReportStore:
             syncedAt=now,
         )
 
-        document = record.model_dump(mode="python")
+
+        document = record.model_dump(
+            mode="python",
+            exclude_none=True,
+        )
         document["_id"] = object_id
 
         self.collection.insert_one(document)

@@ -16,6 +16,7 @@ import 'services/sentiment_survey_service.dart';
 import 'services/mobile_alert_service.dart';
 import 'services/profile_store.dart';
 import 'widgets/app_skeleton.dart';
+import 'localization/app_translations.dart';
 
 //import 'pages/map_page.dart';
 //import 'widgets/floating_navbar.dart';
@@ -295,9 +296,9 @@ class _MainPageState extends State<MainPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              "Quick Actions ⓘ",
-                              style: TextStyle(
+                             Text(
+                              context.tr("Quick Actions ⓘ"),
+                              style: const TextStyle(
                                 color: AppTheme.text,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -357,9 +358,9 @@ class _MainPageState extends State<MainPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  "Recent Alerts ⓘ",
-                                  style: TextStyle(
+                                Text(
+                                  context.tr("Recent Alerts ⓘ"),
+                                  style: const TextStyle(
                                     color: AppTheme.text,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -382,12 +383,12 @@ class _MainPageState extends State<MainPage> {
                                     ),
                                   )
                                 else if (alerts.isEmpty)
-                                  const Text(
-                                    "No recent alerts right now.",
-                                    style: TextStyle(
-                                      color: AppTheme.mutedText,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                  Text(
+                                    context.tr("No recent alerts right now."),
+                                    style: const TextStyle(
+                                      color: AppTheme.text,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
                                     ),
                                   )
                                 else
@@ -506,24 +507,24 @@ class _MainPageState extends State<MainPage> {
       decoration: cardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Your Health Contribution",
-            style: TextStyle(
+        children: [ //
+          Text(
+            context.tr("Your Health Contribution"),
+            style: const TextStyle(
               color: AppTheme.text,
-              fontSize: 16,
               fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            "Report symptoms, review contribution, or answer surveys",
+          Text(
+           context.tr("Report symptoms, review contribution, or answer surveys"),
             style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
           ),
           const SizedBox(height: 12),
           QuickActionTile(
-            title: "Data Collection and Self-Report",
-            subtitle: "Submit symptoms and health information",
+            title: context.tr("Data Collection and Self-Report"),
+            subtitle: context.tr("Submit symptoms and health information"),
             icon: Icons.assignment_add,
             iconColor: AppTheme.warning,
             onTap: () => Navigator.push(
@@ -840,7 +841,7 @@ class _CarouselStatCard extends StatelessWidget {
                         ),
                         SizedBox(height: isLandscapePhone ? 3 : 5),
                         Text(
-                          label,
+                          context.tr(label),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -851,7 +852,7 @@ class _CarouselStatCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          subtitle,
+                          context.tr(subtitle),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -1020,7 +1021,7 @@ class QuickActionTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      context.tr(title),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -1031,7 +1032,7 @@ class QuickActionTile extends StatelessWidget {
                     ),
 
                     Text(
-                      subtitle,
+                      context.tr(subtitle),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

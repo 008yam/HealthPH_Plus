@@ -58,7 +58,6 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   }
 
   Future<void> _continueToApp() async {
-    final prefs = await SharedPreferences.getInstance();
     final profile = ProfileStore.instance.profile;
     final isRegistered =
         profile != null &&
@@ -81,7 +80,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
       ProfileStore.instance.updateLanguage(selectedLanguage);
     }
 
-    await prefs.setString("healthph_selected_language", selectedLanguage);
+    await AppSettingsStore.instance.setLanguage(selectedLanguage);
 
     if (!mounted) return;
 

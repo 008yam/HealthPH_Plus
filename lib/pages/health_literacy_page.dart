@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -178,7 +179,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "Unable to load content.",
+                  context.tr("Unable to load content."),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
@@ -187,7 +188,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                 TextButton.icon(
                   onPressed: _refreshHealthLiteracy,
                   icon: const Icon(Icons.refresh),
-                  label: const Text("Retry"),
+                  label: Text(context.tr("Retry")),
                 ),
               ],
             ),
@@ -216,7 +217,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
         if (filtered.isEmpty) {
           return Center(
             child: Text(
-              emptyMessage,
+              context.tr(emptyMessage),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
@@ -315,7 +316,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                                   );
                                 }
                               },
-                              child: const Text("Back"),
+                              child: Text(context.tr("Back")),
                             ),
 
                             SizedBox(
@@ -328,7 +329,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                             ),
 
                             Text(
-                              "Health Literacy Hub",
+                              context.tr("Health Literacy Hub"),
                               style: TextStyle(
                                 fontSize: Responsive.isLandscapePhone(context)
                                     ? 19
@@ -369,7 +370,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                                 },
                                 decoration: InputDecoration(
                                   hintText:
-                                      "Search articles, topics, claims...",
+                                      context.tr("Search articles, topics, claims..."),
                                   hintStyle: const TextStyle(
                                     color: AppTheme.mutedText,
                                     fontSize: 11,
@@ -426,7 +427,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                                   border: Border.all(color: Colors.black),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const TabBar(
+                                child: TabBar(
                                   labelColor: Colors.black,
                                   unselectedLabelColor: Colors.grey,
                                   indicator: BoxDecoration(
@@ -439,9 +440,9 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                                     ),
                                   ),
                                   tabs: [
-                                    Tab(text: "Articles"),
-                                    Tab(text: "Videos"),
-                                    Tab(text: "Infographics"),
+                                    Tab(text: context.tr("Articles")),
+                                    Tab(text: context.tr("Videos")),
+                                    Tab(text: context.tr("Infographics")),
                                   ],
                                 ),
                               ),
@@ -462,15 +463,15 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                           "article",
                           "articles",
                           "fact_check",
-                        ], "No articles found."),
+                        ], context.tr("No articles found.")),
                         _buildContentList([
                           "video",
                           "videos",
-                        ], "No videos found."),
+                        ], context.tr("No videos found.")),
                         _buildContentList([
                           "infographic",
                           "infographics",
-                        ], "No infographics found."),
+                        ], context.tr("No infographics found.")),
                       ],
                     ),
                   ),
@@ -520,7 +521,7 @@ class HealthArticleCard extends StatelessWidget {
       if (mediaUrl.isEmpty) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Video is unavailable.")));
+        ).showSnackBar(SnackBar(content: Text(context.tr("Video is unavailable."))));
         return;
       }
 
@@ -786,14 +787,12 @@ class HealthArticleCard extends StatelessWidget {
                         ),
                         onPressed: () => _openContent(context),
                         child: Text(
-                          _isVideo
-                              ? "Watch video"
-                              : _isPdf
-                              ? "Open PDF"
-                              : contentType == "infographic" ||
-                                    contentType == "infographics"
-                              ? "View"
-                              : "Read more",
+                          context.tr(
+                            _isVideo ? "Watch video"
+                                : _isPdf ? "Open PDF"
+                                : contentType == "infographic" || contentType == "infographics"
+                                    ? "View" : "Read more",
+                          ),
                           style: const TextStyle(fontSize: 11),
                         ),
                       ),

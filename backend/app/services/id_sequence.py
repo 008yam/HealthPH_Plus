@@ -3,7 +3,9 @@ from pymongo import ReturnDocument
 from app.core.config import settings
 
 
-def next_readable_id(db, *, key: str, prefix: str, width: int = 6) -> str:
+def next_readable_id(
+    db, *, key: str, prefix: str, width: int = 6, separator: str = "-"
+) -> str:
     counter = db[settings.mongo_id_counters_collection].find_one_and_update(
         {"_id": key},
         {"$inc": {"sequence": 1}},
@@ -12,4 +14,4 @@ def next_readable_id(db, *, key: str, prefix: str, width: int = 6) -> str:
     )
 
     sequence = int(counter["sequence"])
-    return f"{prefix}-{sequence:0{width}d}"
+    return f"{prefix}{separator}{sequence:0{width}d}"

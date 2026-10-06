@@ -15,6 +15,7 @@ import 'language_selection_page.dart';
 import '../services/app_settings_store.dart';
 import '../services/biometric_auth_service.dart';
 import '../widgets/six_digit_field.dart';
+import '../localization/app_translations.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -224,7 +225,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   SizedBox(height: isTablet ? 52 : 36),
                   const SizedBox(height: 20),
                   Text(
-                    "Profile",
+                    context.tr("Profile"),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: appSettings.visualMode.onBackground,
@@ -234,7 +235,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    "Account, preferences, security, and accessibility",
+                    context.tr("Account, preferences, security, and accessibility"),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: appSettings.visualMode.onBackground,
@@ -258,9 +259,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     key: appearanceKey,
                     child: _SettingsTile(
                       icon: Icons.palette_outlined,
-                      title: "Appearance",
-                      subtitle:
-                          "Current theme: ${appSettings.visualMode.label}",
+                      title: context.tr("Account, preferences, security, and accessibility"),
+                      subtitle: context.tr(
+                        'Current theme: {theme}',
+                        parameters: {'theme': context.tr(appSettings.visualMode.label)},
+                      ),
                       isTablet: isTablet,
                       accentColor: appSettings.visualMode.accentColor,
                       borderColor: appSettings.visualMode.accentColor
@@ -846,7 +849,7 @@ class _SettingsSectionTitle extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
-        title,
+        context.tr(title),
         style: TextStyle(
           color: mode.onBackground,
           fontSize: isTablet ? 18 : 15,
@@ -1128,7 +1131,7 @@ class _SettingsTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      context.tr(title),
                       style: TextStyle(
                         color: AppTheme.text,
                         fontSize: isTablet ? 17 : 15,
@@ -1137,7 +1140,7 @@ class _SettingsTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      subtitle,
+                      context.tr(subtitle),
                       style: TextStyle(
                         color: AppTheme.mutedText,
                         fontSize: isTablet ? 16 : 14,
@@ -1204,7 +1207,7 @@ class _ThemePreviewTile extends StatelessWidget {
           ),
         ),
         title: Text(
-          mode.label,
+          context.tr(mode.label),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -1214,7 +1217,7 @@ class _ThemePreviewTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          mode.description,
+          context.tr(mode.description),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(

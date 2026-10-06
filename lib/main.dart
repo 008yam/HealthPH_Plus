@@ -6,6 +6,7 @@ import 'services/self_report_database.dart';
 import 'services/self_report_store.dart';
 import 'services/app_settings_store.dart';
 import 'widgets/themed_background.dart';
+import 'localization/app_translations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +41,10 @@ class MyApp extends StatelessWidget {
             return ThemedBackground(
               child: MediaQuery(
                 data: mediaQuery.copyWith(textScaler: clampedTextScaler),
-                child: child ?? const SizedBox.shrink(),
+                child: AppLanguageScope(
+                  language: AppSettingsStore.instance.language,
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             );
           },
