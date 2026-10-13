@@ -54,7 +54,7 @@ class _MainPageState extends State<MainPage> {
 
   late Future<int> mobileSurveyCountFuture;
 
-  static const int _statsCarouselItemCount = 4;
+  static const int _statsCarouselItemCount = 3;
   @override
   void initState() {
     super.initState();
@@ -180,7 +180,9 @@ class _MainPageState extends State<MainPage> {
                   const SizedBox(height: 8),
                   Text(
                     detail.message.isEmpty
-                        ? "No additional alert details were provided."
+                        ? context.tr(
+                            "No additional alert details were provided.",
+                          )
                         : detail.message,
                   ),
                   const SizedBox(height: 12),
@@ -197,7 +199,7 @@ class _MainPageState extends State<MainPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text("Close"),
+                child: Text(context.tr("Close")),
               ),
             ],
           );
@@ -207,7 +209,7 @@ class _MainPageState extends State<MainPage> {
       if (!mounted) return;
 
       final message = error is MobileAlertAuthenticationException
-          ? error.toString()
+          ? context.tr(error.toString())
           : "Unable to open this alert right now.";
       ScaffoldMessenger.of(
         context,
@@ -296,7 +298,7 @@ class _MainPageState extends State<MainPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                             Text(
+                            Text(
                               context.tr("Quick Actions ⓘ"),
                               style: const TextStyle(
                                 color: AppTheme.text,
@@ -374,8 +376,8 @@ class _MainPageState extends State<MainPage> {
                                   Text(
                                     snapshot.error
                                             is MobileAlertAuthenticationException
-                                        ? snapshot.error.toString()
-                                        : "Unable to load alerts.",
+                                        ? context.tr(snapshot.error.toString())
+                                        : context.tr("Unable to load alerts."),
                                     style: const TextStyle(
                                       color: AppTheme.mutedText,
                                       fontSize: 12,
@@ -422,8 +424,8 @@ class _MainPageState extends State<MainPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Health Tips 📖",
+                          Text(
+                            context.tr("Health Tips 📖"),
                             style: TextStyle(
                               color: AppTheme.text,
                               fontWeight: FontWeight.bold,
@@ -443,8 +445,8 @@ class _MainPageState extends State<MainPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  "Stay Protected",
+                                Text(
+                                  context.tr("Stay Protected"),
                                   style: TextStyle(
                                     color: AppTheme.text,
                                     fontWeight: FontWeight.bold,
@@ -454,8 +456,10 @@ class _MainPageState extends State<MainPage> {
 
                                 const SizedBox(height: 4),
 
-                                const Text(
-                                  "Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated",
+                                Text(
+                                  context.tr(
+                                    "Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated",
+                                  ),
                                   style: TextStyle(
                                     color: AppTheme.text,
                                     fontSize: 10,
@@ -478,7 +482,9 @@ class _MainPageState extends State<MainPage> {
                                           ),
                                         );
                                       },
-                                      child: const Text("More Health Tips"),
+                                      child: Text(
+                                        context.tr("More Health Tips"),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -507,7 +513,8 @@ class _MainPageState extends State<MainPage> {
       decoration: cardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [ //
+        children: [
+          //
           Text(
             context.tr("Your Health Contribution"),
             style: const TextStyle(
@@ -518,13 +525,15 @@ class _MainPageState extends State<MainPage> {
           ),
           const SizedBox(height: 4),
           Text(
-           context.tr("Report symptoms, review contribution, or answer surveys"),
+            context.tr(
+              "Report symptoms, review contribution, or answer surveys",
+            ),
             style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
           ),
           const SizedBox(height: 12),
           QuickActionTile(
-            title: context.tr("Data Collection and Self-Report"),
-            subtitle: context.tr("Submit symptoms and health information"),
+            title: "Data Collection and Self-Report",
+            subtitle: "Submit symptoms and health information",
             icon: Icons.assignment_add,
             iconColor: AppTheme.warning,
             onTap: () => Navigator.push(
@@ -592,11 +601,11 @@ class _MainPageState extends State<MainPage> {
 
                 final cards = [
                   _CarouselStatCard(
-                    number: "3",
-                    label: "Active Outbreaks",
-                    subtitle: "Regional disease signals",
-                    icon: Icons.coronavirus,
-                    accentColor: Colors.redAccent,
+                    number: alertCount,
+                    label: "Health Alerts",
+                    subtitle: "Recent inbox alerts",
+                    icon: Icons.local_hospital,
+                    accentColor: AppTheme.warning,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -605,13 +614,6 @@ class _MainPageState extends State<MainPage> {
                         ),
                       );
                     },
-                  ),
-                  _CarouselStatCard(
-                    number: alertCount,
-                    label: "Health Alerts",
-                    subtitle: "Recent inbox alerts",
-                    icon: Icons.local_hospital,
-                    accentColor: AppTheme.warning,
                   ),
                   _CarouselStatCard(
                     number: activeUsers,
@@ -1196,8 +1198,8 @@ class AlertCard extends StatelessWidget {
                       color: severityColor,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Severity level',
+                    Text(
+                      context.tr("Severity level"),
                       style: TextStyle(
                         color: AppTheme.mutedText,
                         fontSize: 11,
@@ -1205,8 +1207,8 @@ class AlertCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    const Text(
-                      'View Details',
+                    Text(
+                      context.tr("View Details"),
                       style: TextStyle(
                         color: AppTheme.info,
                         fontSize: 11,

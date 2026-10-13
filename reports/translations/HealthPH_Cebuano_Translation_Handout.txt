@@ -1,0 +1,2344 @@
+HEALTHPH+ CEBUANO TRANSLATION HANDOUT
+Prepared: October 13, 2026
+Scope: 407 phrases/templates from the existing inventory, plus 12 normalized keys.
+This is a DRAFT catalog for review, not an automatic translation service.
+Application source files have NOT been edited.
+This does not certify that every current or future string is covered.
+
+WHY SOME LABELS REMAIN ENGLISH
+1. A dictionary key must exactly match the English source, including case.
+2. The widget must call context.tr(...).
+3. Dynamic sentences need templates and parameters, not an already interpolated string.
+4. Service errors and server content do not automatically pass through translation.
+5. Text baked into image assets cannot be changed by this dictionary.
+
+STEP 1 - REPLACE THE CEBUANO DICTIONARY ONLY
+File: lib/localization/app_translations.dart
+Find the block beginning 'Cebuano': { and ending just before 'Ilocano': {.
+Replace that whole Cebuano block with the block in STEP 2.
+Do not add a second Cebuano block and do not remove other language dictionaries.
+Keep translateText(), AppLanguageScope, and AppTranslationContext unchanged.
+
+This replacement removes these incorrect keys currently in your file:
+  Choose Lanaguage              -> Choose Language
+  This is your selected langaauge -> This is your selected language
+  Mobile SUrvey                 -> Mobile Surveys
+  Watch Video                  -> Watch video
+
+KEEP THESE VALUES STABLE
+- HealthPH+, personal/place names, URLs, IDs, credentials and language names.
+- API keys, enum values, stored symptom names, database fields, survey answer values.
+- Render translated labels, but submit the original underlying values.
+- Account, Profile, Password, Email, PIN, PDF, CSV, AQI, AURI, COVID, MongoDB,
+  and familiar borrowed terms can remain recognizable English terms.
+- Clinical names without an approved local equivalent remain unchanged.
+- Have Cebuano speakers review the whole draft; have qualified reviewers check
+  clinical wording and disclaimers. This catalog is not medically validated.
+- Backend article bodies/titles, alert messages, authored survey questions, and
+  user-entered text are excluded from automatic lookup.
+- Some inventory entries are old hardcoded examples. Their dates are translated
+  as examples, not made current.
+- Existing misspelled English source keys are preserved for compatibility;
+  corrected alternatives are included for selected typos. Fixing English source
+  independently requires updating the lookup key as well.
+- Inventory line references below date from October 5; search by phrase if shifted.
+
+STEP 2 - REPLACEMENT BLOCK
+Copy the following block into the existing appTranslations map.
+
+  'Cebuano': {
+    "Wearher unavailable": "Dili makuha ang impormasyon sa panahon",
+    "Today": "Karong Adlawa",
+    "{weather.temperature.toInt()}°C": "{weather.temperature.toInt()}°C",
+    "Sunny": "Masidlak ang adlaw",
+    "Humidity": "Kaumog",
+    "Pressure": "Presyon",
+    "AQI": "AQI",
+    "{weather.temperature.round()}°C · Today": "{weather.temperature.round()}°C · Karong Adlawa",
+    "AQI {weather.aqi}": "AQI {weather.aqi}",
+    "Six-digit PIN": "PIN nga unom ka digit",
+    "Home": "Sinugdanan",
+    "Profile": "Profile",
+    "Disease Map": "Mapa sa mga Sakit",
+    "Skip": "Laktawi",
+    "Done": "Nahuman",
+    "Next": "Sunod",
+    "Default": "Default",
+    "Light": "Hayag",
+    "Grey": "Abohon",
+    "Dark": "Ngitngit",
+    "HealthPH+ blue and gold": "Asul ug bulawan sa HealthPH+",
+    "Bright clinical layout": "Hayag nga klinikal nga disenyo",
+    "Soft neutral contrast": "Malumo nga kalainan sa neyutral nga mga kolor",
+    "Low-light dashboard style": "Disenyo sa dashboard alang sa ngitngit nga palibot",
+    "Failed to load public surveys: {response.statusCode}": "Dili makuha ang mga pampublikong survey: {response.statusCode}",
+    "Failed to submit survey response: {response.body}": "Dili maisumite ang tubag sa survey: {response.body}",
+    "Sign in with a registered account to view alerts.": "Pag-sign in gamit ang rehistradong account aron makita ang mga pasidaan.",
+    "Your session has expired. Please sign in again.": "Na-expire na ang imong session. Palihog pag-sign in pag-usab.",
+    "Failed to load mobile alerts ({response.statusCode}): {response.body}": "Dili makuha ang mga pasidaan sa app ({response.statusCode}): {response.body}",
+    "Mobile alert request failed ({response.statusCode}): {response.body}": "Napakyas ang hangyo alang sa pasidaan sa app ({response.statusCode}): {response.body}",
+    "Self-reported on {createdAt.month}/{createdAt.day}/{createdAt.year} at {hour}:{minute}": "Kaugalingong gi-report niadtong {createdAt.month}/{createdAt.day}/{createdAt.year} sa {hour}:{minute}",
+    "Self-reported respiratory symptoms": "Kaugalingong gi-report nga mga sintomas sa pagginhawa",
+    "Exact address geocoded": "Nakit-an ang mga coordinate sa adres",
+    "Region-level estimate": "Gibanabana nga lokasyon sa rehiyon",
+    "Use biometrics to sign in to HealthPH+.": "Gamita ang biometrics aron maka-sign in sa HealthPH+.",
+    "Failed to loaod disease points": "Dili makuha ang mga lokasyon sa sakit",
+    "Failed to sync self-report to MongoDB": "Dili ma-sync ang kaugalingong report ngadto sa MongoDB",
+    "Failed to load self-report map pings": "Dili makuha ang mga pin sa mapa sa kaugalingong report",
+    "A user id or email is required.": "Gikinahanglan ang user ID o email.",
+    "Failed to load your self-reports ({response.statusCode}): {response.body}": "Dili makuha ang imong kaugalingong mga report ({response.statusCode}): {response.body}",
+    "Health literacy response has no items array": "Walay items array ang tubag alang sa kahibalo sa panglawas",
+    "Failed to load health literacy content ({response.statusCode}): {response.body}": "Dili makuha ang sulod sa kahibalo sa panglawas ({response.statusCode}): {response.body}",
+    "Failed to save mobile user to MongoDB: {response.body}": "Dili ma-save ang tiggamit sa app ngadto sa MongoDB: {response.body}",
+    "Failed to login: {response.body}": "Dili maka-sign in: {response.body}",
+    "Failed to set Pin: {response.body}": "Dili matakda ang PIN: {response.body}",
+    "Failed to verify PIN: {response.body}": "Dili mapamatud-an ang PIN: {response.body}",
+    "Failed to update language: {response.body}": "Dili mausab ang pinulongan: {response.body}",
+    "Failed to load mobile users count ({response.statusCode}): {response.body}": "Dili makuha ang gidaghanon sa mga tiggamit sa app ({response.statusCode}): {response.body}",
+    "A mobile access token is required.": "Gikinahanglan ang mobile access token.",
+    "HealthPH+ self-reports export": "Pag-export sa kaugalingong mga report sa HealthPH+",
+    "Exported HealthPH+ self-report records.": "Na-export nga kaugalingong mga report sa HealthPH+.",
+    "Login with a registered account to view your account self-reports.": "Pag-sign in gamit ang rehistradong account aron makita ang imong kaugalingong mga report.",
+    "Unable to load self-reports. Check your backend connection.": "Dili makuha ang kaugalingong mga report. Susiha ang koneksyon sa backend.",
+    "My Self-Reports": "Akong mga Kaugalingong Report",
+    "Review the symptoms and possible conditions you contributed.": "Susiha ang mga sintomas ug posibleng kondisyon nga imong gi-report.",
+    "No reports yet": "Wala pay mga report",
+    "Local reports": "Lokal nga mga report",
+    "Mongo reports": "Mga report sa MongoDB",
+    "Most common concern": "Kasagarang gikabalak-an",
+    "Latest contribution": "Pinakabag-ong kontribusyon",
+    "None": "Wala",
+    "Report ID": "ID sa Report",
+    "Status": "Kahimtang",
+    "Detected Language": "Nailhang Pinulongan",
+    "Location": "Lokasyon",
+    "Date": "Petsa",
+    "Notes": "Mga Nota",
+    "Try again": "Sulayi Pag-usab",
+    "No self-reports yet": "Wala pay kaugalingong mga report",
+    "Submitted self-reports will appear here for review.": "Makita dinhi ang gisumite nga kaugalingong mga report aron masusi.",
+    "Mongo report": "Report sa MongoDB",
+    "submitted": "naisumite",
+    "Respiratory symptoms": "Mga sintomas sa pagginhawa",
+    "Date unavailable": "Walay petsa",
+    "{date.month}/{date.day}/{date.year} at {hour}:{minute}": "{date.month}/{date.day}/{date.year} sa {hour}:{minute}",
+    "Location unavailable": "Walay makuhang lokasyon",
+    "Please sign in with a registered account first.": "Palihog pag-sign in una gamit ang rehistradong account.",
+    "Your PIN was saved successfully.": "Malampusong na-save ang imong PIN.",
+    "Unable to save PIN. Check your password and connection.": "Dili ma-save ang PIN. Susiha ang imong password ug koneksyon.",
+    "Coach marks will replay when you revisit pages.": "Ipakita pag-usab ang mga giya kon mobalik ka sa mga panid.",
+    "Review the account details and location saved during registration.": "Susiha ang detalye sa account ug lokasyon nga na-save panahon sa pagrehistro.",
+    "Appearance": "Panagway",
+    "Choose the background and color mode that is most readable for you.": "Pilia ang background ug mga kolor nga labing sayon nimo basahon.",
+    "Language Selection": "Pagpili og Pinulongan",
+    "Choose the language that is most comfortable for you.": "Pilia ang pinulongan nga labing komportable nimo gamiton.",
+    "Login Security": "Seguridad sa Pag-sign In",
+    "Set your account PIN and manage fingerprint login when your device supports it.": "Itakda ang PIN sa imong account ug dumalaha ang pag-sign in gamit ang fingerprint kon suportado sa imong device.",
+    "Account, preferences, security, and accessibility": "Account, mga gipalabi, seguridad, ug aksesibilidad",
+    "Preferences": "Mga Gipalabi",
+    "Current theme: {appSettings.visualMode.label}": "Kasamtangang tema: {appSettings.visualMode.label}",
+    "Choose your preferred application language": "Pilia ang imong gustong pinulongan para sa app",
+    "Replay Coach Marks": "Ipakita Pag-usab ang Giya",
+    "Show your guide highlights again": "Ipakita pag-usab ang mga giya sa paggamit",
+    "Account": "Account",
+    "Logout": "Pag-sign Out",
+    "Clear this session and return to login.": "Taposa kini nga session ug balik sa pag-sign in.",
+    "Guest User": "Bisita",
+    "Tap to create your profile": "Pislita aron makahimo sa imong profile",
+    "Guest Access": "Akses alang sa Bisita",
+    "Complete your address during registration": "Kompletoha ang imong adres panahon sa pagrehistro",
+    "Register": "Pagrehistro",
+    "Active": "Aktibo",
+    "No saved address": "Walay na-save nga adres",
+    "No city": "Walay nakatalang siyudad",
+    "Mobile Surveys": "Mga Survey sa App",
+    "{count} survey ready to answer": "{count} ka survey ang andam tubagon",
+    "Check available surveys": "Tan-awa ang mga survey nga mahimong tubagon",
+    "Enter all six PIN digits.": "Isulod ang tanang unom ka digit sa PIN.",
+    "Enter your current account password.": "Isulod ang kasamtangang password sa imong account.",
+    "Set six-digit PIN": "Pagtakda og PIN nga unom ka digit",
+    "Enter a six-digit numeric PIN. Each digit uses a separate box.": "Isulod ang PIN nga unom ka numero. Matag numero adunay kaugalingong kahon.",
+    "Current password": "Kasamtangang password",
+    "Cancel": "Kanselahon",
+    "Save PIN": "I-save ang PIN",
+    "Authentication": "Pagpamatuod sa Pagkatawo",
+    "PIN Login": "Pag-sign In Gamit ang PIN",
+    "Set PIN first": "Pagtakda una og PIN",
+    "Enabled": "Naka-on",
+    "Disabled": "Naka-off",
+    "You need to set a six-digit PIN before enabling PIN login.": "Kinahanglan ka magtakda og PIN nga unom ka digit sa dili pa i-on ang pag-sign in gamit ang PIN.",
+    "Set PIN": "Pagtakda og PIN",
+    "Update PIN": "Usba ang PIN",
+    "Open": "Ablihi",
+    "Fingerprint Login": "Pag-sign In Gamit ang Fingerprint",
+    "Available": "Magamit",
+    "Biometric login disabled.": "Naka-off ang pag-sign in gamit ang biometrics.",
+    "Login first before enabling biometrics.": "Pag-sign in una sa dili pa i-on ang biometrics.",
+    "Biometrics authentication is unavailable or cancelled.": "Dili magamit o gikansela ang pagpamatuod gamit ang biometrics.",
+    "Biometric login enabled": "Naka-on ang pag-sign in gamit ang biometrics",
+    "AURI": "AURI",
+    "Cough": "Ubo",
+    "Fever": "Hilanat",
+    "Sore throat": "Sakit sa tutunlan",
+    "Influenza-like illness": "Sakit nga sama sa trangkaso",
+    "Pneumonia": "Pneumonia",
+    "Bronchitis": "Bronchitis",
+    "Asthma flare-up": "Pagsamot sa hika",
+    "Shortness of breath": "Kalisod sa pagginhawa",
+    "Wheezing": "Pagtaghoy sa pagginhawa",
+    "COVID-like symptoms": "Mga sintomas nga sama sa COVID",
+    "Tuberculosis symptoms": "Mga sintomas sa tuberculosis",
+    "Acute Upper Respiratory Infection": "Acute Upper Respiratory Infection",
+    "Upper Respiratory": "Ibabaw nga bahin sa agianan sa ginhawa",
+    "Updated: June 1, 2026": "Gi-update: Hunyo 1, 2026",
+    "Lower Respiratory": "Ubos nga bahin sa agianan sa ginhawa",
+    "Updated: May 31, 2026": "Gi-update: Mayo 31, 2026",
+    "Tuberculosis": "Tuberculosis",
+    "Respiratory": "May kalabotan sa pagginhawa",
+    "Updated: May 30, 2026": "Gi-update: Mayo 30, 2026",
+    "All diseases & symptoms": "Tanang sakit ug sintomas",
+    "filter": "filter",
+    "filters": "mga filter",
+    "{selectedFilters.length} {filterLabel} selected": "{selectedFilters.length} ka {filterLabel} ang napili",
+    "Select Diseases / Symptoms": "Pagpili og mga Sakit / Sintomas",
+    "Close": "Sirad-i",
+    "No filters selected. All reports will be shown.": "Walay napiling filter. Ipakita ang tanang report.",
+    "{draftFilters.length} selected": "{draftFilters.length} ang napili",
+    "Clear All": "Hawani Tanan",
+    "Apply": "I-apply",
+    "Respiratory outbreak monitoring": "Pagsubay sa pagkaylap sa mga sakit sa pagginhawa",
+    "Disease Watch": "Pagsubay sa Sakit",
+    "Health Literacy": "Kahibalo sa Panglawas",
+    "Sentiment Pulse": "Panan-aw sa Publiko",
+    "Data Collection": "Pagkolekta og Datos",
+    "Outbreak Map": "Mapa sa Pagkaylap sa Sakit",
+    "{reportCount} active reports": "{reportCount} ka aktibong report",
+    "{outbreak[\"reports\"]} reports": "{outbreak[\"reports\"]} ka report",
+    "Contribute symptom information to disease surveillance and review reports connected to your account.": "Ipaambit ang impormasyon sa sintomas alang sa pagsubay sa sakit ug susiha ang mga report nga nalambigit sa imong account.",
+    "Collection Tabs": "Mga Tab sa Pagkolekta",
+    "Switch between submitting a self-report, reviewing your reports, and community information.": "Pagbalhin tali sa pagsumite sa kaugalingong report, pagsusi sa imong mga report, ug impormasyon sa komunidad.",
+    "Self Report Form": "Porma sa Kaugalingong Report",
+    "Complete your location, symptoms, duration, severity, and notes before submitting your report.": "Kompletoha ang lokasyon, mga sintomas, gidugayon, kagrabe, ug mga nota sa dili pa isumite ang imong report.",
+    "Back": "Balik",
+    "Tracks symptoms & outbreaks": "Nagsubay sa mga sintomas ug pagkaylap sa sakit",
+    "Self Report": "Kaugalingong Report",
+    "My Reports": "Akong mga Report",
+    "Community": "Komunidad",
+    "Self-reports CSV is ready to share.": "Andam nang ipaambit ang CSV sa kaugalingong mga report.",
+    "Unable to export self-reports CSV.": "Dili ma-export ang CSV sa kaugalingong mga report.",
+    "Your Recent Reports": "Imong Bag-ong mga Report",
+    "No self-reports submitted yet.": "Wala pay naisumite nga kaugalingong report.",
+    "Your Recent Reports ({reports.length})": "Imong Bag-ong mga Report ({reports.length})",
+    "Export CSV": "I-export ang CSV",
+    "Self-reported": "Kaugalingong gi-report",
+    "For review": "Alang sa pagsusi",
+    "No additional notes provided.": "Walay dugang nga nota.",
+    "Community Reports": "Mga Report sa Komunidad",
+    "View symptom reports shared by other users.": "Tan-awa ang mga report sa sintomas nga gipaambit sa ubang tiggamit.",
+    "2 days": "2 ka adlaw",
+    "Moderate": "Kasarangan",
+    "Reported on May 6, 2025": "Gi-report niadtong Mayo 6, 2025",
+    "User experienced fever and fatigue.": "Ang tiggamit nakasinati og hilanat ug kakapoy.",
+    "4 days": "4 ka adlaw",
+    "Mild": "Dili grabe",
+    "User reported dry cough and throat irritation.": "Ang tiggamit nag-report og uga nga ubo ug iritasyon sa tutunlan.",
+    "Headache": "Sakit sa ulo",
+    "1 day": "1 ka adlaw",
+    "Reported on May 5, 2025": "Gi-report niadtong Mayo 5, 2025",
+    "User reported mild headache and tiredness.": "Ang tiggamit nag-report og dili grabeng sakit sa ulo ug kakapoy.",
+    "Complete address and add at least one symptoms": "Kompletoha ang adres ug pagdugang og labing menos usa ka sintomas",
+    "Self-report submitted successfully.": "Malampusong naisumite ang kaugalingong report.",
+    "Report submitted": "Naisumite ang report",
+    "{condition.label} This is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.": "{condition.label} Dili kini usa ka diagnosis. Palihog konsultaha ang usa ka propesyonal sa panglawas, ilabina kon mosamot ang mga sintomas.",
+    "Understood": "Nasabtan",
+    "Self Report Symptoms": "Ireport ang Imong mga Sintomas",
+    "Report respiratory symptoms to supper surveillance mapping.": "Ireport ang mga sintomas sa pagginhawa aron makatabang sa pagmapa ug pagsubay sa sakit.",
+    "Using your registered address. Adress fields are locked for account consistency.": "Gigamit ang imong rehistradong adres. Dili mausab ang mga field sa adres aron magpabiling pareho ang impormasyon sa account.",
+    "Region": "Rehiyon",
+    "Province": "Probinsya",
+    "City / Municipality": "Siyudad / Munisipyo",
+    "Barangay": "Barangay",
+    "Symptoms": "Mga Sintomas",
+    "Additional notes (optional)": "Dugang nga mga nota (opsyonal)",
+    "Location Address...": "Gipangita ang Adres...",
+    "Submit Self Report": "Isumite ang Kaugalingong Report",
+    "Duration: {duration}": "Gidugayon: {duration}",
+    "Possible / Consideration: {consideration}": "Posible / Angay Hunahunaon: {consideration}",
+    "Why Report Symptoms Your reports help public health officials track and monitor its origin.": "Nganong Ireport ang mga Sintomas Ang imong mga report makatabang sa mga opisyal sa panglawas sa pagsubay ug pagmonitor sa gigikanan niini.",
+    "Respiratory Infection Cluster": "Grupo sa mga Kaso sa Impeksyon sa Pagginhawa",
+    "Upper Respiratory Disease": "Sakit sa Ibabaw nga Bahin sa Agianan sa Ginhawa",
+    "Monitor reported respiratory disease activity across Philippine regions.": "Subaybayi ang gi-report nga mga sakit sa pagginhawa sa mga rehiyon sa Pilipinas.",
+    "Search and Filter": "Pagpangita ug Pag-filter",
+    "Search a region or disease term, then narrow the results by disease category.": "Pangitaa ang rehiyon o sakit, dayon limitahi ang mga resulta sumala sa kategoriya sa sakit.",
+    "Regional Reports": "Mga Report sa Rehiyon",
+    "Review each region's report totals and disease breakdown in the results list.": "Susiha ang kinatibuk-ang report ug pagbahinbahin sa mga sakit sa matag rehiyon diha sa listahan sa resulta.",
+    "Outbreak monitoring across the Philippines": "Pagsubay sa pagkaylap sa sakit sa tibuok Pilipinas",
+    "Find Diseases": "Pangitaa ang mga Sakit",
+    "Select all that apply": "Pilia ang tanang angay",
+    "COVID": "COVID",
+    "Active Outbreaks": "Aktibong Pagkaylap sa Sakit",
+    "Resolved": "Nasulbad",
+    "Error: {snapshot.error}": "Sayop: {snapshot.error}",
+    "No outbreaks found.": "Walay nakitang pagkaylap sa sakit.",
+    "Region {region[\"region\"]}": "Rehiyon {region[\"region\"]}",
+    "AURI: {auri} | PN: {pn} | TB: {tb} | COVID: {covid}": "AURI: {auri} | PN: {pn} | TB: {tb} | COVID: {covid}",
+    "Severity Levels": "Mga Ang-ang sa Kagrabe",
+    "{reports} reports": "{reports} ka report",
+    "View Details": "Tan-awa ang mga Detalye",
+    "Monitor outbreak reports, active cases, and disease risk signals across regions.": "Subaybayi ang mga report sa pagkaylap sa sakit, aktibong kaso, ug mga timailhan sa risgo sa sakit sa mga rehiyon.",
+    "View outbreak activity geographically and identify affected areas faster.": "Tan-awa sa mapa ang pagkaylap sa sakit aron mas dali mailhan ang naapektuhang mga lugar.",
+    "Health Literacy Hub": "Sentro sa Kahibalo sa Panglawas",
+    "Read evidence-based health articles and review fact-checking information.": "Basaha ang mga artikulo sa panglawas nga gibase sa ebidensya ug susiha ang impormasyon bahin sa pagsusi sa kamatuoran.",
+    "Understand public concern, misinformation, and health behavior trends.": "Sabta ang mga kabalaka sa publiko, sayop nga impormasyon, ug mga uso sa pamatasan bahin sa panglawas.",
+    "Submit and review symptom reports that support public health monitoring.": "Isumite ug susiha ang mga report sa sintomas nga makatabang sa pagsubay sa panglawas sa publiko.",
+    "Continue": "Padayon",
+    "English": "English",
+    "Filipino": "Filipino",
+    "Cebuano": "Cebuano",
+    "Ilocano": "Ilocano",
+    "Hiligaynon": "Hiligaynon",
+    "Choose Language": "Pagpili og Pinulongan",
+    "Select your preferred language for HealthPH+.": "Pilia ang imong gustong pinulongan para sa HealthPH+.",
+    "This is your selected language": "Kini ang imong napiling pinulongan",
+    "Evidence-based health infomration and fact-checking": "Impormasyon sa panglawas nga gibase sa ebidensya ug pagsusi sa kamatuoran",
+    "Overview": "Kinatibuk-ang Pagtan-aw",
+    "Trends": "Mga Uso",
+    "Regional": "Sa mga Rehiyon",
+    "Survey": "Survey",
+    "Overall Sentiment": "Kinatibuk-ang Panan-aw",
+    "Concerned": "Nabalaka",
+    "Misinformed": "Adunay Sayop nga Impormasyon",
+    "Neutral": "Neyutral",
+    "Proactive": "Nag-una og Lihok",
+    "Sentiment Trends": "Mga Uso sa Panan-aw",
+    "Sentiment changes over time": "Pagbag-o sa panan-aw sa paglabay sa panahon",
+    "Trends Insights": "Pagsabot sa mga Uso",
+    "Increase from last week": "Pagsaka gikan sa miaging semana",
+    "Region Trend Changes": "Mga Pagbag-o sa Uso sa Rehiyon",
+    "Regional Sentiment": "Panan-aw sa Rehiyon",
+    "Dominant sentiment by region": "Nag-unang panan-aw sa matag rehiyon",
+    "Unable to load surveys.": "Dili makuha ang mga survey.",
+    "No active mobile surveys currently available.": "Wala pay aktibong survey nga mahimong tubagon sa app karon.",
+    "{survey.responses} / {survey.target} responses": "{survey.responses} / {survey.target} ka tubag",
+    "Please answer at least one question.": "Palihog tubaga ang labing menos usa ka pangutana.",
+    "Survey response submitted.": "Naisumite ang tubag sa survey.",
+    "Unable to submit survey response.": "Dili maisumite ang tubag sa survey.",
+    "Submitting...": "Nagpadala pa...",
+    "Submit": "Isumite",
+    "Type your answer": "Isulat ang imong tubag",
+    "This question is required.": "Kinahanglang tubagon kini nga pangutana.",
+    "{percent}% of the population": "{percent}% sa populasyon",
+    "Browse published articles, videos, and infographics from trusted health sources.": "Tan-awa ang gipatik nga mga artikulo, bidyo, ug infographic gikan sa kasaligan nga mga tinubdan sa panglawas.",
+    "Search Health Topics": "Pangitaa ang mga Hilisgutan sa Panglawas",
+    "Filter the current tab by title, topic, source, disease, or keyword.": "I-filter ang kasamtangang tab pinaagi sa titulo, hilisgutan, tinubdan, sakit, o keyword.",
+    "Content Categories": "Mga Kategoriya sa Sulod",
+    "Switch between articles, playable videos, and downloadable infographics.": "Pagbalhin tali sa mga artikulo, bidyo nga mapatukar, ug mga infographic nga ma-download.",
+    "Learning Content": "Mga Materyal sa Pagkat-on",
+    "Tap a card action to read an article, open a PDF, view an image, or play a video.": "Pislita ang aksyon sa card aron mobasa og artikulo, moabli og PDF, motan-aw og hulagway, o mopatukar og bidyo.",
+    "Unable to load content.": "Dili maipakita ang sulod.",
+    "Retry": "Sulayi Pag-usab",
+    "Untitled content": "Sulod nga Walay Titulo",
+    "Evidence-based health information and fact-checking": "Impormasyon sa panglawas nga gibase sa ebidensya ug pagsusi sa kamatuoran",
+    "Search articles, topics, claims...": "Pangitaa ang mga artikulo, hilisgutan, o pahayag...",
+    "Articles": "Mga Artikulo",
+    "Videos": "Mga Bidyo",
+    "Infographics": "Mga Infographic",
+    "No articles found.": "Walay nakitang artikulo.",
+    "No videos found.": "Walay nakitang bidyo.",
+    "No infographics found.": "Walay nakitang infographic.",
+    "Video is unavailable.": "Dili magamit ang bidyo.",
+    "Video": "Bidyo",
+    "Watch video": "Tan-awa ang Bidyo",
+    "Open PDF": "Ablihi ang PDF",
+    "View": "Tan-awa",
+    "Read more": "Basaha ang Dugang",
+    "Unable to play video. URL: {widget.videoUrl} Error: {snapshot.error}": "Dili mapatukar ang bidyo. URL: {widget.videoUrl} Sayop: {snapshot.error}",
+    "Verdict:": "Hukom:",
+    "Citizen": "Lungsoranon",
+    "Field Health Worker": "Trabahante sa Panglawas sa Komunidad",
+    "LGU/DOH User": "Tiggamit sa LGU/DOH",
+    "Guest Tester": "Bisitang Tigsulay",
+    "Guest": "Bisita",
+    "Registered": "Rehistrado",
+    "Chills": "Pangurog",
+    "Fatigue": "Kakapoy",
+    "Chest Pain": "Sakit sa Dughan",
+    "Runny nose": "Sip-on",
+    "Loss of taste or smell": "Pagkawala sa panlasa o pang-amoy",
+    "Body aches": "Panakit sa lawas",
+    "Cough for 2+ weeks": "Ubo sulod sa 2 o labaw pang semana",
+    "Night sweats": "Pagpaningot sa gabii",
+    "Weight loss": "Pagkunhod sa timbang",
+    "Possible COVID-like respiratory symptom pattern": "Posibleng sumbanan sa mga sintomas sa pagginhawa nga sama sa COVID",
+    "Possible pneumonia pattern": "Posibleng sumbanan sa pneumonia",
+    "Possible tuberculosis symptom pattern": "Posibleng sumbanan sa mga sintomas sa tuberculosis",
+    "Possible acute respiratory infection pattern": "Posibleng sumbanan sa kalit nga impeksyon sa pagginhawa",
+    "Respiratory symptoms reported": "Gi-report nga mga sintomas sa pagginhawa",
+    "Complete your address.": "Kompletoha ang imong adres.",
+    "Account Created.": "Nahimo na ang Account.",
+    "Logged in.": "Naka-sign in na.",
+    "Biometric login is unavailable. Please use password login.": "Dili magamit ang pag-sign in gamit ang biometrics. Palihog gamita ang password.",
+    "Reset Password": "I-reset ang Password",
+    "Email Address": "Adres sa Email",
+    "Pass reset link sent.": "Napadala na ang link sa pag-reset sa password.",
+    "Send Link": "Ipadala ang Link",
+    "Enter {label}": "Isulod ang {label}",
+    "Enter your email": "Isulod ang imong email",
+    "Enter a valid email": "Isulod ang balidong email",
+    "Enter your password": "Isulod ang imong password",
+    "Password must be at least 6 characters": "Kinahanglang adunay labing menos 6 ka karakter ang password",
+    "Passowrd do not match": "Dili magkapareho ang mga password",
+    "Create Account": "Paghimo og Account",
+    "User Login": "Pag-sign In sa Tiggamit",
+    "Register your basic HeathPH+ profile.": "Irehistro ang imong batakang profile sa HealthPH+.",
+    "Sign in using your email and password.": "Pag-sign in gamit ang imong email ug password.",
+    "Full Name": "Kompletong Ngalan",
+    "your full name": "imong kompletong ngalan",
+    "Email": "Email",
+    "Password": "Password",
+    "Confirm Password": "Kumpirmaha ang Password",
+    "Role": "Papel",
+    "Preferred Language": "Gipalabing Pinulongan",
+    "Select your preferred language": "Pilia ang imong gipalabing pinulongan",
+    "Forgot password?": "Nakalimot sa password?",
+    "Login": "Pag-sign In",
+    "Login with Biometrics": "Pag-sign In Gamit ang Biometrics",
+    "Continue as Guest": "Padayon isip Bisita",
+    "Already have an account? Login": "Aduna ka nay account? Pag-sign In",
+    "New User? Create an account": "Bag-ong Tiggamit? Paghimo og account",
+    "Account ID is missing. Please login again.": "Wala ang ID sa account. Palihog pag-sign in pag-usab.",
+    "Enter your complete six-digit PIN.": "Isulod ang kompleto nga unom ka digit sa imong PIN.",
+    "Incorrect PIN. Please try again.": "Sayop ang PIN. Palihog sulayi pag-usab.",
+    "Enter PIN": "Isulod ang PIN",
+    "Enter the six-digit PIN for {widget.profile.email}.": "Isulod ang PIN nga unom ka digit para sa {widget.profile.email}.",
+    "Verify": "Pamatud-i",
+    "Untitled Survey": "Survey nga Walay Titulo",
+    "Question": "Pangutana",
+    "HealthAlert": "Pasidaan sa Panglawas",
+    "{windowMinutes ~/ 60}h window": "Sulod sa {windowMinutes ~/ 60} ka oras",
+    "{windowMinutes}m window": "Sulod sa {windowMinutes} ka minuto",
+    "{reportCount} reports": "{reportCount} ka report",
+    "Live Health Summary": "Kasamtangang Katingbanan sa Panglawas",
+    "Swipe through current outbreaks, health alerts, registered users, and available mobile surveys.": "I-swipe aron makita ang pagkaylap sa sakit, mga pasidaan, rehistradong tiggamit, ug mga survey nga mahimong tubagon.",
+    "Your Contributions": "Imong mga Kontribusyon",
+    "Submit a self-report, review your previous reports, or answer an available mobile survey.": "Isumite ang kaugalingong report, susiha ang miaging mga report, o tubaga ang usa ka survey.",
+    "Quick Actions": "Mga Daling Aksyon",
+    "Open Disease Watch for outbreaks or Health Literacy for trusted learning resources.": "Ablihi ang Pagsubay sa Sakit aron makita ang pagkaylap niini o ang Kahibalo sa Panglawas alang sa kasaligan nga mga materyal sa pagkat-on.",
+    "Recent Alerts": "Bag-ong mga Pasidaan",
+    "Review the latest respiratory health alerts and outbreaks": "Susiha ang pinakabag-ong mga pasidaan ug pagkaylap sa mga sakit sa pagginhawa",
+    "Publication time unavailable": "Walay makuhang oras sa pagpatik",
+    "Published {published.year}-{published.month.toString().padLeft(2, '0')}-{published.day.toString().padLeft(2, '0')} {published.hour.toString().padLeft(2, '0')}:{published.minute.toString().padLeft(2, '0')}": "Gipatik {published.year}-{published.month.toString().padLeft(2, '0')}-{published.day.toString().padLeft(2, '0')} {published.hour.toString().padLeft(2, '0')}:{published.minute.toString().padLeft(2, '0')}",
+    "No additional alert details were provided.": "Walay dugang nga detalye nga gihatag alang sa pasidaan.",
+    "Unable to open this alert right now.": "Dili maablihan kini nga pasidaan karon.",
+    "Quick Actions ⓘ": "Mga Daling Aksyon ⓘ",
+    "Track outbreaks and alerts": "Subaybayi ang pagkaylap sa sakit ug mga pasidaan",
+    "Public attitude insights": "Mga Panglantaw sa Publiko",
+    "Recent Alerts ⓘ": "Bag-ong mga Pasidaan ⓘ",
+    "Unable to load alerts.": "Dili makuha ang mga pasidaan.",
+    "No recent alerts right now.": "Wala pay bag-ong mga pasidaan karon.",
+    "Health Tips 📖": "Mga Tambag sa Panglawas 📖",
+    "Stay Protected": "Panalipdi ang Imong Kaugalingon",
+    "Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated": "Hinumdomi ang kanunay nga paghugas sa kamot, pagsul-ob og mask sa daghang tawo, ug pagpasulod og preskong hangin sa imong pinuy-anan.",
+    "More Health Tips": "Dugang nga mga Tambag sa Panglawas",
+    "Your Health Contribution": "Ang Imong Kontribusyon sa Panglawas",
+    "Report symptoms, review contribution, or answer surveys": "Ireport ang mga sintomas, susiha ang imong kontribusyon, o tubaga ang mga survey",
+    "Data Collection and Self-Report": "Pagkolekta og Datos ug Kaugalingong Report",
+    "Submit symptoms and health information": "Isumite ang mga sintomas ug impormasyon sa panglawas",
+    "Review your previous contributions": "Susiha ang imong nangaging mga kontribusyon",
+    "Sentiment Pulse and Mobile Survey": "Panan-aw sa Publiko ug Survey sa App",
+    "View surveys available for mobile users": "Tan-awa ang mga survey nga mahimong tubagon sa app",
+    "Regional disease signals": "Mga Timailhan sa Sakit sa mga Rehiyon",
+    "Health Alerts": "Mga Pasidaan sa Panglawas",
+    "Recent inbox alerts": "Bag-ong Nadawat nga mga Pasidaan",
+    "Active Users": "Mga Aktibong Tiggamit",
+    "Registered mobile users": "Mga Rehistradong Tiggamit sa App",
+    "Available public surveys": "Mga Pampublikong Survey nga Mahimong Tubagon",
+    "Severity level": "Ang-ang sa kagrabe",
+    "Current theme: {theme}": "Kasamtangang tema: {theme}",
+    "Weather unavailable": "Dili makuha ang impormasyon sa panahon",
+    "Passwords do not match": "Dili magkapareho ang mga password",
+    "Password reset link sent.": "Napadala na ang link sa pag-reset sa password.",
+    "Register your basic HealthPH+ profile.": "Irehistro ang imong batakang profile sa HealthPH+.",
+    "Complete your address and add at least one symptom.": "Kompletoha ang imong adres ug pagdugang og labing menos usa ka sintomas.",
+    "Report respiratory symptoms to support surveillance mapping.": "Ireport ang mga sintomas sa pagginhawa aron makatabang sa pagmapa ug pagsubay sa sakit.",
+    "Biometric authentication is unavailable or cancelled.": "Dili magamit o gikansela ang pagpamatuod gamit ang biometrics.",
+    "{count} reports": "{count} ka report",
+    "{count} selected": "{count} ang napili",
+    "{count} surveys ready to answer": "{count} ka survey ang andam tubagon",
+    "Duration: {days} days": "Gidugayon: {days} ka adlaw",
+  },
+
+
+STEP 3 - CONNECT ALL USER INTERFACE TEXT
+Import for files directly inside lib/:
+  import 'localization/app_translations.dart';
+Import for lib/pages/ or lib/widgets/:
+  import '../localization/app_translations.dart';
+
+For a literal label:
+  BEFORE: const Text("Continue")
+  AFTER:  Text(context.tr("Continue"))
+
+For a text field:
+  BEFORE: decoration: const InputDecoration(labelText: "Email")
+  AFTER:  decoration: InputDecoration(labelText: context.tr("Email"))
+
+For validation:
+  BEFORE: return "Enter your email";
+  AFTER:  return context.tr("Enter your email");
+
+For tooltips and tab labels:
+  tooltip: context.tr("View Details")
+  Tab(text: context.tr("Articles"))
+
+Remove const only from the containing runtime widget/list/decoration when it
+contains context.tr(...). Fixed styles/icons can remain const.
+Do not run a global replacement over every String or every title/subtitle.
+Data keys, server values, and user input are not translation keys.
+
+STEP 4 - CURRENT FILE CONNECTION CHECKLIST
+These are presentation changes, not schema or API changes.
+
+lib/pages/settings_page.dart
+- In the Appearance tile under appearanceKey, around current line 262, replace:
+    title: context.tr("Account, preferences, security, and accessibility"),
+  with:
+    title: "Appearance",
+  _SettingsTile already translates title, so translate only once.
+- Keep the main page description at the top; that is where the long phrase belongs.
+- _SettingsSectionTitle and _SettingsTile already call context.tr(title/subtitle).
+- _ThemePreviewTile already translates mode.label and mode.description.
+- Translate local guest/default labels inside _ProfileCard without translating
+  a real user's name, email, address, or profile values.
+- Translate static PIN dialog titles, instructions, field labels, validators,
+  buttons, and snackbar messages. Preserve PIN values and passwords.
+- For the current theme subtitle use:
+    context.tr(
+      'Current theme: {theme}',
+      parameters: {'theme': context.tr(appSettings.visualMode.label)},
+    )
+  The nested theme name is translated separately.
+
+lib/pages/language_selection_page.dart
+- Add the helper import; this page currently has no translation lookup.
+- Wrap "Choose Language", the instruction sentence,
+  "This is your selected language", and "Continue" with context.tr(...).
+- Remove const from Text("This is your selected language") and the Continue Text.
+- Keep the selectable values English, Filipino, Cebuano, Ilocano, Hiligaynon
+  unchanged. These are stored identifiers, not translated input values.
+- The page still applies the new language on its confirmation action.
+  This handout does not change selection into an immediate preview.
+
+lib/widgets/coach_mark.dart
+- In the card build method replace Text(step.title, ...) with
+  Text(context.tr(step.title), ...).
+- Do the same for step.description.
+- Translate Skip and context.tr(currentStep == totalSteps ? "Done" : "Next").
+- Keep step numbers and GlobalKeys unchanged.
+- The catalog includes the existing hardcoded coach-mark phrases.
+- Ensure the overlay is below AppLanguageScope; verify by switching language
+  and replaying coach marks.
+
+lib/pages/intro_tutorial_page.dart
+- Translate item.title and item.description where rendered in Text.
+- Translate Skip and the Next/Continue button labels.
+- Keep the tutorial item definitions in English; do not translate in a field
+  initializer, which cannot depend on BuildContext.
+- Leave artwork and animation configuration unchanged.
+
+lib/main_page.dart
+- Carousel labels/subtitles and QuickActionTile labels are already connected.
+- For QuickActionTile callers, pass raw English keys if the tile itself translates.
+- Translate remaining local health tips, alert empty/error fallback messages,
+  dialog buttons, static metric labels, and other local headings.
+- Do not translate alert.title, alert.message, real dates, or region names.
+- For local alert counts, format at the UI boundary:
+    Text(context.tr('{count} reports', parameters: {'count': alert.reportCount}))
+- This changes wording only; do not change fetch logic or turn API errors into
+  an empty list.
+
+lib/pages/health_literacy_page.dart
+- Main heading, tabs, action buttons and emptyMessage rendering are connected.
+- The descriptive Text below the heading still needs context.tr(...).
+- Pass raw empty-message keys to _buildContentList; it already translates
+  emptyMessage at render time. Do not translate both caller and callee.
+- Translate local fallback labels (Untitled content, Video), playback errors,
+  and the local Verdict label where displayed.
+- Do not wrap real item titles, descriptions, source names, tags, URLs or
+  fact-check content from the backend indiscriminately.
+- A fallback title can be translated when chosen:
+    title: (item["title"] ?? context.tr("Untitled content")).toString()
+  Do not then translate the title again in the card.
+
+lib/login_page.dart
+- Translate login/register headings, descriptions, button labels, field labels,
+  hints, validators, password-reset dialogs and local success/error messages.
+- Remove enclosing const where needed.
+- Keep role IDs, selectedLanguage, addresses, email/password payloads unchanged.
+- For labels produced by a local validator use a stable template:
+    context.tr('Enter {label}', parameters: {'label': context.tr(label)})
+- For technical backend errors prefer an approved local user-facing message,
+  while preserving detailed errors in appropriate development logs.
+  Do not translate arbitrary response.body strings or reveal secrets.
+
+lib/login_page.dart - PIN dialog around current line 801
+- Translate headings, validators, buttons and local messages.
+- For the email instruction, either keep the inventory placeholder exactly
+  or normalize the key and translation together. See STEP 5.
+- Keep the email and PIN as original values.
+
+lib/pages/data_collection_page.dart
+- Translate page/tabs, report-form titles, hints, labels, validation/success
+  dialogs, explanatory text, severity/duration labels and empty states.
+- Display translated symptom/severity/role labels only:
+    DropdownMenuItem(value: originalValue,
+                     child: Text(context.tr(originalValue)))
+  Keep comparisons, selected values and submitted data unchanged.
+- Translate local hardcoded demo report captions if those demos remain visible.
+  Do not translate actual user notes/comments as dictionary keys.
+- For condition labels from local taxonomy, translate the label at presentation,
+  then insert it into the disclaimer template.
+- Format duration/count text using templates, not interpolation before lookup.
+
+lib/pages/self_report_history_page.dart
+- Translate heading, local summary labels, empty/error states, retry/export
+  buttons and local report field labels.
+- Keep real report IDs, notes, addresses, timestamps and detected language values.
+- Convert local status/symptom enum labels for display without rewriting records.
+
+lib/pages/map_page.dart
+- Translate drawer navigation, map headings, tooltips, legends, filter sheet
+  headings/buttons, and static helper text.
+- Display translated disease/symptom names while retaining original filter values.
+- Preserve tile URLs, coordinates, place names and map data.
+- For "filter"/"filters", use a simple count template to avoid awkward plural
+  assembly:
+    context.tr('{count} selected', parameters: {'count': selectedFilters.length})
+
+lib/pages/disease_watch_page.dart
+- Translate headers, filter/search labels, result totals, empty/error messages,
+  severity labels and View Details buttons.
+- Preserve disease identifiers and region keys used to filter backend data.
+- Translate only known local disease labels, not entire backend result maps.
+
+lib/pages/sentiment_pulse_page.dart
+- Translate tabs, local sentiment labels, headings, legends, explanatory text,
+  loading/error/empty states, answer hints, validators and submit messages.
+- Keep chart data keys, question IDs and answer payload values unchanged.
+- Do not translate server-authored questions/options without a backend content
+  localization contract.
+- Translate built-in sentiment labels at the point they are displayed.
+
+lib/widgets/weather_widget.dart
+- Translate Today, Sunny, Humidity, Pressure and local error text.
+- Preserve numeric readings, units, AQI and actual location names.
+- If weather descriptions come from an API, only dictionary-supported labels
+  translate; other descriptions safely fall back to their original text.
+
+lib/widgets/location_autocomplete_field.dart
+- Translate local hints/error/empty labels only; never translate address results.
+
+lib/widgets/six_digit_field.dart
+- Translate the local accessibility/field label Six-digit PIN when displayed.
+- Do not translate digits or change keyboard/backspace behavior.
+
+lib/widgets/feature_tile.dart
+- If callers pass only local UI keys, translate its title/subtitle at rendering.
+- If callers can pass server/user text, translate at the local caller instead.
+
+lib/widgets/floating_navbar.dart
+- Home, Profile and Disease Map are already connected. Preserve their behavior.
+
+lib/landing_page.dart and lib/widgets/app_skeleton.dart
+- Review actual rendered Text widgets. Brand-only images and skeleton shapes
+  need no dictionary entries.
+- Text embedded in theme/landing images needs separately localized artwork.
+
+lib/data/app_taxonomy.dart and models/services
+- Keep stored values and IDs unchanged. Translate their known display labels
+  in the UI, not by modifying the data model.
+- Service templates listed in the catalog are reference entries. Formatting
+  an exception string in English and then calling tr(error.toString()) will
+  not match templates containing placeholders.
+- For service failures use typed error codes/fields and render a local template
+  at the widget boundary. Avoid importing Flutter UI context into backend/API
+  services just to translate their errors.
+
+Backup *_copy.dart pages and the unused Flutter counter demo are not primary
+migration targets. If a backup is actually routed into the app, audit it too.
+
+STEP 5 - DYNAMIC TEMPLATES: IMPORTANT
+Inventory placeholders such as {reports.length} are literal dictionary keys,
+not Dart expressions evaluated by translateText().
+
+Do not do this:
+  context.tr('Your Recent Reports (${reports.length})')
+
+Use this exact inventory key and parameter name:
+  context.tr(
+    'Your Recent Reports ({reports.length})',
+    parameters: {'reports.length': reports.length},
+  )
+
+Or use one of the added normalized templates:
+  context.tr('{count} reports', parameters: {'count': reports.length})
+
+For PIN email:
+  context.tr(
+    'Enter the six-digit PIN for {widget.profile.email}.',
+    parameters: {'widget.profile.email': widget.profile.email},
+  )
+
+For nested labels, translate only the local label before inserting it.
+Never translate user-provided values.
+Preserve all braces/placeholders when changing the dictionary.
+If you rename a placeholder, change both dictionary languages and the caller.
+Do not convert API request values to Cebuano just because their display changed.
+
+STEP 6 - VERIFY BEFORE RELEASE
+1. Run flutter analyze and flutter test.
+2. Restart and select Cebuano through Profile > Language Selection; confirm.
+3. Visit login/registration, Home, Profile, map, Disease Watch, Health Literacy,
+   Sentiment Pulse, report form/history, PIN dialogs, tutorials and coach marks.
+4. Exercise empty, loading, validation, success and failure states.
+5. Test small phones, landscape, and larger accessibility text.
+6. Remove unnecessary fixed text heights. Prefer wrapping/Expanded/Flexible;
+   do not solve overflow by making every translated label tiny.
+7. Check stored survey answers and self-report values remain in the expected
+   backend format; only the visible labels should have changed.
+8. Switch back to English and verify all controls still work.
+9. Confirm unreviewed clinical wording with qualified/native reviewers.
+10. Rescan strings introduced after the inventory; this catalog is not a
+    guarantee of exhaustive current-code coverage.
+
+STEP 7 - INVENTORY CROSS-REFERENCE
+The following lists every inventory key, proposed translation and its recorded
+source locations. Source line numbers may have moved after subsequent edits.
+
+[001] Wearher unavailable
+Cebuano: Dili makuha ang impormasyon sa panahon
+Source: lib/widgets/weather_widget.dart:48
+
+[002] Today
+Cebuano: Karong Adlawa
+Source: lib/widgets/weather_widget.dart:81
+
+[003] {weather.temperature.toInt()}°C
+Cebuano: {weather.temperature.toInt()}°C
+Source: lib/widgets/weather_widget.dart:101
+
+[004] Sunny
+Cebuano: Masidlak ang adlaw
+Source: lib/widgets/weather_widget.dart:113
+
+[005] Humidity
+Cebuano: Kaumog
+Source: lib/widgets/weather_widget.dart:141; lib/widgets/weather_widget.dart:148
+
+[006] Pressure
+Cebuano: Presyon
+Source: lib/widgets/weather_widget.dart:162
+
+[007] AQI
+Cebuano: AQI
+Source: lib/widgets/weather_widget.dart:170
+
+[008] {weather.temperature.round()}°C · Today
+Cebuano: {weather.temperature.round()}°C · Karong Adlawa
+Source: lib/widgets/weather_widget.dart:240
+
+[009] AQI {weather.aqi}
+Cebuano: AQI {weather.aqi}
+Source: lib/widgets/weather_widget.dart:261
+
+[010] Six-digit PIN
+Cebuano: PIN nga unom ka digit
+Source: lib/widgets/six_digit_field.dart:75
+
+[011] Home
+Cebuano: Sinugdanan
+Source: lib/widgets/floating_navbar.dart:109; lib/pages/map_page.dart:547
+
+[012] Profile
+Cebuano: Profile
+Source: lib/widgets/floating_navbar.dart:126; lib/pages/settings_page.dart:165; lib/pages/settings_page.dart:227; lib/pages/map_page.dart:583
+
+[013] Disease Map
+Cebuano: Mapa sa mga Sakit
+Source: lib/widgets/floating_navbar.dart:141; lib/pages/map_page.dart:526; lib/pages/map_page.dart:552; lib/pages/intro_tutorial_page.dart:29
+
+[014] Skip
+Cebuano: Laktawi
+Source: lib/widgets/coach_mark.dart:292; lib/pages/intro_tutorial_page.dart:374
+
+[015] Done
+Cebuano: Nahuman
+Source: lib/widgets/coach_mark.dart:300
+
+[016] Next
+Cebuano: Sunod
+Source: lib/widgets/coach_mark.dart:300; lib/pages/intro_tutorial_page.dart:392
+
+[017] Default
+Cebuano: Default
+Source: lib/services/app_settings_store.dart:10
+
+[018] Light
+Cebuano: Hayag
+Source: lib/services/app_settings_store.dart:12
+
+[019] Grey
+Cebuano: Abohon
+Source: lib/services/app_settings_store.dart:14
+
+[020] Dark
+Cebuano: Ngitngit
+Source: lib/services/app_settings_store.dart:16
+
+[021] HealthPH+ blue and gold
+Cebuano: Asul ug bulawan sa HealthPH+
+Source: lib/services/app_settings_store.dart:49
+
+[022] Bright clinical layout
+Cebuano: Hayag nga klinikal nga disenyo
+Source: lib/services/app_settings_store.dart:51
+
+[023] Soft neutral contrast
+Cebuano: Malumo nga kalainan sa neyutral nga mga kolor
+Source: lib/services/app_settings_store.dart:53
+
+[024] Low-light dashboard style
+Cebuano: Disenyo sa dashboard alang sa ngitngit nga palibot
+Source: lib/services/app_settings_store.dart:55
+
+[025] Failed to load public surveys: {response.statusCode}
+Cebuano: Dili makuha ang mga pampublikong survey: {response.statusCode}
+Source: lib/services/sentiment_survey_service.dart:38
+
+[026] Failed to submit survey response: {response.body}
+Cebuano: Dili maisumite ang tubag sa survey: {response.body}
+Source: lib/services/sentiment_survey_service.dart:72
+
+[027] Sign in with a registered account to view alerts.
+Cebuano: Pag-sign in gamit ang rehistradong account aron makita ang mga pasidaan.
+Source: lib/services/mobile_alert_service.dart:28; lib/services/mobile_alert_service.dart:113
+
+[028] Your session has expired. Please sign in again.
+Cebuano: Na-expire na ang imong session. Palihog pag-sign in pag-usab.
+Source: lib/services/mobile_alert_service.dart:58; lib/services/mobile_alert_service.dart:127
+
+[029] Failed to load mobile alerts ({response.statusCode}): {response.body}
+Cebuano: Dili makuha ang mga pasidaan sa app ({response.statusCode}): {response.body}
+Source: lib/services/mobile_alert_service.dart:63
+
+[030] Mobile alert request failed ({response.statusCode}): {response.body}
+Cebuano: Napakyas ang hangyo alang sa pasidaan sa app ({response.statusCode}): {response.body}
+Source: lib/services/mobile_alert_service.dart:132
+
+[031] Self-reported on {createdAt.month}/{createdAt.day}/{createdAt.year} at {hour}:{minute}
+Cebuano: Kaugalingong gi-report niadtong {createdAt.month}/{createdAt.day}/{createdAt.year} sa {hour}:{minute}
+Source: lib/services/self_report_store.dart:39
+
+[032] Self-reported respiratory symptoms
+Cebuano: Kaugalingong gi-report nga mga sintomas sa pagginhawa
+Source: lib/services/self_report_store.dart:96
+
+[033] Exact address geocoded
+Cebuano: Nakit-an ang mga coordinate sa adres
+Source: lib/services/self_report_store.dart:105
+
+[034] Region-level estimate
+Cebuano: Gibanabana nga lokasyon sa rehiyon
+Source: lib/services/self_report_store.dart:106
+
+[035] Use biometrics to sign in to HealthPH+.
+Cebuano: Gamita ang biometrics aron maka-sign in sa HealthPH+.
+Source: lib/services/biometric_auth_service.dart:37
+
+[036] Failed to loaod disease points
+Cebuano: Dili makuha ang mga lokasyon sa sakit
+Source: lib/services/healthph_api_services.dart:19
+
+[037] Failed to sync self-report to MongoDB
+Cebuano: Dili ma-sync ang kaugalingong report ngadto sa MongoDB
+Source: lib/services/healthph_api_services.dart:75
+
+[038] Failed to load self-report map pings
+Cebuano: Dili makuha ang mga pin sa mapa sa kaugalingong report
+Source: lib/services/healthph_api_services.dart:88
+
+[039] A user id or email is required.
+Cebuano: Gikinahanglan ang user ID o email.
+Source: lib/services/healthph_api_services.dart:106
+
+[040] Failed to load your self-reports ({response.statusCode}): {response.body}
+Cebuano: Dili makuha ang imong kaugalingong mga report ({response.statusCode}): {response.body}
+Source: lib/services/healthph_api_services.dart:129
+
+[041] Health literacy response has no items array
+Cebuano: Walay items array ang tubag alang sa kahibalo sa panglawas
+Source: lib/services/healthph_api_services.dart:143
+
+[042] Failed to load health literacy content ({response.statusCode}): {response.body}
+Cebuano: Dili makuha ang sulod sa kahibalo sa panglawas ({response.statusCode}): {response.body}
+Source: lib/services/healthph_api_services.dart:154
+
+[043] Failed to save mobile user to MongoDB: {response.body}
+Cebuano: Dili ma-save ang tiggamit sa app ngadto sa MongoDB: {response.body}
+Source: lib/services/healthph_api_services.dart:207
+
+[044] Failed to login: {response.body}
+Cebuano: Dili maka-sign in: {response.body}
+Source: lib/services/healthph_api_services.dart:225
+
+[045] Failed to set Pin: {response.body}
+Cebuano: Dili matakda ang PIN: {response.body}
+Source: lib/services/healthph_api_services.dart:256
+
+[046] Failed to verify PIN: {response.body}
+Cebuano: Dili mapamatud-an ang PIN: {response.body}
+Source: lib/services/healthph_api_services.dart:272
+
+[047] Failed to update language: {response.body}
+Cebuano: Dili mausab ang pinulongan: {response.body}
+Source: lib/services/healthph_api_services.dart:290
+
+[048] Failed to load mobile users count ({response.statusCode}): {response.body}
+Cebuano: Dili makuha ang gidaghanon sa mga tiggamit sa app ({response.statusCode}): {response.body}
+Source: lib/services/healthph_api_services.dart:307
+
+[049] A mobile access token is required.
+Cebuano: Gikinahanglan ang mobile access token.
+Source: lib/services/healthph_api_services.dart:314
+
+[050] HealthPH+ self-reports export
+Cebuano: Pag-export sa kaugalingong mga report sa HealthPH+
+Source: lib/services/self_report_export_service.dart:23
+
+[051] Exported HealthPH+ self-report records.
+Cebuano: Na-export nga kaugalingong mga report sa HealthPH+.
+Source: lib/services/self_report_export_service.dart:25
+
+[052] Login with a registered account to view your account self-reports.
+Cebuano: Pag-sign in gamit ang rehistradong account aron makita ang imong kaugalingong mga report.
+Source: lib/pages/self_report_history_page.dart:41
+
+[053] Unable to load self-reports. Check your backend connection.
+Cebuano: Dili makuha ang kaugalingong mga report. Susiha ang koneksyon sa backend.
+Source: lib/pages/self_report_history_page.dart:109
+
+[054] My Self-Reports
+Cebuano: Akong mga Kaugalingong Report
+Source: lib/pages/self_report_history_page.dart:171; lib/main_page.dart:535
+
+[055] Review the symptoms and possible conditions you contributed.
+Cebuano: Susiha ang mga sintomas ug posibleng kondisyon nga imong gi-report.
+Source: lib/pages/self_report_history_page.dart:180
+
+[056] No reports yet
+Cebuano: Wala pay mga report
+Source: lib/pages/self_report_history_page.dart:204
+
+[057] Local reports
+Cebuano: Lokal nga mga report
+Source: lib/pages/self_report_history_page.dart:230
+
+[058] Mongo reports
+Cebuano: Mga report sa MongoDB
+Source: lib/pages/self_report_history_page.dart:230
+
+[059] Most common concern
+Cebuano: Kasagarang gikabalak-an
+Source: lib/pages/self_report_history_page.dart:239
+
+[060] Latest contribution
+Cebuano: Pinakabag-ong kontribusyon
+Source: lib/pages/self_report_history_page.dart:249
+
+[061] None
+Cebuano: Wala
+Source: lib/pages/self_report_history_page.dart:259
+
+[062] Report ID
+Cebuano: ID sa Report
+Source: lib/pages/self_report_history_page.dart:443
+
+[063] Status
+Cebuano: Kahimtang
+Source: lib/pages/self_report_history_page.dart:444
+
+[064] Detected Language
+Cebuano: Nailhang Pinulongan
+Source: lib/pages/self_report_history_page.dart:447
+
+[065] Location
+Cebuano: Lokasyon
+Source: lib/pages/self_report_history_page.dart:450
+
+[066] Date
+Cebuano: Petsa
+Source: lib/pages/self_report_history_page.dart:451
+
+[067] Notes
+Cebuano: Mga Nota
+Source: lib/pages/self_report_history_page.dart:453
+
+[068] Try again
+Cebuano: Sulayi Pag-usab
+Source: lib/pages/self_report_history_page.dart:619
+
+[069] No self-reports yet
+Cebuano: Wala pay kaugalingong mga report
+Source: lib/pages/self_report_history_page.dart:648
+
+[070] Submitted self-reports will appear here for review.
+Cebuano: Makita dinhi ang gisumite nga kaugalingong mga report aron masusi.
+Source: lib/pages/self_report_history_page.dart:657
+
+[071] Mongo report
+Cebuano: Report sa MongoDB
+Source: lib/pages/self_report_history_page.dart:705
+
+[072] submitted
+Cebuano: naisumite
+Source: lib/pages/self_report_history_page.dart:706
+
+[073] Respiratory symptoms
+Cebuano: Mga sintomas sa pagginhawa
+Source: lib/pages/self_report_history_page.dart:709
+
+[074] Date unavailable
+Cebuano: Walay petsa
+Source: lib/pages/self_report_history_page.dart:725
+
+[075] {date.month}/{date.day}/{date.year} at {hour}:{minute}
+Cebuano: {date.month}/{date.day}/{date.year} sa {hour}:{minute}
+Source: lib/pages/self_report_history_page.dart:730
+
+[076] Location unavailable
+Cebuano: Walay makuhang lokasyon
+Source: lib/pages/self_report_history_page.dart:761
+
+[077] Please sign in with a registered account first.
+Cebuano: Palihog pag-sign in una gamit ang rehistradong account.
+Source: lib/pages/settings_page.dart:94
+
+[078] Your PIN was saved successfully.
+Cebuano: Malampusong na-save ang imong PIN.
+Source: lib/pages/settings_page.dart:126
+
+[079] Unable to save PIN. Check your password and connection.
+Cebuano: Dili ma-save ang PIN. Susiha ang imong password ug koneksyon.
+Source: lib/pages/settings_page.dart:136
+
+[080] Coach marks will replay when you revisit pages.
+Cebuano: Ipakita pag-usab ang mga giya kon mobalik ka sa mga panid.
+Source: lib/pages/settings_page.dart:149
+
+[081] Review the account details and location saved during registration.
+Cebuano: Susiha ang detalye sa account ug lokasyon nga na-save panahon sa pagrehistro.
+Source: lib/pages/settings_page.dart:167
+
+[082] Appearance
+Cebuano: Panagway
+Source: lib/pages/settings_page.dart:173; lib/pages/settings_page.dart:261
+
+[083] Choose the background and color mode that is most readable for you.
+Cebuano: Pilia ang background ug mga kolor nga labing sayon nimo basahon.
+Source: lib/pages/settings_page.dart:175
+
+[084] Language Selection
+Cebuano: Pagpili og Pinulongan
+Source: lib/pages/settings_page.dart:181; lib/pages/settings_page.dart:278
+
+[085] Choose the language that is most comfortable for you.
+Cebuano: Pilia ang pinulongan nga labing komportable nimo gamiton.
+Source: lib/pages/settings_page.dart:183
+
+[086] Login Security
+Cebuano: Seguridad sa Pag-sign In
+Source: lib/pages/settings_page.dart:189
+
+[087] Set your account PIN and manage fingerprint login when your device supports it.
+Cebuano: Itakda ang PIN sa imong account ug dumalaha ang pag-sign in gamit ang fingerprint kon suportado sa imong device.
+Source: lib/pages/settings_page.dart:191
+
+[088] Account, preferences, security, and accessibility
+Cebuano: Account, mga gipalabi, seguridad, ug aksesibilidad
+Source: lib/pages/settings_page.dart:237
+
+[089] Preferences
+Cebuano: Mga Gipalabi
+Source: lib/pages/settings_page.dart:253
+
+[090] Current theme: {appSettings.visualMode.label}
+Cebuano: Kasamtangang tema: {appSettings.visualMode.label}
+Source: lib/pages/settings_page.dart:263
+
+[091] Choose your preferred application language
+Cebuano: Pilia ang imong gustong pinulongan para sa app
+Source: lib/pages/settings_page.dart:279
+
+[092] Replay Coach Marks
+Cebuano: Ipakita Pag-usab ang Giya
+Source: lib/pages/settings_page.dart:300
+
+[093] Show your guide highlights again
+Cebuano: Ipakita pag-usab ang mga giya sa paggamit
+Source: lib/pages/settings_page.dart:301
+
+[094] Account
+Cebuano: Account
+Source: lib/pages/settings_page.dart:318
+
+[095] Logout
+Cebuano: Pag-sign Out
+Source: lib/pages/settings_page.dart:322
+
+[096] Clear this session and return to login.
+Cebuano: Taposa kini nga session ug balik sa pag-sign in.
+Source: lib/pages/settings_page.dart:323
+
+[097] Guest User
+Cebuano: Bisita
+Source: lib/pages/settings_page.dart:354
+
+[098] Tap to create your profile
+Cebuano: Pislita aron makahimo sa imong profile
+Source: lib/pages/settings_page.dart:355
+
+[099] Guest Access
+Cebuano: Akses alang sa Bisita
+Source: lib/pages/settings_page.dart:356
+
+[100] Complete your address during registration
+Cebuano: Kompletoha ang imong adres panahon sa pagrehistro
+Source: lib/pages/settings_page.dart:359
+
+[101] Register
+Cebuano: Pagrehistro
+Source: lib/pages/settings_page.dart:450; lib/login_page.dart:655
+
+[102] Active
+Cebuano: Aktibo
+Source: lib/pages/settings_page.dart:450
+
+[103] No saved address
+Cebuano: Walay na-save nga adres
+Source: lib/pages/settings_page.dart:553
+
+[104] No city
+Cebuano: Walay nakatalang siyudad
+Source: lib/pages/settings_page.dart:558
+
+[105] Mobile Surveys
+Cebuano: Mga Survey sa App
+Source: lib/pages/settings_page.dart:798; lib/main_page.dart:624
+
+[106] {count} survey ready to answer
+Cebuano: {count} ka survey ang andam tubagon
+Source: lib/pages/settings_page.dart:808
+
+[107] Check available surveys
+Cebuano: Tan-awa ang mga survey nga mahimong tubagon
+Source: lib/pages/settings_page.dart:809
+
+[108] Enter all six PIN digits.
+Cebuano: Isulod ang tanang unom ka digit sa PIN.
+Source: lib/pages/settings_page.dart:887
+
+[109] Enter your current account password.
+Cebuano: Isulod ang kasamtangang password sa imong account.
+Source: lib/pages/settings_page.dart:895
+
+[110] Set six-digit PIN
+Cebuano: Pagtakda og PIN nga unom ka digit
+Source: lib/pages/settings_page.dart:916
+
+[111] Enter a six-digit numeric PIN. Each digit uses a separate box.
+Cebuano: Isulod ang PIN nga unom ka numero. Matag numero adunay kaugalingong kahon.
+Source: lib/pages/settings_page.dart:922
+
+[112] Current password
+Cebuano: Kasamtangang password
+Source: lib/pages/settings_page.dart:947
+
+[113] Cancel
+Cebuano: Kanselahon
+Source: lib/pages/settings_page.dart:965; lib/login_page.dart:310; lib/login_page.dart:842
+
+[114] Save PIN
+Cebuano: I-save ang PIN
+Source: lib/pages/settings_page.dart:967
+
+[115] Authentication
+Cebuano: Pagpamatuod sa Pagkatawo
+Source: lib/pages/settings_page.dart:989
+
+[116] PIN Login
+Cebuano: Pag-sign In Gamit ang PIN
+Source: lib/pages/settings_page.dart:992
+
+[117] Set PIN first
+Cebuano: Pagtakda una og PIN
+Source: lib/pages/settings_page.dart:994
+
+[118] Enabled
+Cebuano: Naka-on
+Source: lib/pages/settings_page.dart:996; lib/pages/settings_page.dart:1030
+
+[119] Disabled
+Cebuano: Naka-off
+Source: lib/pages/settings_page.dart:997
+
+[120] You need to set a six-digit PIN before enabling PIN login.
+Cebuano: Kinahanglan ka magtakda og PIN nga unom ka digit sa dili pa i-on ang pag-sign in gamit ang PIN.
+Source: lib/pages/settings_page.dart:1004
+
+[121] Set PIN
+Cebuano: Pagtakda og PIN
+Source: lib/pages/settings_page.dart:1021
+
+[122] Update PIN
+Cebuano: Usba ang PIN
+Source: lib/pages/settings_page.dart:1022
+
+[123] Open
+Cebuano: Ablihi
+Source: lib/pages/settings_page.dart:1022
+
+[124] Fingerprint Login
+Cebuano: Pag-sign In Gamit ang Fingerprint
+Source: lib/pages/settings_page.dart:1029
+
+[125] Available
+Cebuano: Magamit
+Source: lib/pages/settings_page.dart:1030
+
+[126] Biometric login disabled.
+Cebuano: Naka-off ang pag-sign in gamit ang biometrics.
+Source: lib/pages/settings_page.dart:1039
+
+[127] Login first before enabling biometrics.
+Cebuano: Pag-sign in una sa dili pa i-on ang biometrics.
+Source: lib/pages/settings_page.dart:1048
+
+[128] Biometrics authentication is unavailable or cancelled.
+Cebuano: Dili magamit o gikansela ang pagpamatuod gamit ang biometrics.
+Source: lib/pages/settings_page.dart:1062
+
+[129] Biometric login enabled
+Cebuano: Naka-on ang pag-sign in gamit ang biometrics
+Source: lib/pages/settings_page.dart:1076
+
+[130] AURI
+Cebuano: AURI
+Source: lib/pages/map_page.dart:32; lib/pages/map_page.dart:63; lib/pages/disease_watch_page.dart:302
+
+[131] Cough
+Cebuano: Ubo
+Source: lib/pages/map_page.dart:33; lib/pages/map_page.dart:64; lib/pages/map_page.dart:96; lib/pages/data_collection_page.dart:374; lib/data/app_taxonomy.dart:25
+
+[132] Fever
+Cebuano: Hilanat
+Source: lib/pages/map_page.dart:34; lib/pages/map_page.dart:65; lib/pages/map_page.dart:85; lib/pages/data_collection_page.dart:363; lib/data/app_taxonomy.dart:26
+
+[133] Sore throat
+Cebuano: Sakit sa tutunlan
+Source: lib/pages/map_page.dart:35; lib/pages/map_page.dart:66; lib/data/app_taxonomy.dart:31
+
+[134] Influenza-like illness
+Cebuano: Sakit nga sama sa trangkaso
+Source: lib/pages/map_page.dart:36; lib/pages/map_page.dart:67
+
+[135] Pneumonia
+Cebuano: Pneumonia
+Source: lib/pages/map_page.dart:37; lib/pages/map_page.dart:73; lib/pages/map_page.dart:80; lib/pages/disease_watch_page.dart:36; lib/pages/disease_watch_page.dart:40; lib/pages/disease_watch_page.dart:309
+
+[136] Bronchitis
+Cebuano: Bronchitis
+Source: lib/pages/map_page.dart:38; lib/pages/map_page.dart:81
+
+[137] Asthma flare-up
+Cebuano: Pagsamot sa hika
+Source: lib/pages/map_page.dart:39; lib/pages/map_page.dart:82
+
+[138] Shortness of breath
+Cebuano: Kalisod sa pagginhawa
+Source: lib/pages/map_page.dart:40; lib/pages/map_page.dart:83; lib/pages/map_page.dart:96; lib/data/app_taxonomy.dart:29
+
+[139] Wheezing
+Cebuano: Pagtaghoy sa pagginhawa
+Source: lib/pages/map_page.dart:41; lib/pages/map_page.dart:84; lib/data/app_taxonomy.dart:33
+
+[140] COVID-like symptoms
+Cebuano: Mga sintomas nga sama sa COVID
+Source: lib/pages/map_page.dart:42; lib/pages/map_page.dart:68
+
+[141] Tuberculosis symptoms
+Cebuano: Mga sintomas sa tuberculosis
+Source: lib/pages/map_page.dart:43; lib/pages/map_page.dart:96
+
+[142] Acute Upper Respiratory Infection
+Cebuano: Acute Upper Respiratory Infection
+Source: lib/pages/map_page.dart:56
+
+[143] Upper Respiratory
+Cebuano: Ibabaw nga bahin sa agianan sa ginhawa
+Source: lib/pages/map_page.dart:57
+
+[144] Updated: June 1, 2026
+Cebuano: Gi-update: Hunyo 1, 2026
+Source: lib/pages/map_page.dart:59
+
+[145] Lower Respiratory
+Cebuano: Ubos nga bahin sa agianan sa ginhawa
+Source: lib/pages/map_page.dart:74
+
+[146] Updated: May 31, 2026
+Cebuano: Gi-update: Mayo 31, 2026
+Source: lib/pages/map_page.dart:76
+
+[147] Tuberculosis
+Cebuano: Tuberculosis
+Source: lib/pages/map_page.dart:90; lib/pages/disease_watch_page.dart:43; lib/pages/disease_watch_page.dart:47; lib/pages/disease_watch_page.dart:316
+
+[148] Respiratory
+Cebuano: May kalabotan sa pagginhawa
+Source: lib/pages/map_page.dart:91
+
+[149] Updated: May 30, 2026
+Cebuano: Gi-update: Mayo 30, 2026
+Source: lib/pages/map_page.dart:93
+
+[150] All diseases & symptoms
+Cebuano: Tanang sakit ug sintomas
+Source: lib/pages/map_page.dart:114
+
+[151] filter
+Cebuano: filter
+Source: lib/pages/map_page.dart:116
+
+[152] filters
+Cebuano: mga filter
+Source: lib/pages/map_page.dart:116
+
+[153] {selectedFilters.length} {filterLabel} selected
+Cebuano: {selectedFilters.length} ka {filterLabel} ang napili
+Source: lib/pages/map_page.dart:117
+
+[154] Select Diseases / Symptoms
+Cebuano: Pagpili og mga Sakit / Sintomas
+Source: lib/pages/map_page.dart:178; lib/pages/map_page.dart:696
+
+[155] Close
+Cebuano: Sirad-i
+Source: lib/pages/map_page.dart:187; lib/main_page.dart:199
+
+[156] No filters selected. All reports will be shown.
+Cebuano: Walay napiling filter. Ipakita ang tanang report.
+Source: lib/pages/map_page.dart:195
+
+[157] {draftFilters.length} selected
+Cebuano: {draftFilters.length} ang napili
+Source: lib/pages/map_page.dart:196
+
+[158] Clear All
+Cebuano: Hawani Tanan
+Source: lib/pages/map_page.dart:269
+
+[159] Apply
+Cebuano: I-apply
+Source: lib/pages/map_page.dart:296
+
+[160] Respiratory outbreak monitoring
+Cebuano: Pagsubay sa pagkaylap sa mga sakit sa pagginhawa
+Source: lib/pages/map_page.dart:534
+
+[161] Disease Watch
+Cebuano: Pagsubay sa Sakit
+Source: lib/pages/map_page.dart:558; lib/pages/disease_watch_page.dart:88; lib/pages/disease_watch_page.dart:194; lib/pages/intro_tutorial_page.dart:21; lib/main_page.dart:310
+
+[162] Health Literacy
+Cebuano: Kahibalo sa Panglawas
+Source: lib/pages/map_page.dart:564; lib/main_page.dart:324
+
+[163] Sentiment Pulse
+Cebuano: Panan-aw sa Publiko
+Source: lib/pages/map_page.dart:570; lib/pages/intro_tutorial_page.dart:45; lib/pages/sentiment_pulse_page.dart:84
+
+[164] Data Collection
+Cebuano: Pagkolekta og Datos
+Source: lib/pages/map_page.dart:576; lib/pages/data_collection_page.dart:43; lib/pages/data_collection_page.dart:142; lib/pages/intro_tutorial_page.dart:53
+
+[165] Outbreak Map
+Cebuano: Mapa sa Pagkaylap sa Sakit
+Source: lib/pages/map_page.dart:625
+
+[166] {reportCount} active reports
+Cebuano: {reportCount} ka aktibong report
+Source: lib/pages/map_page.dart:635
+
+[167] {outbreak["reports"]} reports
+Cebuano: {outbreak["reports"]} ka report
+Source: lib/pages/map_page.dart:860
+
+[168] Contribute symptom information to disease surveillance and review reports connected to your account.
+Cebuano: Ipaambit ang impormasyon sa sintomas alang sa pagsubay sa sakit ug susiha ang mga report nga nalambigit sa imong account.
+Source: lib/pages/data_collection_page.dart:45
+
+[169] Collection Tabs
+Cebuano: Mga Tab sa Pagkolekta
+Source: lib/pages/data_collection_page.dart:51
+
+[170] Switch between submitting a self-report, reviewing your reports, and community information.
+Cebuano: Pagbalhin tali sa pagsumite sa kaugalingong report, pagsusi sa imong mga report, ug impormasyon sa komunidad.
+Source: lib/pages/data_collection_page.dart:53
+
+[171] Self Report Form
+Cebuano: Porma sa Kaugalingong Report
+Source: lib/pages/data_collection_page.dart:59
+
+[172] Complete your location, symptoms, duration, severity, and notes before submitting your report.
+Cebuano: Kompletoha ang lokasyon, mga sintomas, gidugayon, kagrabe, ug mga nota sa dili pa isumite ang imong report.
+Source: lib/pages/data_collection_page.dart:61
+
+[173] Back
+Cebuano: Balik
+Source: lib/pages/data_collection_page.dart:125; lib/pages/disease_watch_page.dart:183; lib/pages/sentiment_pulse_page.dart:68; lib/pages/health_literacy_page.dart:318; lib/login_page.dart:399
+
+[174] Tracks symptoms & outbreaks
+Cebuano: Nagsubay sa mga sintomas ug pagkaylap sa sakit
+Source: lib/pages/data_collection_page.dart:153
+
+[175] Self Report
+Cebuano: Kaugalingong Report
+Source: lib/pages/data_collection_page.dart:199
+
+[176] My Reports
+Cebuano: Akong mga Report
+Source: lib/pages/data_collection_page.dart:200
+
+[177] Community
+Cebuano: Komunidad
+Source: lib/pages/data_collection_page.dart:201
+
+[178] Self-reports CSV is ready to share.
+Cebuano: Andam nang ipaambit ang CSV sa kaugalingong mga report.
+Source: lib/pages/data_collection_page.dart:257
+
+[179] Unable to export self-reports CSV.
+Cebuano: Dili ma-export ang CSV sa kaugalingong mga report.
+Source: lib/pages/data_collection_page.dart:264
+
+[180] Your Recent Reports
+Cebuano: Imong Bag-ong mga Report
+Source: lib/pages/data_collection_page.dart:281
+
+[181] No self-reports submitted yet.
+Cebuano: Wala pay naisumite nga kaugalingong report.
+Source: lib/pages/data_collection_page.dart:286
+
+[182] Your Recent Reports ({reports.length})
+Cebuano: Imong Bag-ong mga Report ({reports.length})
+Source: lib/pages/data_collection_page.dart:301
+
+[183] Export CSV
+Cebuano: I-export ang CSV
+Source: lib/pages/data_collection_page.dart:310
+
+[184] Self-reported
+Cebuano: Kaugalingong gi-report
+Source: lib/pages/data_collection_page.dart:322
+
+[185] For review
+Cebuano: Alang sa pagsusi
+Source: lib/pages/data_collection_page.dart:323
+
+[186] No additional notes provided.
+Cebuano: Walay dugang nga nota.
+Source: lib/pages/data_collection_page.dart:326
+
+[187] Community Reports
+Cebuano: Mga Report sa Komunidad
+Source: lib/pages/data_collection_page.dart:349
+
+[188] View symptom reports shared by other users.
+Cebuano: Tan-awa ang mga report sa sintomas nga gipaambit sa ubang tiggamit.
+Source: lib/pages/data_collection_page.dart:356
+
+[189] 2 days
+Cebuano: 2 ka adlaw
+Source: lib/pages/data_collection_page.dart:365
+
+[190] Moderate
+Cebuano: Kasarangan
+Source: lib/pages/data_collection_page.dart:366
+
+[191] Reported on May 6, 2025
+Cebuano: Gi-report niadtong Mayo 6, 2025
+Source: lib/pages/data_collection_page.dart:367; lib/pages/data_collection_page.dart:378
+
+[192] User experienced fever and fatigue.
+Cebuano: Ang tiggamit nakasinati og hilanat ug kakapoy.
+Source: lib/pages/data_collection_page.dart:368
+
+[193] 4 days
+Cebuano: 4 ka adlaw
+Source: lib/pages/data_collection_page.dart:376
+
+[194] Mild
+Cebuano: Dili grabe
+Source: lib/pages/data_collection_page.dart:377; lib/pages/data_collection_page.dart:388
+
+[195] User reported dry cough and throat irritation.
+Cebuano: Ang tiggamit nag-report og uga nga ubo ug iritasyon sa tutunlan.
+Source: lib/pages/data_collection_page.dart:379
+
+[196] Headache
+Cebuano: Sakit sa ulo
+Source: lib/pages/data_collection_page.dart:385; lib/data/app_taxonomy.dart:35
+
+[197] 1 day
+Cebuano: 1 ka adlaw
+Source: lib/pages/data_collection_page.dart:387
+
+[198] Reported on May 5, 2025
+Cebuano: Gi-report niadtong Mayo 5, 2025
+Source: lib/pages/data_collection_page.dart:389
+
+[199] User reported mild headache and tiredness.
+Cebuano: Ang tiggamit nag-report og dili grabeng sakit sa ulo ug kakapoy.
+Source: lib/pages/data_collection_page.dart:390
+
+[200] Complete address and add at least one symptoms
+Cebuano: Kompletoha ang adres ug pagdugang og labing menos usa ka sintomas
+Source: lib/pages/data_collection_page.dart:543
+
+[201] Self-report submitted successfully.
+Cebuano: Malampusong naisumite ang kaugalingong report.
+Source: lib/pages/data_collection_page.dart:604
+
+[202] Report submitted
+Cebuano: Naisumite ang report
+Source: lib/pages/data_collection_page.dart:610
+
+[203] {condition.label} This is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.
+Cebuano: {condition.label} Dili kini usa ka diagnosis. Palihog konsultaha ang usa ka propesyonal sa panglawas, ilabina kon mosamot ang mga sintomas.
+Source: lib/pages/data_collection_page.dart:612
+
+[204] Understood
+Cebuano: Nasabtan
+Source: lib/pages/data_collection_page.dart:617
+
+[205] Self Report Symptoms
+Cebuano: Ireport ang Imong mga Sintomas
+Source: lib/pages/data_collection_page.dart:642
+
+[206] Report respiratory symptoms to supper surveillance mapping.
+Cebuano: Ireport ang mga sintomas sa pagginhawa aron makatabang sa pagmapa ug pagsubay sa sakit.
+Source: lib/pages/data_collection_page.dart:647
+
+[207] Using your registered address. Adress fields are locked for account consistency.
+Cebuano: Gigamit ang imong rehistradong adres. Dili mausab ang mga field sa adres aron magpabiling pareho ang impormasyon sa account.
+Source: lib/pages/data_collection_page.dart:668
+
+[208] Region
+Cebuano: Rehiyon
+Source: lib/pages/data_collection_page.dart:679; lib/login_page.dart:549
+
+[209] Province
+Cebuano: Probinsya
+Source: lib/pages/data_collection_page.dart:701; lib/pages/data_collection_page.dart:708; lib/login_page.dart:570; lib/login_page.dart:579
+
+[210] City / Municipality
+Cebuano: Siyudad / Munisipyo
+Source: lib/pages/data_collection_page.dart:726; lib/login_page.dart:598
+
+[211] Barangay
+Cebuano: Barangay
+Source: lib/pages/data_collection_page.dart:749; lib/login_page.dart:617
+
+[212] Symptoms
+Cebuano: Mga Sintomas
+Source: lib/pages/data_collection_page.dart:766
+
+[213] Additional notes (optional)
+Cebuano: Dugang nga mga nota (opsyonal)
+Source: lib/pages/data_collection_page.dart:799
+
+[214] Location Address...
+Cebuano: Gipangita ang Adres...
+Source: lib/pages/data_collection_page.dart:812
+
+[215] Submit Self Report
+Cebuano: Isumite ang Kaugalingong Report
+Source: lib/pages/data_collection_page.dart:812
+
+[216] Duration: {duration}
+Cebuano: Gidugayon: {duration}
+Source: lib/pages/data_collection_page.dart:883
+
+[217] Possible / Consideration: {consideration}
+Cebuano: Posible / Angay Hunahunaon: {consideration}
+Source: lib/pages/data_collection_page.dart:918
+
+[218] Why Report Symptoms Your reports help public health officials track and monitor its origin.
+Cebuano: Nganong Ireport ang mga Sintomas Ang imong mga report makatabang sa mga opisyal sa panglawas sa pagsubay ug pagmonitor sa gigikanan niini.
+Source: lib/pages/data_collection_page.dart:980
+
+[219] Respiratory Infection Cluster
+Cebuano: Grupo sa mga Kaso sa Impeksyon sa Pagginhawa
+Source: lib/pages/disease_watch_page.dart:29
+
+[220] Upper Respiratory Disease
+Cebuano: Sakit sa Ibabaw nga Bahin sa Agianan sa Ginhawa
+Source: lib/pages/disease_watch_page.dart:33
+
+[221] Monitor reported respiratory disease activity across Philippine regions.
+Cebuano: Subaybayi ang gi-report nga mga sakit sa pagginhawa sa mga rehiyon sa Pilipinas.
+Source: lib/pages/disease_watch_page.dart:90
+
+[222] Search and Filter
+Cebuano: Pagpangita ug Pag-filter
+Source: lib/pages/disease_watch_page.dart:96
+
+[223] Search a region or disease term, then narrow the results by disease category.
+Cebuano: Pangitaa ang rehiyon o sakit, dayon limitahi ang mga resulta sumala sa kategoriya sa sakit.
+Source: lib/pages/disease_watch_page.dart:98
+
+[224] Regional Reports
+Cebuano: Mga Report sa Rehiyon
+Source: lib/pages/disease_watch_page.dart:104
+
+[225] Review each region's report totals and disease breakdown in the results list.
+Cebuano: Susiha ang kinatibuk-ang report ug pagbahinbahin sa mga sakit sa matag rehiyon diha sa listahan sa resulta.
+Source: lib/pages/disease_watch_page.dart:106
+
+[226] Outbreak monitoring across the Philippines
+Cebuano: Pagsubay sa pagkaylap sa sakit sa tibuok Pilipinas
+Source: lib/pages/disease_watch_page.dart:205
+
+[227] Find Diseases
+Cebuano: Pangitaa ang mga Sakit
+Source: lib/pages/disease_watch_page.dart:245
+
+[228] Select all that apply
+Cebuano: Pilia ang tanang angay
+Source: lib/pages/disease_watch_page.dart:295
+
+[229] COVID
+Cebuano: COVID
+Source: lib/pages/disease_watch_page.dart:323
+
+[230] Active Outbreaks
+Cebuano: Aktibong Pagkaylap sa Sakit
+Source: lib/pages/disease_watch_page.dart:357; lib/main_page.dart:595
+
+[231] Resolved
+Cebuano: Nasulbad
+Source: lib/pages/disease_watch_page.dart:388
+
+[232] Error: {snapshot.error}
+Cebuano: Sayop: {snapshot.error}
+Source: lib/pages/disease_watch_page.dart:419
+
+[233] No outbreaks found.
+Cebuano: Walay nakitang pagkaylap sa sakit.
+Source: lib/pages/disease_watch_page.dart:456
+
+[234] Region {region["region"]}
+Cebuano: Rehiyon {region["region"]}
+Source: lib/pages/disease_watch_page.dart:478
+
+[235] AURI: {auri} | PN: {pn} | TB: {tb} | COVID: {covid}
+Cebuano: AURI: {auri} | PN: {pn} | TB: {tb} | COVID: {covid}
+Source: lib/pages/disease_watch_page.dart:480
+
+[236] Severity Levels
+Cebuano: Mga Ang-ang sa Kagrabe
+Source: lib/pages/disease_watch_page.dart:630
+
+[237] {reports} reports
+Cebuano: {reports} ka report
+Source: lib/pages/disease_watch_page.dart:638
+
+[238] View Details
+Cebuano: Tan-awa ang mga Detalye
+Source: lib/pages/disease_watch_page.dart:651; lib/main_page.dart:1208
+
+[239] Monitor outbreak reports, active cases, and disease risk signals across regions.
+Cebuano: Subaybayi ang mga report sa pagkaylap sa sakit, aktibong kaso, ug mga timailhan sa risgo sa sakit sa mga rehiyon.
+Source: lib/pages/intro_tutorial_page.dart:23
+
+[240] View outbreak activity geographically and identify affected areas faster.
+Cebuano: Tan-awa sa mapa ang pagkaylap sa sakit aron mas dali mailhan ang naapektuhang mga lugar.
+Source: lib/pages/intro_tutorial_page.dart:31
+
+[241] Health Literacy Hub
+Cebuano: Sentro sa Kahibalo sa Panglawas
+Source: lib/pages/intro_tutorial_page.dart:37; lib/pages/health_literacy_page.dart:47; lib/pages/health_literacy_page.dart:331
+
+[242] Read evidence-based health articles and review fact-checking information.
+Cebuano: Basaha ang mga artikulo sa panglawas nga gibase sa ebidensya ug susiha ang impormasyon bahin sa pagsusi sa kamatuoran.
+Source: lib/pages/intro_tutorial_page.dart:39
+
+[243] Understand public concern, misinformation, and health behavior trends.
+Cebuano: Sabta ang mga kabalaka sa publiko, sayop nga impormasyon, ug mga uso sa pamatasan bahin sa panglawas.
+Source: lib/pages/intro_tutorial_page.dart:47
+
+[244] Submit and review symptom reports that support public health monitoring.
+Cebuano: Isumite ug susiha ang mga report sa sintomas nga makatabang sa pagsubay sa panglawas sa publiko.
+Source: lib/pages/intro_tutorial_page.dart:55
+
+[245] Continue
+Cebuano: Padayon
+Source: lib/pages/intro_tutorial_page.dart:392; lib/pages/language_selection_page.dart:242
+
+[246] English
+Cebuano: English
+Source: lib/pages/language_selection_page.dart:26; lib/login_page.dart:43
+
+[247] Filipino
+Cebuano: Filipino
+Source: lib/pages/language_selection_page.dart:27; lib/login_page.dart:44
+
+[248] Cebuano
+Cebuano: Cebuano
+Source: lib/pages/language_selection_page.dart:28; lib/login_page.dart:45
+
+[249] Ilocano
+Cebuano: Ilocano
+Source: lib/pages/language_selection_page.dart:29; lib/login_page.dart:46
+
+[250] Hiligaynon
+Cebuano: Hiligaynon
+Source: lib/pages/language_selection_page.dart:30; lib/login_page.dart:47
+
+[251] Choose Language
+Cebuano: Pagpili og Pinulongan
+Source: lib/pages/language_selection_page.dart:127
+
+[252] Select your preferred language for HealthPH+.
+Cebuano: Pilia ang imong gustong pinulongan para sa HealthPH+.
+Source: lib/pages/language_selection_page.dart:136
+
+[253] This is your selected language
+Cebuano: Kini ang imong napiling pinulongan
+Source: lib/pages/language_selection_page.dart:210
+
+[254] Evidence-based health infomration and fact-checking
+Cebuano: Impormasyon sa panglawas nga gibase sa ebidensya ug pagsusi sa kamatuoran
+Source: lib/pages/sentiment_pulse_page.dart:95
+
+[255] Overview
+Cebuano: Kinatibuk-ang Pagtan-aw
+Source: lib/pages/sentiment_pulse_page.dart:129
+
+[256] Trends
+Cebuano: Mga Uso
+Source: lib/pages/sentiment_pulse_page.dart:130
+
+[257] Regional
+Cebuano: Sa mga Rehiyon
+Source: lib/pages/sentiment_pulse_page.dart:131
+
+[258] Survey
+Cebuano: Survey
+Source: lib/pages/sentiment_pulse_page.dart:132
+
+[259] Overall Sentiment
+Cebuano: Kinatibuk-ang Panan-aw
+Source: lib/pages/sentiment_pulse_page.dart:172
+
+[260] Concerned
+Cebuano: Nabalaka
+Source: lib/pages/sentiment_pulse_page.dart:186; lib/pages/sentiment_pulse_page.dart:272
+
+[261] Misinformed
+Cebuano: Adunay Sayop nga Impormasyon
+Source: lib/pages/sentiment_pulse_page.dart:195
+
+[262] Neutral
+Cebuano: Neyutral
+Source: lib/pages/sentiment_pulse_page.dart:208
+
+[263] Proactive
+Cebuano: Nag-una og Lihok
+Source: lib/pages/sentiment_pulse_page.dart:215; lib/pages/sentiment_pulse_page.dart:279
+
+[264] Sentiment Trends
+Cebuano: Mga Uso sa Panan-aw
+Source: lib/pages/sentiment_pulse_page.dart:239
+
+[265] Sentiment changes over time
+Cebuano: Pagbag-o sa panan-aw sa paglabay sa panahon
+Source: lib/pages/sentiment_pulse_page.dart:248
+
+[266] Trends Insights
+Cebuano: Pagsabot sa mga Uso
+Source: lib/pages/sentiment_pulse_page.dart:259
+
+[267] Increase from last week
+Cebuano: Pagsaka gikan sa miaging semana
+Source: lib/pages/sentiment_pulse_page.dart:274; lib/pages/sentiment_pulse_page.dart:281
+
+[268] Region Trend Changes
+Cebuano: Mga Pagbag-o sa Uso sa Rehiyon
+Source: lib/pages/sentiment_pulse_page.dart:290
+
+[269] Regional Sentiment
+Cebuano: Panan-aw sa Rehiyon
+Source: lib/pages/sentiment_pulse_page.dart:325
+
+[270] Dominant sentiment by region
+Cebuano: Nag-unang panan-aw sa matag rehiyon
+Source: lib/pages/sentiment_pulse_page.dart:334
+
+[271] Unable to load surveys.
+Cebuano: Dili makuha ang mga survey.
+Source: lib/pages/sentiment_pulse_page.dart:429
+
+[272] No active mobile surveys currently available.
+Cebuano: Wala pay aktibong survey nga mahimong tubagon sa app karon.
+Source: lib/pages/sentiment_pulse_page.dart:443
+
+[273] {survey.responses} / {survey.target} responses
+Cebuano: {survey.responses} / {survey.target} ka tubag
+Source: lib/pages/sentiment_pulse_page.dart:495
+
+[274] Please answer at least one question.
+Cebuano: Palihog tubaga ang labing menos usa ka pangutana.
+Source: lib/pages/sentiment_pulse_page.dart:543
+
+[275] Survey response submitted.
+Cebuano: Naisumite ang tubag sa survey.
+Source: lib/pages/sentiment_pulse_page.dart:578
+
+[276] Unable to submit survey response.
+Cebuano: Dili maisumite ang tubag sa survey.
+Source: lib/pages/sentiment_pulse_page.dart:585
+
+[277] Submitting...
+Cebuano: Nagpadala pa...
+Source: lib/pages/sentiment_pulse_page.dart:644
+
+[278] Submit
+Cebuano: Isumite
+Source: lib/pages/sentiment_pulse_page.dart:644
+
+[279] Type your answer
+Cebuano: Isulat ang imong tubag
+Source: lib/pages/sentiment_pulse_page.dart:775
+
+[280] This question is required.
+Cebuano: Kinahanglang tubagon kini nga pangutana.
+Source: lib/pages/sentiment_pulse_page.dart:782
+
+[281] {percent}% of the population
+Cebuano: {percent}% sa populasyon
+Source: lib/pages/sentiment_pulse_page.dart:1128
+
+[282] Browse published articles, videos, and infographics from trusted health sources.
+Cebuano: Tan-awa ang gipatik nga mga artikulo, bidyo, ug infographic gikan sa kasaligan nga mga tinubdan sa panglawas.
+Source: lib/pages/health_literacy_page.dart:49
+
+[283] Search Health Topics
+Cebuano: Pangitaa ang mga Hilisgutan sa Panglawas
+Source: lib/pages/health_literacy_page.dart:56
+
+[284] Filter the current tab by title, topic, source, disease, or keyword.
+Cebuano: I-filter ang kasamtangang tab pinaagi sa titulo, hilisgutan, tinubdan, sakit, o keyword.
+Source: lib/pages/health_literacy_page.dart:58
+
+[285] Content Categories
+Cebuano: Mga Kategoriya sa Sulod
+Source: lib/pages/health_literacy_page.dart:64
+
+[286] Switch between articles, playable videos, and downloadable infographics.
+Cebuano: Pagbalhin tali sa mga artikulo, bidyo nga mapatukar, ug mga infographic nga ma-download.
+Source: lib/pages/health_literacy_page.dart:66
+
+[287] Learning Content
+Cebuano: Mga Materyal sa Pagkat-on
+Source: lib/pages/health_literacy_page.dart:72
+
+[288] Tap a card action to read an article, open a PDF, view an image, or play a video.
+Cebuano: Pislita ang aksyon sa card aron mobasa og artikulo, moabli og PDF, motan-aw og hulagway, o mopatukar og bidyo.
+Source: lib/pages/health_literacy_page.dart:74
+
+[289] Unable to load content.
+Cebuano: Dili maipakita ang sulod.
+Source: lib/pages/health_literacy_page.dart:181
+
+[290] Retry
+Cebuano: Sulayi Pag-usab
+Source: lib/pages/health_literacy_page.dart:190
+
+[291] Untitled content
+Cebuano: Sulod nga Walay Titulo
+Source: lib/pages/health_literacy_page.dart:244
+
+[292] Evidence-based health information and fact-checking
+Cebuano: Impormasyon sa panglawas nga gibase sa ebidensya ug pagsusi sa kamatuoran
+Source: lib/pages/health_literacy_page.dart:342
+
+[293] Search articles, topics, claims...
+Cebuano: Pangitaa ang mga artikulo, hilisgutan, o pahayag...
+Source: lib/pages/health_literacy_page.dart:372
+
+[294] Articles
+Cebuano: Mga Artikulo
+Source: lib/pages/health_literacy_page.dart:442
+
+[295] Videos
+Cebuano: Mga Bidyo
+Source: lib/pages/health_literacy_page.dart:443
+
+[296] Infographics
+Cebuano: Mga Infographic
+Source: lib/pages/health_literacy_page.dart:444
+
+[297] No articles found.
+Cebuano: Walay nakitang artikulo.
+Source: lib/pages/health_literacy_page.dart:465
+
+[298] No videos found.
+Cebuano: Walay nakitang bidyo.
+Source: lib/pages/health_literacy_page.dart:469
+
+[299] No infographics found.
+Cebuano: Walay nakitang infographic.
+Source: lib/pages/health_literacy_page.dart:473
+
+[300] Video is unavailable.
+Cebuano: Dili magamit ang bidyo.
+Source: lib/pages/health_literacy_page.dart:523
+
+[301] Video
+Cebuano: Bidyo
+Source: lib/pages/health_literacy_page.dart:672
+
+[302] Watch video
+Cebuano: Tan-awa ang Bidyo
+Source: lib/pages/health_literacy_page.dart:790
+
+[303] Open PDF
+Cebuano: Ablihi ang PDF
+Source: lib/pages/health_literacy_page.dart:792
+
+[304] View
+Cebuano: Tan-awa
+Source: lib/pages/health_literacy_page.dart:795
+
+[305] Read more
+Cebuano: Basaha ang Dugang
+Source: lib/pages/health_literacy_page.dart:796
+
+[306] Unable to play video. URL: {widget.videoUrl} Error: {snapshot.error}
+Cebuano: Dili mapatukar ang bidyo. URL: {widget.videoUrl} Sayop: {snapshot.error}
+Source: lib/pages/health_literacy_page.dart:902
+
+[307] Verdict:
+Cebuano: Hukom:
+Source: lib/pages/health_literacy_page.dart:1078
+
+[308] Citizen
+Cebuano: Lungsoranon
+Source: lib/data/app_taxonomy.dart:12
+
+[309] Field Health Worker
+Cebuano: Trabahante sa Panglawas sa Komunidad
+Source: lib/data/app_taxonomy.dart:13
+
+[310] LGU/DOH User
+Cebuano: Tiggamit sa LGU/DOH
+Source: lib/data/app_taxonomy.dart:14
+
+[311] Guest Tester
+Cebuano: Bisitang Tigsulay
+Source: lib/data/app_taxonomy.dart:17
+
+[312] Guest
+Cebuano: Bisita
+Source: lib/data/app_taxonomy.dart:20
+
+[313] Registered
+Cebuano: Rehistrado
+Source: lib/data/app_taxonomy.dart:21
+
+[314] Chills
+Cebuano: Pangurog
+Source: lib/data/app_taxonomy.dart:27
+
+[315] Fatigue
+Cebuano: Kakapoy
+Source: lib/data/app_taxonomy.dart:28
+
+[316] Chest Pain
+Cebuano: Sakit sa Dughan
+Source: lib/data/app_taxonomy.dart:30
+
+[317] Runny nose
+Cebuano: Sip-on
+Source: lib/data/app_taxonomy.dart:32
+
+[318] Loss of taste or smell
+Cebuano: Pagkawala sa panlasa o pang-amoy
+Source: lib/data/app_taxonomy.dart:34
+
+[319] Body aches
+Cebuano: Panakit sa lawas
+Source: lib/data/app_taxonomy.dart:36
+
+[320] Cough for 2+ weeks
+Cebuano: Ubo sulod sa 2 o labaw pang semana
+Source: lib/data/app_taxonomy.dart:37
+
+[321] Night sweats
+Cebuano: Pagpaningot sa gabii
+Source: lib/data/app_taxonomy.dart:38
+
+[322] Weight loss
+Cebuano: Pagkunhod sa timbang
+Source: lib/data/app_taxonomy.dart:39
+
+[323] Possible COVID-like respiratory symptom pattern
+Cebuano: Posibleng sumbanan sa mga sintomas sa pagginhawa nga sama sa COVID
+Source: lib/data/app_taxonomy.dart:45
+
+[324] Possible pneumonia pattern
+Cebuano: Posibleng sumbanan sa pneumonia
+Source: lib/data/app_taxonomy.dart:47
+
+[325] Possible tuberculosis symptom pattern
+Cebuano: Posibleng sumbanan sa mga sintomas sa tuberculosis
+Source: lib/data/app_taxonomy.dart:50
+
+[326] Possible acute respiratory infection pattern
+Cebuano: Posibleng sumbanan sa kalit nga impeksyon sa pagginhawa
+Source: lib/data/app_taxonomy.dart:54
+
+[327] Respiratory symptoms reported
+Cebuano: Gi-report nga mga sintomas sa pagginhawa
+Source: lib/data/app_taxonomy.dart:58
+
+[328] Complete your address.
+Cebuano: Kompletoha ang imong adres.
+Source: lib/login_page.dart:166
+
+[329] Account Created.
+Cebuano: Nahimo na ang Account.
+Source: lib/login_page.dart:235
+
+[330] Logged in.
+Cebuano: Naka-sign in na.
+Source: lib/login_page.dart:235
+
+[331] Biometric login is unavailable. Please use password login.
+Cebuano: Dili magamit ang pag-sign in gamit ang biometrics. Palihog gamita ang password.
+Source: lib/login_page.dart:266
+
+[332] Reset Password
+Cebuano: I-reset ang Password
+Source: lib/login_page.dart:298
+
+[333] Email Address
+Cebuano: Adres sa Email
+Source: lib/login_page.dart:303
+
+[334] Pass reset link sent.
+Cebuano: Napadala na ang link sa pag-reset sa password.
+Source: lib/login_page.dart:316
+
+[335] Send Link
+Cebuano: Ipadala ang Link
+Source: lib/login_page.dart:319
+
+[336] Enter {label}
+Cebuano: Isulod ang {label}
+Source: lib/login_page.dart:329
+
+[337] Enter your email
+Cebuano: Isulod ang imong email
+Source: lib/login_page.dart:336
+
+[338] Enter a valid email
+Cebuano: Isulod ang balidong email
+Source: lib/login_page.dart:340
+
+[339] Enter your password
+Cebuano: Isulod ang imong password
+Source: lib/login_page.dart:348
+
+[340] Password must be at least 6 characters
+Cebuano: Kinahanglang adunay labing menos 6 ka karakter ang password
+Source: lib/login_page.dart:352
+
+[341] Passowrd do not match
+Cebuano: Dili magkapareho ang mga password
+Source: lib/login_page.dart:361
+
+[342] Create Account
+Cebuano: Paghimo og Account
+Source: lib/login_page.dart:413
+
+[343] User Login
+Cebuano: Pag-sign In sa Tiggamit
+Source: lib/login_page.dart:413
+
+[344] Register your basic HeathPH+ profile.
+Cebuano: Irehistro ang imong batakang profile sa HealthPH+.
+Source: lib/login_page.dart:423
+
+[345] Sign in using your email and password.
+Cebuano: Pag-sign in gamit ang imong email ug password.
+Source: lib/login_page.dart:424
+
+[346] Full Name
+Cebuano: Kompletong Ngalan
+Source: lib/login_page.dart:437
+
+[347] your full name
+Cebuano: imong kompletong ngalan
+Source: lib/login_page.dart:441
+
+[348] Email
+Cebuano: Email
+Source: lib/login_page.dart:451
+
+[349] Password
+Cebuano: Password
+Source: lib/login_page.dart:465
+
+[350] Confirm Password
+Cebuano: Kumpirmaha ang Password
+Source: lib/login_page.dart:490
+
+[351] Role
+Cebuano: Papel
+Source: lib/login_page.dart:499
+
+[352] Preferred Language
+Cebuano: Gipalabing Pinulongan
+Source: lib/login_page.dart:521
+
+[353] Select your preferred language
+Cebuano: Pilia ang imong gipalabing pinulongan
+Source: lib/login_page.dart:532
+
+[354] Forgot password?
+Cebuano: Nakalimot sa password?
+Source: lib/login_page.dart:639
+
+[355] Login
+Cebuano: Pag-sign In
+Source: lib/login_page.dart:655
+
+[356] Login with Biometrics
+Cebuano: Pag-sign In Gamit ang Biometrics
+Source: lib/login_page.dart:676
+
+[357] Continue as Guest
+Cebuano: Padayon isip Bisita
+Source: lib/login_page.dart:694
+
+[358] Already have an account? Login
+Cebuano: Aduna ka nay account? Pag-sign In
+Source: lib/login_page.dart:710
+
+[359] New User? Create an account
+Cebuano: Bag-ong Tiggamit? Paghimo og account
+Source: lib/login_page.dart:711
+
+[360] Account ID is missing. Please login again.
+Cebuano: Wala ang ID sa account. Palihog pag-sign in pag-usab.
+Source: lib/login_page.dart:759
+
+[361] Enter your complete six-digit PIN.
+Cebuano: Isulod ang kompleto nga unom ka digit sa imong PIN.
+Source: lib/login_page.dart:766
+
+[362] Incorrect PIN. Please try again.
+Cebuano: Sayop ang PIN. Palihog sulayi pag-usab.
+Source: lib/login_page.dart:791
+
+[363] Enter PIN
+Cebuano: Isulod ang PIN
+Source: lib/login_page.dart:806
+
+[364] Enter the six-digit PIN for {widget.profile.email}.
+Cebuano: Isulod ang PIN nga unom ka digit para sa {widget.profile.email}.
+Source: lib/login_page.dart:812
+
+[365] Verify
+Cebuano: Pamatud-i
+Source: lib/login_page.dart:852
+
+[366] Untitled Survey
+Cebuano: Survey nga Walay Titulo
+Source: lib/models/mobile_survey.dart:23
+
+[367] Question
+Cebuano: Pangutana
+Source: lib/models/mobile_survey.dart:62
+
+[368] HealthAlert
+Cebuano: Pasidaan sa Panglawas
+Source: lib/models/mobile_alert.dart:57
+
+[369] {windowMinutes ~/ 60}h window
+Cebuano: Sulod sa {windowMinutes ~/ 60} ka oras
+Source: lib/models/mobile_alert.dart:73
+
+[370] {windowMinutes}m window
+Cebuano: Sulod sa {windowMinutes} ka minuto
+Source: lib/models/mobile_alert.dart:74
+
+[371] {reportCount} reports
+Cebuano: {reportCount} ka report
+Source: lib/models/mobile_alert.dart:77
+
+[372] Live Health Summary
+Cebuano: Kasamtangang Katingbanan sa Panglawas
+Source: lib/main_page.dart:82
+
+[373] Swipe through current outbreaks, health alerts, registered users, and available mobile surveys.
+Cebuano: I-swipe aron makita ang pagkaylap sa sakit, mga pasidaan, rehistradong tiggamit, ug mga survey nga mahimong tubagon.
+Source: lib/main_page.dart:84
+
+[374] Your Contributions
+Cebuano: Imong mga Kontribusyon
+Source: lib/main_page.dart:90
+
+[375] Submit a self-report, review your previous reports, or answer an available mobile survey.
+Cebuano: Isumite ang kaugalingong report, susiha ang miaging mga report, o tubaga ang usa ka survey.
+Source: lib/main_page.dart:92
+
+[376] Quick Actions
+Cebuano: Mga Daling Aksyon
+Source: lib/main_page.dart:98
+
+[377] Open Disease Watch for outbreaks or Health Literacy for trusted learning resources.
+Cebuano: Ablihi ang Pagsubay sa Sakit aron makita ang pagkaylap niini o ang Kahibalo sa Panglawas alang sa kasaligan nga mga materyal sa pagkat-on.
+Source: lib/main_page.dart:100
+
+[378] Recent Alerts
+Cebuano: Bag-ong mga Pasidaan
+Source: lib/main_page.dart:106
+
+[379] Review the latest respiratory health alerts and outbreaks
+Cebuano: Susiha ang pinakabag-ong mga pasidaan ug pagkaylap sa mga sakit sa pagginhawa
+Source: lib/main_page.dart:108
+
+[380] Publication time unavailable
+Cebuano: Walay makuhang oras sa pagpatik
+Source: lib/main_page.dart:156
+
+[381] Published {published.year}-{published.month.toString().padLeft(2, '0')}-{published.day.toString().padLeft(2, '0')} {published.hour.toString().padLeft(2, '0')}:{published.minute.toString().padLeft(2, '0')}
+Cebuano: Gipatik {published.year}-{published.month.toString().padLeft(2, '0')}-{published.day.toString().padLeft(2, '0')} {published.hour.toString().padLeft(2, '0')}:{published.minute.toString().padLeft(2, '0')}
+Source: lib/main_page.dart:157
+
+[382] No additional alert details were provided.
+Cebuano: Walay dugang nga detalye nga gihatag alang sa pasidaan.
+Source: lib/main_page.dart:182
+
+[383] Unable to open this alert right now.
+Cebuano: Dili maablihan kini nga pasidaan karon.
+Source: lib/main_page.dart:210
+
+[384] Quick Actions ⓘ
+Cebuano: Mga Daling Aksyon ⓘ
+Source: lib/main_page.dart:299
+
+[385] Track outbreaks and alerts
+Cebuano: Subaybayi ang pagkaylap sa sakit ug mga pasidaan
+Source: lib/main_page.dart:311
+
+[386] Public attitude insights
+Cebuano: Mga Panglantaw sa Publiko
+Source: lib/main_page.dart:325
+
+[387] Recent Alerts ⓘ
+Cebuano: Bag-ong mga Pasidaan ⓘ
+Source: lib/main_page.dart:361
+
+[388] Unable to load alerts.
+Cebuano: Dili makuha ang mga pasidaan.
+Source: lib/main_page.dart:377
+
+[389] No recent alerts right now.
+Cebuano: Wala pay bag-ong mga pasidaan karon.
+Source: lib/main_page.dart:386
+
+[390] Health Tips 📖
+Cebuano: Mga Tambag sa Panglawas 📖
+Source: lib/main_page.dart:425
+
+[391] Stay Protected
+Cebuano: Panalipdi ang Imong Kaugalingon
+Source: lib/main_page.dart:446
+
+[392] Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated
+Cebuano: Hinumdomi ang kanunay nga paghugas sa kamot, pagsul-ob og mask sa daghang tawo, ug pagpasulod og preskong hangin sa imong pinuy-anan.
+Source: lib/main_page.dart:457
+
+[393] More Health Tips
+Cebuano: Dugang nga mga Tambag sa Panglawas
+Source: lib/main_page.dart:480
+
+[394] Your Health Contribution
+Cebuano: Ang Imong Kontribusyon sa Panglawas
+Source: lib/main_page.dart:511
+
+[395] Report symptoms, review contribution, or answer surveys
+Cebuano: Ireport ang mga sintomas, susiha ang imong kontribusyon, o tubaga ang mga survey
+Source: lib/main_page.dart:520
+
+[396] Data Collection and Self-Report
+Cebuano: Pagkolekta og Datos ug Kaugalingong Report
+Source: lib/main_page.dart:525
+
+[397] Submit symptoms and health information
+Cebuano: Isumite ang mga sintomas ug impormasyon sa panglawas
+Source: lib/main_page.dart:526
+
+[398] Review your previous contributions
+Cebuano: Susiha ang imong nangaging mga kontribusyon
+Source: lib/main_page.dart:536
+
+[399] Sentiment Pulse and Mobile Survey
+Cebuano: Panan-aw sa Publiko ug Survey sa App
+Source: lib/main_page.dart:545
+
+[400] View surveys available for mobile users
+Cebuano: Tan-awa ang mga survey nga mahimong tubagon sa app
+Source: lib/main_page.dart:546
+
+[401] Regional disease signals
+Cebuano: Mga Timailhan sa Sakit sa mga Rehiyon
+Source: lib/main_page.dart:596
+
+[402] Health Alerts
+Cebuano: Mga Pasidaan sa Panglawas
+Source: lib/main_page.dart:610
+
+[403] Recent inbox alerts
+Cebuano: Bag-ong Nadawat nga mga Pasidaan
+Source: lib/main_page.dart:611
+
+[404] Active Users
+Cebuano: Mga Aktibong Tiggamit
+Source: lib/main_page.dart:617
+
+[405] Registered mobile users
+Cebuano: Mga Rehistradong Tiggamit sa App
+Source: lib/main_page.dart:618
+
+[406] Available public surveys
+Cebuano: Mga Pampublikong Survey nga Mahimong Tubagon
+Source: lib/main_page.dart:625
+
+[407] Severity level
+Cebuano: Ang-ang sa kagrabe
+Source: lib/main_page.dart:1199

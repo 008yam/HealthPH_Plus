@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_translations.dart';
 import '../services/location_data_services.dart';
 
 class LocationAutocompleteField extends StatefulWidget {
@@ -95,7 +96,7 @@ class _LocationAutocompleteFieldState extends State<LocationAutocompleteField> {
           focusNode: focusNode,
           enabled: widget.enabled,
           decoration: InputDecoration(
-            labelText: widget.label,
+            labelText: context.tr(widget.label),
             prefixIcon: Icon(widget.icon),
           ),
         );

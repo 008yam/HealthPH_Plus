@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import 'intro_tutorial_page.dart';
 import '../theme/app_theme.dart';
@@ -123,7 +124,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                     ),
                   ),
                   Text(
-                    "Choose Language",
+                    context.tr("Choose Language"),
                     style: TextStyle(
                       color: visualMode.onBackground,
                       fontSize: isLandscapePhone ? 21 : 24,
@@ -132,7 +133,7 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                   ),
                   SizedBox(height: isLandscapePhone ? 3 : 6),
                   Text(
-                    "Select your preferred language for HealthPH+.",
+                    context.tr("Select your preferred language for HealthPH+."),
                     style: TextStyle(
                       color: visualMode.onBackgroundMuted,
                       fontSize: isLandscapePhone ? 12 : 14,
@@ -205,8 +206,10 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                                       ),
                                       if (isSelected) ...[
                                         const SizedBox(height: 4),
-                                        const Text(
-                                          "This is your selected language",
+                                        Text(
+                                          context.tr(
+                                            "This is your selected language",
+                                          ),
                                           style: TextStyle(
                                             color: AppTheme.primary,
                                             fontSize: 12,
@@ -237,8 +240,8 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                     height: Responsive.buttonHeight(context),
                     child: ElevatedButton(
                       onPressed: _continueToApp,
-                      child: const Text(
-                        "Continue",
+                      child: Text(
+                        context.tr("Continue"),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

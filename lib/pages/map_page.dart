@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -111,10 +112,11 @@ class _MapPageState extends State<MapPage> {
   }
 
   String get filterSummary {
-    if (selectedFilters.isEmpty) return "All diseases & symptoms";
-
-    final filterLabel = selectedFilters.length == 1 ? "filter" : "filters";
-    return "${selectedFilters.length} $filterLabel selected";
+    if (selectedFilters.isEmpty) return context.tr("All diseases & symptoms");
+    return context.tr(
+      '{count} selected',
+      parameters: {'count': selectedFilters.length},
+    );
   }
 
   void resetMapView() {
@@ -173,9 +175,9 @@ class _MapPageState extends State<MapPage> {
                       const SizedBox(height: 14),
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              "Select Diseases / Symptoms",
+                              context.tr("Select Diseases / Symptoms"),
                               style: TextStyle(
                                 color: _navy,
                                 fontSize: 18,
@@ -184,7 +186,7 @@ class _MapPageState extends State<MapPage> {
                             ),
                           ),
                           IconButton(
-                            tooltip: "Close",
+                            tooltip: context.tr("Close"),
                             onPressed: () => Navigator.pop(sheetContext),
                             icon: const Icon(Icons.close, color: _navy),
                           ),
@@ -192,8 +194,15 @@ class _MapPageState extends State<MapPage> {
                       ),
                       Text(
                         draftFilters.isEmpty
-                            ? "No filters selected. All reports will be shown."
-                            : "${draftFilters.length} selected",
+                            ? context.tr(
+                                "No filters selected. All reports will be shown.",
+                              )
+                            : context.tr(
+                                "{draftFilters.length} selected",
+                                parameters: {
+                                  "draftFilters.length": draftFilters.length,
+                                },
+                              ),
                         style: const TextStyle(
                           color: _deepBlue,
                           fontSize: 12,
@@ -235,7 +244,7 @@ class _MapPageState extends State<MapPage> {
                                   vertical: 2,
                                 ),
                                 title: Text(
-                                  option,
+                                  context.tr(option),
                                   style: const TextStyle(
                                     color: Color(0xFF1D2450),
                                     fontSize: 15,
@@ -265,8 +274,8 @@ class _MapPageState extends State<MapPage> {
                               onPressed: () {
                                 setSheetState(draftFilters.clear);
                               },
-                              child: const Text(
-                                "Clear All",
+                              child: Text(
+                                context.tr("Clear All"),
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -292,8 +301,8 @@ class _MapPageState extends State<MapPage> {
                                 });
                                 Navigator.pop(sheetContext);
                               },
-                              child: const Text(
-                                "Apply",
+                              child: Text(
+                                context.tr("Apply"),
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -523,7 +532,7 @@ class _MapPageState extends State<MapPage> {
                   ),
                   SizedBox(height: isLandscapePhone ? 6 : 10),
                   Text(
-                    "Disease Map",
+                    context.tr("Disease Map"),
                     style: TextStyle(
                       color: _navy,
                       fontSize: isLandscapePhone ? 16 : 18,
@@ -531,7 +540,7 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
                   Text(
-                    "Respiratory outbreak monitoring",
+                    context.tr("Respiratory outbreak monitoring"),
                     style: TextStyle(
                       color: _deepBlue,
                       fontSize: isLandscapePhone ? 11 : 12,
@@ -621,8 +630,8 @@ class _MapHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  "Outbreak Map",
+                Text(
+                  context.tr("Outbreak Map"),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -632,7 +641,10 @@ class _MapHeader extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  "$reportCount active reports",
+                  context.tr(
+                    "{reportCount} active reports",
+                    parameters: {"reportCount": reportCount},
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -692,8 +704,8 @@ class _FilterButton extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      "Select Diseases / Symptoms",
+                    Text(
+                      context.tr("Select Diseases / Symptoms"),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -777,7 +789,7 @@ class _DrawerNavTile extends StatelessWidget {
         color: isSelected ? _MapPageState._deepBlue : Colors.black54,
       ),
       title: Text(
-        label,
+        context.tr(label),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -857,7 +869,10 @@ class OutbreakDetailsSheet extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            "${outbreak["reports"]} reports",
+            context.tr(
+              "{outbreak[\"reports\"]} reports",
+              parameters: {"outbreak[\"reports\"]": outbreak["reports"]},
+            ),
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.redAccent,

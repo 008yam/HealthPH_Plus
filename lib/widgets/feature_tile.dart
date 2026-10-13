@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 
 class FeatureTile extends StatelessWidget {
@@ -16,8 +17,8 @@ class FeatureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(description),
+      title: Text(context.tr(title)),
+      subtitle: Text(context.tr(description)),
     );
   }
 }

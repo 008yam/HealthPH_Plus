@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
@@ -65,7 +66,7 @@ class SentimentPulsePage extends StatelessWidget {
                                 );
                               }
                             },
-                            child: const Text("Back"),
+                            child: Text(context.tr("Back")),
                           ),
                           SizedBox(
                             height: Responsive.verticalGap(
@@ -81,7 +82,7 @@ class SentimentPulsePage extends StatelessWidget {
                           ),
 
                           Text(
-                            "Sentiment Pulse",
+                            context.tr("Sentiment Pulse"),
                             style: TextStyle(
                               fontSize: Responsive.isLandscapePhone(context)
                                   ? 20
@@ -91,8 +92,10 @@ class SentimentPulsePage extends StatelessWidget {
                             ),
                           ),
 
-                          const Text(
-                            "Evidence-based health infomration and fact-checking",
+                          Text(
+                            context.tr(
+                              "Evidence-based health infomration and fact-checking",
+                            ),
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.indigo,
@@ -121,15 +124,15 @@ class SentimentPulsePage extends StatelessWidget {
                               border: Border.all(color: Colors.black),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const TabBar(
+                            child: TabBar(
                               labelColor: Colors.black,
                               unselectedLabelColor: Colors.grey,
                               indicatorColor: Colors.indigo,
                               tabs: [
-                                Tab(text: "Overview"),
-                                Tab(text: "Trends"),
-                                Tab(text: "Regional"),
-                                Tab(text: "Survey"),
+                                Tab(text: context.tr("Overview")),
+                                Tab(text: context.tr("Trends")),
+                                Tab(text: context.tr("Regional")),
+                                Tab(text: context.tr("Survey")),
                               ],
                             ),
                           ),
@@ -167,9 +170,9 @@ class OverviewTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: EdgeInsets.zero,
-      children: const [
+      children: [
         Text(
-          "Overall Sentiment",
+          context.tr("Overall Sentiment"),
           style: TextStyle(
             color: AppTheme.text,
             fontSize: 18,
@@ -234,9 +237,9 @@ class TrendsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: EdgeInsets.zero,
-      children: const [
+      children: [
         Text(
-          "Sentiment Trends",
+          context.tr("Sentiment Trends"),
           style: TextStyle(
             color: AppTheme.text,
             fontSize: 18,
@@ -245,7 +248,7 @@ class TrendsTab extends StatelessWidget {
         ),
 
         Text(
-          "Sentiment changes over time",
+          context.tr("Sentiment changes over time"),
           style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
         ),
 
@@ -256,7 +259,7 @@ class TrendsTab extends StatelessWidget {
         SizedBox(height: 16),
 
         Text(
-          "Trends Insights",
+          context.tr("Trends Insights"),
           style: TextStyle(
             color: AppTheme.text,
             fontSize: 16,
@@ -287,7 +290,7 @@ class TrendsTab extends StatelessWidget {
         SizedBox(height: 16),
 
         Text(
-          "Region Trend Changes",
+          context.tr("Region Trend Changes"),
           style: TextStyle(
             color: AppTheme.text,
             fontSize: 16,
@@ -320,9 +323,9 @@ class RegionalTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: EdgeInsets.zero,
-      children: const [
+      children: [
         Text(
-          "Regional Sentiment",
+          context.tr("Regional Sentiment"),
           style: TextStyle(
             color: AppTheme.text,
             fontSize: 18,
@@ -331,7 +334,7 @@ class RegionalTab extends StatelessWidget {
         ),
 
         Text(
-          "Dominant sentiment by region",
+          context.tr("Dominant sentiment by region"),
           style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
         ),
 
@@ -426,7 +429,7 @@ class _SurveyTabState extends State<SurveyTab> {
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              "Unable to load surveys.",
+              context.tr("Unable to load surveys."),
               style: TextStyle(
                 color: AppTheme.text,
                 fontWeight: FontWeight.bold,
@@ -438,9 +441,9 @@ class _SurveyTabState extends State<SurveyTab> {
         final surveys = snapshot.data ?? [];
 
         if (surveys.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
-              "No active mobile surveys currently available.",
+              context.tr("No active mobile surveys currently available."),
               textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
@@ -492,7 +495,13 @@ class _SurveyTabState extends State<SurveyTab> {
                     LinearProgressIndicator(value: progress),
                     const SizedBox(height: 6),
                     Text(
-                      "${survey.responses} / ${survey.target} responses",
+                      context.tr(
+                        "{survey.responses} / {survey.target} responses",
+                        parameters: {
+                          "survey.responses": survey.responses,
+                          "survey.target": survey.target,
+                        },
+                      ),
                       style: const TextStyle(
                         color: AppTheme.mutedText,
                         fontSize: 11,
@@ -540,7 +549,9 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
 
     if (cleanedAnswers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please answer at least one question.")),
+        SnackBar(
+          content: Text(context.tr("Please answer at least one question.")),
+        ),
       );
       return;
     }
@@ -575,14 +586,16 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
       widget.onSubmitted();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Survey response submitted.")),
+        SnackBar(content: Text(context.tr("Survey response submitted."))),
       );
     } catch (_) {
       if (!mounted) return;
       setState(() => isSubmitting = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unable to submit survey response.")),
+        SnackBar(
+          content: Text(context.tr("Unable to submit survey response.")),
+        ),
       );
     }
   }
@@ -641,7 +654,11 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.send),
-                  label: Text(isSubmitting ? "Submitting..." : "Submit"),
+                  label: Text(
+                    isSubmitting
+                        ? context.tr("Submitting...")
+                        : context.tr("Submit"),
+                  ),
                 ),
               ),
             ],
@@ -691,13 +708,13 @@ class _QuestionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _buildQuestionInput(answer),
+          _buildQuestionInput(context, answer),
         ],
       ),
     );
   }
 
-  Widget _buildQuestionInput(dynamic answer) {
+  Widget _buildQuestionInput(BuildContext context, dynamic answer) {
     switch (question.type) {
       case "multipleChoice":
         return Column(
@@ -771,15 +788,15 @@ class _QuestionCard extends StatelessWidget {
           minLines: 2,
           maxLines: 4,
           initialValue: answer?.toString(),
-          decoration: const InputDecoration(
-            hintText: "Type your answer",
+          decoration: InputDecoration(
+            hintText: context.tr("Type your answer"),
             hintStyle: TextStyle(color: AppTheme.mutedText),
             border: OutlineInputBorder(),
           ),
           validator: (value) {
             if (question.isRequired &&
                 (value == null || value.trim().isEmpty)) {
-              return "This question is required.";
+              return context.tr("This question is required.");
             }
             return null;
           },
@@ -831,7 +848,7 @@ class SentimentBox extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    label,
+                    context.tr(label),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.indigo,
@@ -877,10 +894,7 @@ class BarGraphCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  "$value%",
-                  style: const TextStyle(color: AppTheme.text),
-                ),
+                Text("$value%", style: const TextStyle(color: AppTheme.text)),
                 Container(
                   height: value * 3,
                   width: 34,
@@ -891,11 +905,8 @@ class BarGraphCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  item["label"].toString(),
-                  style: const TextStyle(
-                    color: AppTheme.text,
-                    fontSize: 10,
-                  ),
+                  context.tr(item["label"].toString()),
+                  style: const TextStyle(color: AppTheme.text, fontSize: 10),
                 ),
               ],
             ),
@@ -920,16 +931,21 @@ class TrendLineCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _trendRow("Concerned", "45% → 52%", AppTheme.concerned),
-          _trendRow("Neutral", "35% → 44%", AppTheme.neutral),
-          _trendRow("Proactive", "26% → 33%", AppTheme.proactive),
-          _trendRow("Misinformed", "16% → 24%", AppTheme.misinformed),
+          _trendRow(context, "Concerned", "45% → 52%", AppTheme.concerned),
+          _trendRow(context, "Neutral", "35% → 44%", AppTheme.neutral),
+          _trendRow(context, "Proactive", "26% → 33%", AppTheme.proactive),
+          _trendRow(context, "Misinformed", "16% → 24%", AppTheme.misinformed),
         ],
       ),
     );
   }
 
-  static Widget _trendRow(String label, String value, Color color) {
+  static Widget _trendRow(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -938,7 +954,7 @@ class TrendLineCard extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              label,
+              context.tr(label),
               style: const TextStyle(color: AppTheme.text),
             ),
           ),
@@ -976,7 +992,7 @@ class InsightCard extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              title,
+              context.tr(title),
               style: const TextStyle(
                 color: AppTheme.text,
                 fontWeight: FontWeight.bold,
@@ -991,11 +1007,8 @@ class InsightCard extends StatelessWidget {
               ),
             ),
             Text(
-              description,
-              style: const TextStyle(
-                color: AppTheme.text,
-                fontSize: 10,
-              ),
+              context.tr(description),
+              style: const TextStyle(color: AppTheme.text, fontSize: 10),
             ),
           ],
         ),
@@ -1024,7 +1037,7 @@ class RegionMiniCard extends StatelessWidget {
         dense: true,
         title: Text(region, style: const TextStyle(color: AppTheme.text)),
         subtitle: Text(
-          sentiment,
+          context.tr(sentiment),
           style: const TextStyle(color: AppTheme.mutedText),
         ),
         trailing: Text(
@@ -1114,7 +1127,7 @@ class RegionalSentimentCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    sentiment,
+                    context.tr(sentiment),
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -1125,7 +1138,10 @@ class RegionalSentimentCard extends StatelessWidget {
                 const Spacer(),
 
                 Text(
-                  "$percent% of the population",
+                  context.tr(
+                    "{percent}% of the population",
+                    parameters: {"percent": percent},
+                  ),
                   style: const TextStyle(
                     fontSize: 11,
                     color: Colors.indigo,

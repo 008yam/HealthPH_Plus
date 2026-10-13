@@ -251,7 +251,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
             },
           ),
         );
-      }
+      },
     );
   }
 
@@ -339,8 +339,10 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                               ),
                             ),
 
-                            const Text(
-                              "Evidence-based health information and fact-checking",
+                            Text(
+                              context.tr(
+                                "Evidence-based health information and fact-checking",
+                              ),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF243B8F),
@@ -369,8 +371,9 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                                   });
                                 },
                                 decoration: InputDecoration(
-                                  hintText:
-                                      context.tr("Search articles, topics, claims..."),
+                                  hintText: context.tr(
+                                    "Search articles, topics, claims...",
+                                  ),
                                   hintStyle: const TextStyle(
                                     color: AppTheme.mutedText,
                                     fontSize: 11,
@@ -463,15 +466,15 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                           "article",
                           "articles",
                           "fact_check",
-                        ], context.tr("No articles found.")),
+                        ], "No articles found."),
                         _buildContentList([
                           "video",
                           "videos",
-                        ], context.tr("No videos found.")),
+                        ], "No videos found."),
                         _buildContentList([
                           "infographic",
                           "infographics",
-                        ], context.tr("No infographics found.")),
+                        ], "No infographics found."),
                       ],
                     ),
                   ),
@@ -519,9 +522,9 @@ class HealthArticleCard extends StatelessWidget {
   Future<void> _openContent(BuildContext context) async {
     if (_isVideo) {
       if (mediaUrl.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.tr("Video is unavailable."))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr("Video is unavailable."))),
+        );
         return;
       }
 
@@ -602,87 +605,78 @@ class HealthArticleCard extends StatelessWidget {
     }
   }
 
-  Widget _buildMediaPreview() {
-  Widget buildFallback() {
-    return Image.asset(
-      "assets/images/lunghealtharticle.png",
-      height: 230,
-      width: double.infinity,
-      fit: BoxFit.cover,
-    );
-  }
-
-  Widget buildThumbnail() {
-    if (imageUrl.isEmpty) {
-      return buildFallback();
+  Widget _buildMediaPreview(BuildContext context) {
+    Widget buildFallback() {
+      return Image.asset(
+        "assets/images/lunghealtharticle.png",
+        height: 230,
+        width: double.infinity,
+        fit: BoxFit.cover,
+      );
     }
 
-    return Image.network(
-      imageUrl,
+    Widget buildThumbnail() {
+      if (imageUrl.isEmpty) {
+        return buildFallback();
+      }
+
+      return Image.network(
+        imageUrl,
+        height: 230,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+
+          return const SizedBox(
+            height: 230,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        },
+        errorBuilder: (_, _, _) => buildFallback(),
+      );
+    }
+
+    final thumbnail = buildThumbnail();
+
+    if (!_isVideo) {
+      return thumbnail;
+    }
+
+    return SizedBox(
       height: 230,
       width: double.infinity,
-      fit: BoxFit.cover,
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
-
-        return const SizedBox(
-          height: 230,
-          child: Center(child: CircularProgressIndicator()),
-        );
-      },
-      errorBuilder: (_, _, _) => buildFallback(),
-    );
-  }
-
-  final thumbnail = buildThumbnail();
-
-  if (!_isVideo) {
-    return thumbnail;
-  }
-
-  return SizedBox(
-    height: 230,
-    width: double.infinity,
-    child: Stack(
-      fit: StackFit.expand,
-      children: [
-        thumbnail,
-        Container(
-          color: Colors.black.withValues(alpha: 0.22),
-        ),
-        const Center(
-          child: Icon(
-            Icons.play_circle_fill,
-            color: Colors.white,
-            size: 62,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          thumbnail,
+          Container(color: Colors.black.withValues(alpha: 0.22)),
+          const Center(
+            child: Icon(Icons.play_circle_fill, color: Colors.white, size: 62),
           ),
-        ),
-        Positioned(
-          left: 12,
-          bottom: 12,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 5,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.70),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              "Video",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
+          Positioned(
+            left: 12,
+            bottom: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.70),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                context.tr("Video"),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -698,7 +692,7 @@ class HealthArticleCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildMediaPreview(),
+            _buildMediaPreview(context),
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
               child: Column(
@@ -788,10 +782,14 @@ class HealthArticleCard extends StatelessWidget {
                         onPressed: () => _openContent(context),
                         child: Text(
                           context.tr(
-                            _isVideo ? "Watch video"
-                                : _isPdf ? "Open PDF"
-                                : contentType == "infographic" || contentType == "infographics"
-                                    ? "View" : "Read more",
+                            _isVideo
+                                ? "Watch video"
+                                : _isPdf
+                                ? "Open PDF"
+                                : contentType == "infographic" ||
+                                      contentType == "infographics"
+                                ? "View"
+                                : "Read more",
                           ),
                           style: const TextStyle(fontSize: 11),
                         ),
@@ -898,7 +896,13 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
                       padding: const EdgeInsets.all(14),
                       child: Center(
                         child: Text(
-                          "Unable to play video.\n\nURL:\n${widget.videoUrl}\n\nError:\n${snapshot.error}",
+                          context.tr(
+                            "Unable to play video. URL: {widget.videoUrl} Error: {snapshot.error}",
+                            parameters: {
+                              "widget.videoUrl": widget.videoUrl,
+                              "snapshot.error": snapshot.error.toString(),
+                            },
+                          ),
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 11),
                         ),
@@ -1073,8 +1077,8 @@ class FactCheckCard extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                const Text(
-                  "Verdict:",
+                Text(
+                  context.tr("Verdict:"),
                   style: TextStyle(
                     color: AppTheme.text,
                     fontWeight: FontWeight.bold,

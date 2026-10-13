@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
@@ -259,7 +260,7 @@ class _CoachMarkCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  step.title,
+                  context.tr(step.title),
                   style: const TextStyle(
                     color: AppTheme.text,
                     fontSize: 17,
@@ -279,7 +280,7 @@ class _CoachMarkCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            step.description,
+            context.tr(step.description),
             style: const TextStyle(
               color: AppTheme.mutedText,
               fontSize: 13,
@@ -289,7 +290,7 @@ class _CoachMarkCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              TextButton(onPressed: onSkip, child: const Text("Skip")),
+              TextButton(onPressed: onSkip, child: Text(context.tr("Skip"))),
               const Spacer(),
               ElevatedButton(
                 onPressed: onNext,
@@ -297,7 +298,11 @@ class _CoachMarkCard extends StatelessWidget {
                   backgroundColor: step.color,
                   foregroundColor: Colors.white,
                 ),
-                child: Text(currentStep == totalSteps ? "Done" : "Next"),
+                child: Text(
+                  currentStep == totalSteps
+                      ? context.tr("Done")
+                      : context.tr("Next"),
+                ),
               ),
             ],
           ),

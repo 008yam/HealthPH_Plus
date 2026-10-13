@@ -1,667 +1,340 @@
 import 'package:flutter/material.dart';
+import '../localization/app_translations.dart';
+import '../models/mobile_alert.dart';
 import '../services/api_config.dart';
-import '../services/healthph_api_services.dart';
-import '../theme/app_theme.dart';
-import 'package:healthphplus/main_page.dart';
+import '../services/mobile_alert_service.dart';
+import '../services/profile_store.dart';
 import '../theme/responsive.dart';
-import '../widgets/coach_mark.dart';
 
 class DiseaseWatchPage extends StatefulWidget {
-  const DiseaseWatchPage({super.key});
-
+  final MobileAlertService? alertService;
+  const DiseaseWatchPage({super.key, this.alertService});
   @override
   State<DiseaseWatchPage> createState() => _DiseaseWatchPageState();
 }
 
 class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
-  final TextEditingController _searchController = TextEditingController();
-  final diseaseHeaderKey = GlobalKey();
-  final diseaseFiltersKey = GlobalKey();
-  final diseaseResultsKey = GlobalKey();
-
-  String searchQuery = "";
-  String selectedDisease = "All";
-
-  late Future<Map<String, dynamic>> diseaseFuture;
-
-  final List<Map<String, dynamic>> outbreaks = [
-    {
-      "title": "Respiratory Infection Cluster",
-      "location": "Manila City - Respiratory",
-      "percent": 21,
-      "reports": 42,
-      "category": "Upper Respiratory Disease",
-    },
-    {
-      "title": "Pneumonia",
-      "location": "Laguna Province - Respiratory",
-      "percent": 14,
-      "reports": 28,
-      "category": "Pneumonia",
-    },
-    {
-      "title": "Tuberculosis",
-      "location": "Bulacan Province - Respiratory",
-      "percent": 7.5,
-      "reports": 15,
-      "category": "Tuberculosis",
-    },
-  ];
-
-  List<Map<String, dynamic>> get filteredOutbreaks {
-    return outbreaks.where((outbreak) {
-      final title = outbreak["title"].toString().toLowerCase();
-      final location = outbreak["location"].toString().toLowerCase();
-      final category = outbreak["category"].toString().toLowerCase();
-
-      final matchesSearch =
-          title.contains(searchQuery) ||
-          location.contains(searchQuery) ||
-          category.contains(searchQuery);
-
-      final matchesCategory =
-          selectedDisease == "All" ||
-          outbreak["category"].toString() == selectedDisease;
-
-      return matchesSearch && matchesCategory;
-    }).toList();
-  }
+  late final MobileAlertService _service;
+  final _search = TextEditingController();
+  final List<MobileAlert> _alerts = [];
+  String? _cursor;
+  String? _error;
+  bool _loading = false;
+  bool _opening = false;
+  int _generation = 0;
 
   @override
   void initState() {
     super.initState();
+    _service =
+        widget.alertService ?? MobileAlertService(baseUrl: ApiConfig.baseUrl);
+    ProfileStore.instance.addListener(_profileChanged);
+    _load();
+  }
 
-    diseaseFuture = HealthPhApiService(
-      baseUrl: ApiConfig.baseUrl,
-    ).fetchDiseasePoints();
+  void _profileChanged() => _load();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 650), () {
-        if (!mounted) return;
+  Future<void> _load({bool more = false}) async {
+    if (more && (_loading || _cursor == null)) return;
+    final generation = ++_generation;
+    setState(() {
+      _loading = true;
+      _error = null;
+      if (!more) {
+        _alerts.clear();
+        _cursor = null;
+      }
+    });
+    try {
+      final page = await _service.fetchAlerts(
+        accessToken: ProfileStore.instance.profile?.accessToken,
+        cursor: more ? _cursor : null,
+      );
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        final ids = _alerts.map((a) => a.id).toSet();
+        _alerts.addAll(page.items.where((a) => ids.add(a.id)));
+        _cursor = page.nextCursor?.isNotEmpty == true ? page.nextCursor : null;
+      });
+    } catch (error) {
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _error = error is MobileAlertAuthenticationException
+            ? error.message
+            : 'Unable to load alerts.';
+        if (error is MobileAlertAuthenticationException) {
+          _alerts.clear();
+          _cursor = null;
+        }
+      });
+    } finally {
+      if (mounted && generation == _generation) {
+        setState(() => _loading = false);
+      }
+    }
+  }
 
-        CoachMark.showOnce(
-          context,
-          discoveryKey: "disease_watch_v1",
-          steps: [
-            CoachMarkStep(
-              targetKey: diseaseHeaderKey,
-              title: "Disease Watch",
-              description:
-                  "Monitor reported respiratory disease activity across Philippine regions.",
-              icon: Icons.coronavirus_outlined,
-              color: AppTheme.highRisk,
+  Future<void> _open(MobileAlert alert) async {
+    if (_opening) return;
+    setState(() => _opening = true);
+    final token = ProfileStore.instance.profile?.accessToken;
+    try {
+      final detail = await _service.fetchAlert(
+        alertId: alert.id,
+        accessToken: token,
+      );
+      if (!mounted || token != ProfileStore.instance.profile?.accessToken) {
+        return;
+      }
+      setState(() => _opening = false);
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(detail.title),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  detail.regionName.isEmpty ? detail.region : detail.regionName,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  detail.message.isEmpty
+                      ? context.tr('No additional alert details were provided.')
+                      : detail.message,
+                ),
+                if (detail.publishedAt != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    MaterialLocalizations.of(
+                      context,
+                    ).formatMediumDate(detail.publishedAt!.toLocal()),
+                  ),
+                ],
+              ],
             ),
-            CoachMarkStep(
-              targetKey: diseaseFiltersKey,
-              title: "Search and Filter",
-              description:
-                  "Search a region or disease term, then narrow the results by disease category.",
-              icon: Icons.filter_alt_outlined,
-              color: AppTheme.info,
-            ),
-            CoachMarkStep(
-              targetKey: diseaseResultsKey,
-              title: "Regional Reports",
-              description:
-                  "Review each region's report totals and disease breakdown in the results list.",
-              icon: Icons.analytics_outlined,
-              color: AppTheme.warning,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(context.tr('Close')),
             ),
           ],
+        ),
+      );
+      if (!mounted || token != ProfileStore.instance.profile?.accessToken) {
+        return;
+      }
+      try {
+        final read = await _service.markAlertRead(
+          alertId: alert.id,
+          accessToken: token,
         );
-      });
-    });
+        if (!mounted || token != ProfileStore.instance.profile?.accessToken) {
+          return;
+        }
+        setState(() {
+          final index = _alerts.indexWhere((a) => a.id == alert.id);
+          if (index >= 0) _alerts[index] = read.item;
+        });
+      } catch (error) {
+        if (!mounted) return;
+        _notify(
+          error is MobileAlertAuthenticationException
+              ? error.message
+              : 'Unable to mark alert as read.',
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      _notify(
+        error is MobileAlertAuthenticationException
+            ? error.message
+            : 'Unable to open this alert right now.',
+      );
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
   }
+
+  void _notify(String message) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(context.tr(message))));
 
   @override
   void dispose() {
-    _searchController.dispose();
+    ProfileStore.instance.removeListener(_profileChanged);
+    _search.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final int activeCount = filteredOutbreaks.length;
-    final pagePadding = Responsive.pagePadding(context);
-    final headerRadius = Responsive.isLandscapePhone(context) ? 24.0 : 35.0;
-    final contentMargin = Responsive.isLandscapePhone(context)
-        ? EdgeInsets.fromLTRB(pagePadding, 8, pagePadding, 8)
-        : EdgeInsets.fromLTRB(pagePadding, 14, pagePadding, 20);
-
+    final colors = Theme.of(context).colorScheme;
+    final query = _search.text.trim().toLowerCase();
+    final visible = _alerts
+        .where(
+          (a) => '${a.title} ${a.regionName} ${a.region} ${a.message}'
+              .toLowerCase()
+              .contains(query),
+        )
+        .toList();
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Container(
-                key: diseaseHeaderKey,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(headerRadius),
-                    bottomRight: Radius.circular(headerRadius),
-                  ),
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      pagePadding,
-                      10,
-                      pagePadding,
-                      Responsive.verticalGap(context, 24, compact: 12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (Navigator.canPop(context)) {
-                              Navigator.pop(context);
-                            } else {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const MainPage(),
-                                ),
-                              );
-                            }
-                          },
-                          child: const Text("Back"),
-                        ),
-
-                        SizedBox(height: Responsive.verticalGap(context, 8)),
-
-                        Image.asset(
-                          'assets/images/healthphplusbarlogo.png',
-                          height: Responsive.logoHeight(context),
-                        ),
-
-                        Text(
-                          "Disease Watch",
-                          style: TextStyle(
-                            fontSize: Responsive.isLandscapePhone(context)
-                                ? 20
-                                : 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF243B8F),
-                          ),
-                        ),
-
-                        const Text(
-                          "Outbreak monitoring across the Philippines",
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF243B8F),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              Expanded(
-                child: Container(
-                  margin: contentMargin,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: AppTheme.border),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Theme(
-                    data: AppTheme.lightTheme,
-                    child: Column(
-                      children: [
-                        Row(
-                          key: diseaseFiltersKey,
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _searchController,
-                                style: const TextStyle(color: AppTheme.text),
-                                cursorColor: AppTheme.primary,
-                                onChanged: (value) {
-                                  setState(() {
-                                    searchQuery = value.toLowerCase().trim();
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  hintText: "Find Diseases",
-                                  hintStyle: const TextStyle(
-                                    color: AppTheme.mutedText,
-                                    fontSize: 11,
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.search,
-                                    color: AppTheme.mutedText,
-                                    size: 18,
-                                  ),
-                                  filled: true,
-                                  fillColor: const Color(0xFFF2F2F2),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 8),
-
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                initialValue: selectedDisease,
-                                isExpanded: true,
-                                style: const TextStyle(
-                                  color: AppTheme.text,
-                                  fontSize: 10,
-                                ),
-                                dropdownColor: Colors.white,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: const Color(0xFFF2F2F2),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: "All",
-                                    child: Text(
-                                      "Select all that apply",
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: "AURI",
-                                    child: Text(
-                                      "AURI",
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: "PN",
-                                    child: Text(
-                                      "Pneumonia",
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: "TB",
-                                    child: Text(
-                                      "Tuberculosis",
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: "COVID",
-                                    child: Text(
-                                      "COVID",
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedDisease = value!;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  color: const Color(0xFFF3F3F3),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Text(
-                                        "Active Outbreaks",
-                                        style: TextStyle(
-                                          color: AppTheme.text,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor: Colors.redAccent,
-                                        child: Text(
-                                          "$activeCount",
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  child: const Center(
-                                    child: Text(
-                                      "Resolved",
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        Expanded(
-                          key: diseaseResultsKey,
-                          child: FutureBuilder<Map<String, dynamic>>(
-                            future: diseaseFuture,
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
-
-                              if (snapshot.hasError) {
-                                return Center(
-                                  child: Text(
-                                    "Error: ${snapshot.error}",
-                                    style: const TextStyle(
-                                      color: AppTheme.text,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              final apiData = snapshot.data!;
-                              final regions = apiData["data"] as List;
-
-                              final filteredRegions = regions.where((region) {
-                                final regionName = region["region"]
-                                    .toString()
-                                    .toLowerCase();
-                                final annotations = List<String>.from(
-                                  region["annotations"] ?? [],
-                                );
-                                final annotationsText = annotations
-                                    .join(" ")
-                                    .toLowerCase();
-
-                                final matchesSearch =
-                                    regionName.contains(searchQuery) ||
-                                    annotationsText.contains(searchQuery);
-
-                                final matchesCategory =
-                                    selectedDisease == "All" ||
-                                    annotations.contains(selectedDisease);
-
-                                return matchesSearch && matchesCategory;
-                              }).toList();
-
-                              if (filteredRegions.isEmpty) {
-                                return const Center(
-                                  child: Text(
-                                    "No outbreaks found.",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
-                              }
-                              return ListView.builder(
-                                itemCount: filteredRegions.length,
-                                itemBuilder: (context, index) {
-                                  final region = filteredRegions[index];
-                                  final counts = region["annotations_count"];
-
-                                  final int auri = counts["AURI"] ?? 0;
-                                  final int pn = counts["PN"] ?? 0;
-                                  final int tb = counts["TB"] ?? 0;
-                                  final int covid = counts["COVID"] ?? 0;
-
-                                  final int totalReports =
-                                      auri + pn + tb + covid;
-
-                                  return OutbreakCard(
-                                    title: "Region ${region["region"]}",
-                                    location:
-                                        "AURI: $auri | PN: $pn | TB: $tb | COVID: $covid",
-                                    percent: totalReports,
-                                    reports: totalReports,
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+      backgroundColor: colors.surface,
+      appBar: AppBar(
+        title: Text(context.tr('Disease Watch')),
+        actions: [
+          IconButton(
+            tooltip: context.tr('Refresh'),
+            onPressed: _loading ? null : () => _load(),
+            icon: const Icon(Icons.refresh),
           ),
         ],
       ),
-    );
-  }
-}
-
-class OutbreakCard extends StatelessWidget {
-  final String title;
-  final String location;
-  final num percent;
-  final int reports;
-
-  const OutbreakCard({
-    super.key,
-    required this.title,
-    required this.location,
-    required this.percent,
-    required this.reports,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final double progress = (percent / 30).clamp(0.08, 1.0);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      child: Stack(
-        children: [
-          Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 28,
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                border: Border.all(color: Colors.black),
-                borderRadius: BorderRadius.circular(10),
+      body: RefreshIndicator(
+        onRefresh: () => _load(),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(Responsive.pagePadding(context)),
+          children: [
+            Text(
+              context.tr('Health Alerts'),
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _search,
+              onChanged: (_) => setState(() {}),
+              style: TextStyle(color: colors.onSurface),
+              decoration: InputDecoration(
+                hintText: context.tr('Search alerts'),
+                hintStyle: TextStyle(color: colors.onSurfaceVariant),
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: colors.surfaceContainerHighest,
+                border: const OutlineInputBorder(),
               ),
             ),
-          ),
-
-          Container(
-            margin: const EdgeInsets.only(right: 18),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F8F8),
-              border: Border.all(color: AppTheme.border),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppTheme.text,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      size: 14,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        location,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                Stack(
-                  children: [
-                    Container(
-                      height: 30,
+            const SizedBox(height: 16),
+            if (_opening) const LinearProgressIndicator(),
+            if (_loading && _alerts.isEmpty)
+              Semantics(
+                label: context.tr('Loading...'),
+                child: Column(
+                  children: List.generate(
+                    3,
+                    (_) => Container(
+                      height: 108,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFE25A),
-                        border: Border.all(color: Colors.black),
+                        color: colors.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
+                      child: const Center(child: LinearProgressIndicator()),
                     ),
-                    FractionallySizedBox(
-                      widthFactor: progress,
-                      child: Container(
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2F3D91),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: Text(
-                            "$percent%",
-                            style: const TextStyle(
-                              color: AppTheme.text,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-
-                const SizedBox(height: 6),
-
-                Row(
-                  children: [
-                    Column(
+              )
+            else if (_error == null && visible.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  context.tr(
+                    query.isEmpty
+                        ? 'No recent alerts right now.'
+                        : 'No matching alerts.',
+                  ),
+                ),
+              ),
+            for (final alert in visible)
+              Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: colors.outlineVariant),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: _opening ? null : () => _open(alert),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Severity Levels",
-                          style: TextStyle(
-                            color: AppTheme.text,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            Icon(
+                              alert.readAt == null
+                                  ? Icons.notifications_active_outlined
+                                  : Icons.notifications_none,
+                              color: colors.primary,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                alert.title,
+                                style: TextStyle(
+                                  color: colors.onSurface,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 8),
                         Text(
-                          "$reports reports",
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
+                          alert.regionName.isEmpty
+                              ? alert.region
+                              : alert.regionName,
+                          style: TextStyle(color: colors.onSurfaceVariant),
+                        ),
+                        if (alert.message.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            alert.message,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: colors.onSurface),
                           ),
+                        ],
+                        const SizedBox(height: 8),
+                        Text(
+                          context.tr(
+                            '{reports} reports',
+                            parameters: {'reports': alert.reportCount},
+                          ),
+                          style: TextStyle(color: colors.onSurfaceVariant),
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        "View Details",
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Color(0xFF243B8F),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            if (_error != null) ...[
+              Text(context.tr(_error!), style: TextStyle(color: colors.error)),
+              TextButton.icon(
+                onPressed: _loading
+                    ? null
+                    : () => _load(more: _alerts.isNotEmpty),
+                icon: const Icon(Icons.refresh),
+                label: Text(context.tr('Retry')),
+              ),
+            ],
+            if (_cursor != null && _error == null)
+              TextButton(
+                onPressed: _loading ? null : () => _load(more: true),
+                child: Text(context.tr(_loading ? 'Loading...' : 'Load more')),
+              ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }

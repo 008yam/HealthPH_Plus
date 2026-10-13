@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 
 import '../data/app_taxonomy.dart';
@@ -168,7 +169,7 @@ class _HistoryHeader extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         Text(
-          "My Self-Reports",
+          context.tr("My Self-Reports"),
           style: TextStyle(
             color: titleColor,
             fontSize: isTablet ? 34 : 28,
@@ -177,7 +178,9 @@ class _HistoryHeader extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          "Review the symptoms and possible conditions you contributed.",
+          context.tr(
+            "Review the symptoms and possible conditions you contributed.",
+          ),
           style: TextStyle(
             color: subtitleColor,
             fontSize: isTablet ? 17 : 14,
@@ -201,8 +204,10 @@ class _ContributionSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final latest = reports.isEmpty ? "No reports yet" : reports.first.dateLabel;
-    final topCondition = _topConditionLabel(reports);
+    final latest = reports.isEmpty
+        ? context.tr("No reports yet")
+        : reports.first.dateLabel;
+    final topCondition = context.tr(_topConditionLabel(reports));
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -312,7 +317,7 @@ class _SummaryMetric extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            label,
+            context.tr(label),
             style: const TextStyle(
               color: AppTheme.mutedText,
               fontSize: 12,
@@ -475,7 +480,7 @@ class _SymptomChip extends StatelessWidget {
         border: Border.all(color: AppTheme.info.withValues(alpha: 0.22)),
       ),
       child: Text(
-        label,
+        context.tr(label),
         style: const TextStyle(
           color: AppTheme.primary,
           fontSize: 12,
@@ -500,7 +505,7 @@ class _DetailRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            context.tr(label),
             style: const TextStyle(
               color: AppTheme.mutedText,
               fontSize: 12,
@@ -538,7 +543,7 @@ class _NoticeCard extends StatelessWidget {
         border: Border.all(color: AppTheme.warning.withValues(alpha: 0.35)),
       ),
       child: Text(
-        message,
+        context.tr(message),
         style: const TextStyle(
           color: AppTheme.text,
           fontSize: 13,
@@ -605,7 +610,7 @@ class _ErrorCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            message,
+            context.tr(message),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppTheme.text,
@@ -616,7 +621,7 @@ class _ErrorCard extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text("Try again"),
+            label: Text(context.tr("Try again")),
           ),
         ],
       ),
@@ -636,7 +641,7 @@ class _EmptyContributionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
           Icon(
             Icons.assignment_late_outlined,
@@ -645,7 +650,7 @@ class _EmptyContributionCard extends StatelessWidget {
           ),
           SizedBox(height: 10),
           Text(
-            "No self-reports yet",
+            context.tr("No self-reports yet"),
             style: TextStyle(
               color: AppTheme.text,
               fontSize: 18,
@@ -654,7 +659,7 @@ class _EmptyContributionCard extends StatelessWidget {
           ),
           SizedBox(height: 5),
           Text(
-            "Submitted self-reports will appear here for review.",
+            context.tr("Submitted self-reports will appear here for review."),
             textAlign: TextAlign.center,
             style: TextStyle(color: AppTheme.mutedText, height: 1.35),
           ),

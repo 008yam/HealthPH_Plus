@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import '../data/app_taxonomy.dart';
 import '../theme/app_theme.dart';
@@ -122,7 +123,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                                   );
                                 }
                               },
-                              child: const Text("Back"),
+                              child: Text(context.tr("Back")),
                             ),
 
                             SizedBox(
@@ -139,7 +140,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                             ),
 
                             Text(
-                              "Data Collection",
+                              context.tr("Data Collection"),
                               style: TextStyle(
                                 fontSize: Responsive.isLandscapePhone(context)
                                     ? 20
@@ -149,8 +150,8 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                               ),
                             ),
 
-                            const Text(
-                              "Tracks symptoms & outbreaks",
+                            Text(
+                              context.tr("Tracks symptoms & outbreaks"),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.indigo,
@@ -196,9 +197,9 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                                   ),
                                 ),
                                 tabs: [
-                                  Tab(text: "Self Report"),
-                                  Tab(text: "My Reports"),
-                                  Tab(text: "Community"),
+                                  Tab(text: context.tr("Self Report")),
+                                  Tab(text: context.tr("My Reports")),
+                                  Tab(text: context.tr("Community")),
                                 ],
                               ),
                             ),
@@ -254,14 +255,18 @@ class _MyReportsTab extends StatelessWidget {
 
       if (shared) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Self-reports CSV is ready to share.")),
+          SnackBar(
+            content: Text(context.tr("Self-reports CSV is ready to share.")),
+          ),
         );
       }
     } catch (_) {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unable to export self-reports CSV.")),
+        SnackBar(
+          content: Text(context.tr("Unable to export self-reports CSV.")),
+        ),
       );
     }
   }
@@ -276,14 +281,14 @@ class _MyReportsTab extends StatelessWidget {
         if (reports.isEmpty) {
           return ListView(
             padding: EdgeInsets.zero,
-            children: const [
+            children: [
               Text(
-                "Your Recent Reports",
+                context.tr("Your Recent Reports"),
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 12),
               Text(
-                "No self-reports submitted yet.",
+                context.tr("No self-reports submitted yet."),
                 style: TextStyle(fontSize: 12),
               ),
               InfoBox(),
@@ -298,7 +303,10 @@ class _MyReportsTab extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    "Your Recent Reports (${reports.length})",
+                    context.tr(
+                      "Your Recent Reports ({reports.length})",
+                      parameters: {"reports.length": reports.length},
+                    ),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -307,7 +315,7 @@ class _MyReportsTab extends StatelessWidget {
                 ),
                 if (_canExportReports)
                   IconButton(
-                    tooltip: "Export CSV",
+                    tooltip: context.tr("Export CSV"),
                     onPressed: () => _exportReports(context, reports),
                     icon: const Icon(Icons.ios_share, color: AppTheme.primary),
                   ),
@@ -344,16 +352,16 @@ class _CommunityTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: EdgeInsets.zero,
-      children: const [
+      children: [
         Text(
-          "Community Reports",
+          context.tr("Community Reports"),
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
 
         SizedBox(height: 4),
 
         Text(
-          "View symptom reports shared by other users.",
+          context.tr("View symptom reports shared by other users."),
           style: TextStyle(fontSize: 12),
         ),
 
@@ -539,8 +547,10 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         selectedBarangay == null ||
         selectedSymptomIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Complete address and add at least one symptoms"),
+        SnackBar(
+          content: Text(
+            context.tr("Complete address and add at least one symptoms"),
+          ),
         ),
       );
       return;
@@ -552,41 +562,35 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
     final condition = _possibleCondition();
 
-    final geocoded = await GeocodingService.instance.geocodePhilippinesAddress(
-      barangay: selectedBarangay!.name,
-      city: selectedCity!.name,
-      province: selectedProvince?.name ?? selectedRegion!.name,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      reportSubmitting = false;
-    });
-
-    final report = SelfReport(
-      region: selectedRegion!.code,
-      province: selectedProvince?.name ?? selectedRegion!.name,
-      city: selectedCity!.name,
-      barangay: selectedBarangay!.name,
-      latitude: geocoded?.latitude,
-      longitude: geocoded?.longitude,
-      geocodedAddress: geocoded?.displayName,
-      symptomIds: selectedSymptomIds.toList(),
-      symptoms: AppTaxonomy.labelsFor(
-        AppTaxonomy.symptoms,
-        selectedSymptomIds.toList(),
-      ),
-      possibleConditionId: condition.id,
-      possibleCondition: condition.label,
-      notes: notesController.text.trim(),
-      createdAt: DateTime.now(),
-    );
-
-    SelfReportStore.instance.addReport(report);
-    await SelfReportDatabase.instance.insertReport(report);
-
     try {
+      final geocoded = await GeocodingService.instance
+          .geocodePhilippinesAddress(
+            barangay: selectedBarangay!.name,
+            city: selectedCity!.name,
+            province: selectedProvince?.name ?? selectedRegion!.name,
+          );
+
+      if (!mounted) return;
+
+      final report = SelfReport(
+        region: selectedRegion!.code,
+        province: selectedProvince?.name ?? selectedRegion!.name,
+        city: selectedCity!.name,
+        barangay: selectedBarangay!.name,
+        latitude: geocoded?.latitude,
+        longitude: geocoded?.longitude,
+        geocodedAddress: geocoded?.displayName,
+        symptomIds: selectedSymptomIds.toList(),
+        symptoms: AppTaxonomy.labelsFor(
+          AppTaxonomy.symptoms,
+          selectedSymptomIds.toList(),
+        ),
+        possibleConditionId: condition.id,
+        possibleCondition: condition.label,
+        notes: notesController.text.trim(),
+        createdAt: DateTime.now(),
+      );
+
       await HealthPhApiService(baseUrl: ApiConfig.baseUrl).submitSelfReport(
         report: report,
         regionName: selectedRegion!.name,
@@ -594,43 +598,71 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         cityCode: selectedCity?.code,
         barangayCode: selectedBarangay?.code,
       );
-    } catch (error) {
-      debugPrint("Self-report MongoDB sync failed: $error");
-    }
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Self-report submitted successfully.")),
-    );
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Report submitted"),
-        content: Text(
-          "${condition.label}\n\nThis is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.",
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Understood"),
-          ),
-        ],
-      ),
-    );
-
-    setState(() {
-      if (!lockAddressFields) {
-        selectedRegion = null;
-        selectedProvince = null;
-        selectedCity = null;
-        selectedBarangay = null;
+      // Local storage is a cache, not a second backend submission.
+      SelfReportStore.instance.addReport(report);
+      try {
+        await SelfReportDatabase.instance.insertReport(report);
+      } catch (_) {
+        debugPrint('Report accepted; local cache could not be saved.');
       }
 
-      selectedSymptomIds.clear();
-      notesController.clear();
-    });
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr("Self-report submitted successfully.")),
+        ),
+      );
+
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text(context.tr("Report submitted")),
+          content: Text(
+            context.tr(
+              "{condition.label} This is not a diagnosis. Please consult a healthcare provider, especially if symptoms worsen.",
+              parameters: {"condition.label": context.tr(condition.label)},
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.tr("Understood")),
+            ),
+          ],
+        ),
+      );
+
+      setState(() {
+        if (!lockAddressFields) {
+          selectedRegion = null;
+          selectedProvince = null;
+          selectedCity = null;
+          selectedBarangay = null;
+        }
+
+        selectedSymptomIds.clear();
+        notesController.clear();
+      });
+    } on SelfReportSubmissionException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.tr(error.message))));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr(
+              'Could not confirm submission. Check My Self Reports before trying again.',
+            ),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => reportSubmitting = false);
+    }
   }
 
   @override
@@ -638,13 +670,15 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        const Text(
-          "Self Report Symptoms",
+        Text(
+          context.tr("Self Report Symptoms"),
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        const Text(
-          "Report respiratory symptoms to supper surveillance mapping.",
+        Text(
+          context.tr(
+            "Report respiratory symptoms to supper surveillance mapping.",
+          ),
           style: TextStyle(fontSize: 12),
         ),
 
@@ -664,8 +698,10 @@ class _SelfReportTabState extends State<_SelfReportTab> {
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                "Using your registered address. Adress fields are locked for account consistency.",
+              child: Text(
+                context.tr(
+                  "Using your registered address. Adress fields are locked for account consistency.",
+                ),
                 style: TextStyle(
                   color: AppTheme.primary,
                   fontSize: 12,
@@ -698,7 +734,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
               initialValue: "NCR",
               enabled: false,
               decoration: InputDecoration(
-                labelText: "Province",
+                labelText: context.tr("Province"),
                 prefixIcon: Icon(Icons.location_city_outlined),
               ),
             ),
@@ -763,7 +799,10 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
         const SizedBox(height: 12),
 
-        const Text("Symptoms", style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(
+          context.tr("Symptoms"),
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
 
         Wrap(
@@ -773,7 +812,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             final selected = selectedSymptomIds.contains(symptom.id);
 
             return FilterChip(
-              label: Text(symptom.label),
+              label: Text(context.tr(symptom.label)),
               selected: selected,
               selectedColor: AppTheme.primary.withValues(alpha: 0.16),
               checkmarkColor: AppTheme.primary,
@@ -795,8 +834,8 @@ class _SelfReportTabState extends State<_SelfReportTab> {
         TextField(
           controller: notesController,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: "Additional notes (optional)",
+          decoration: InputDecoration(
+            labelText: context.tr("Additional notes (optional)"),
             alignLabelWithHint: true,
           ),
         ),
@@ -809,7 +848,9 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             onPressed: reportSubmitting ? null : _submitReport,
             icon: const Icon(Icons.add_location_alt_outlined),
             label: Text(
-              reportSubmitting ? "Location Address..." : "Submit Self Report",
+              reportSubmitting
+                  ? context.tr("Location Address...")
+                  : context.tr("Submit Self Report"),
             ),
           ),
         ),
@@ -869,7 +910,7 @@ class ReportCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        symptom,
+                        context.tr(symptom),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -880,7 +921,10 @@ class ReportCard extends StatelessWidget {
                         style: const TextStyle(fontSize: 12),
                       ),
                       Text(
-                        "Duration: $duration",
+                        context.tr(
+                          "Duration: {duration}",
+                          parameters: {"duration": duration},
+                        ),
                         style: const TextStyle(fontSize: 12),
                       ),
                     ],
@@ -897,7 +941,7 @@ class ReportCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    severity,
+                    context.tr(severity),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -915,7 +959,12 @@ class ReportCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  "Possible / Consideration: $consideration",
+                  context.tr(
+                    "Possible / Consideration: {consideration}",
+                    parameters: {
+                      "consideration": context.tr(consideration ?? ''),
+                    },
+                  ),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -970,14 +1019,16 @@ class InfoBox extends StatelessWidget {
         border: Border.all(color: Colors.cyan),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.health_and_safety, color: Colors.blue),
           SizedBox(width: 8),
           Expanded(
             child: Text(
-              "Why Report Symptoms\nYour reports help public health officials track and monitor its origin.",
+              context.tr(
+                "Why Report Symptoms Your reports help public health officials track and monitor its origin.",
+              ),
               style: TextStyle(fontSize: 12),
             ),
           ),

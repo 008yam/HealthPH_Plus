@@ -1,3 +1,4 @@
+import 'localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import 'main_page.dart';
 import 'theme/app_theme.dart';
@@ -160,9 +161,9 @@ class _LoginPageState extends State<LoginPage> {
             (!isNcrSelected && selectedProvince == null) ||
             selectedCity == null ||
             selectedBarangay == null)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Complete your address.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr("Complete your address."))),
+      );
       return;
     }
 
@@ -229,7 +230,11 @@ class _LoginPageState extends State<LoginPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(wasRegistering ? "Account Created." : "Logged in."),
+          content: Text(
+            wasRegistering
+                ? context.tr("Account Created.")
+                : context.tr("Logged in."),
+          ),
         ),
       );
 
@@ -258,9 +263,11 @@ class _LoginPageState extends State<LoginPage> {
 
     if (profile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "Biometric login is unavailable. Please use password login.",
+            context.tr(
+              "Biometric login is unavailable. Please use password login.",
+            ),
           ),
         ),
       );
@@ -290,28 +297,28 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Reset Password"),
+          title: Text(context.tr("Reset Password")),
           content: TextField(
             controller: resetEmailController,
             keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: "Email Address",
+            decoration: InputDecoration(
+              labelText: context.tr("Email Address"),
               prefixIcon: Icon(Icons.email_outlined),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text(context.tr("Cancel")),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Pass reset link sent.")),
+                  SnackBar(content: Text(context.tr("Pass reset link sent."))),
                 );
               },
-              child: const Text("Send Link"),
+              child: Text(context.tr("Send Link")),
             ),
           ],
         );
@@ -321,18 +328,21 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _requiredValidator(String? value, String label) {
     if (value == null || value.trim().isEmpty) {
-      return "Enter $label";
+      return context.tr(
+        'Enter {label}',
+        parameters: {'label': context.tr(label)},
+      );
     }
     return null;
   }
 
   String? _emailValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return "Enter your email";
+      return context.tr("Enter your email");
     }
 
     if (!value.contains("@")) {
-      return "Enter a valid email";
+      return context.tr("Enter a valid email");
     }
 
     return null;
@@ -340,11 +350,11 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _passwordValidator(String? value) {
     if (value == null || value.isEmpty) {
-      return "Enter your password";
+      return context.tr("Enter your password");
     }
 
     if (value.length < 6) {
-      return "Password must be at least 6 characters";
+      return context.tr("Password must be at least 6 characters");
     }
     return null;
   }
@@ -353,7 +363,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!isRegistering) return null;
 
     if (value != passwordController.text) {
-      return "Passowrd do not match";
+      return context.tr("Passowrd do not match");
     }
 
     return null;
@@ -391,7 +401,7 @@ class _LoginPageState extends State<LoginPage> {
                           Align(
                             alignment: Alignment.centerLeft,
                             child: IconButton(
-                              tooltip: "Back",
+                              tooltip: context.tr("Back"),
                               onPressed: _handleBackPressed,
                               icon: const Icon(
                                 Icons.arrow_back_ios_new,
@@ -405,7 +415,9 @@ class _LoginPageState extends State<LoginPage> {
 
                           const SizedBox(height: 18),
                           Text(
-                            isRegistering ? "Create Account" : "User Login",
+                            isRegistering
+                                ? context.tr("Create Account")
+                                : context.tr("User Login"),
                             style: const TextStyle(
                               color: AppTheme.navy,
                               fontSize: 24,
@@ -415,8 +427,12 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 4),
                           Text(
                             isRegistering
-                                ? "Register your basic HeathPH+ profile."
-                                : "Sign in using your email and password.",
+                                ? context.tr(
+                                    "Register your basic HeathPH+ profile.",
+                                  )
+                                : context.tr(
+                                    "Sign in using your email and password.",
+                                  ),
                             style: const TextStyle(
                               color: AppTheme.mutedText,
                               fontSize: 13,
@@ -428,8 +444,8 @@ class _LoginPageState extends State<LoginPage> {
                             TextFormField(
                               controller: fullNameController,
                               textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: "Full Name",
+                              decoration: InputDecoration(
+                                labelText: context.tr("Full Name"),
                                 prefixIcon: Icon(Icons.person_outlined),
                               ),
                               validator: (value) =>
@@ -442,8 +458,8 @@ class _LoginPageState extends State<LoginPage> {
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: "Email",
+                            decoration: InputDecoration(
+                              labelText: context.tr("Email"),
                               prefixIcon: Icon(Icons.email_outlined),
                             ),
                             validator: _emailValidator,
@@ -457,7 +473,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ? TextInputAction.next
                                 : TextInputAction.done,
                             decoration: InputDecoration(
-                              labelText: "Password",
+                              labelText: context.tr("Password"),
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -481,8 +497,8 @@ class _LoginPageState extends State<LoginPage> {
                               controller: confirmPasswordController,
                               obscureText: obscurePassword,
                               textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                labelText: "Confirm Password",
+                              decoration: InputDecoration(
+                                labelText: context.tr("Confirm Password"),
                                 prefixIcon: Icon(Icons.lock_reset),
                               ),
                               validator: _confirmPasswordValidator,
@@ -490,14 +506,14 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 12),
                             DropdownButtonFormField<AppOption>(
                               initialValue: selectedRole,
-                              decoration: const InputDecoration(
-                                labelText: "Role",
+                              decoration: InputDecoration(
+                                labelText: context.tr("Role"),
                                 prefixIcon: Icon(Icons.badge_outlined),
                               ),
                               items: AppTaxonomy.roles.map((role) {
                                 return DropdownMenuItem<AppOption>(
                                   value: role,
-                                  child: Text(role.label),
+                                  child: Text(context.tr(role.label)),
                                 );
                               }).toList(),
                               onChanged: (value) {
@@ -512,8 +528,8 @@ class _LoginPageState extends State<LoginPage> {
 
                             DropdownButtonFormField<String>(
                               initialValue: selectedLanguage,
-                              decoration: const InputDecoration(
-                                labelText: "Preferred Language",
+                              decoration: InputDecoration(
+                                labelText: context.tr("Preferred Language"),
                                 prefixIcon: Icon(Icons.language),
                               ),
                               items: languages.map((language) {
@@ -524,7 +540,9 @@ class _LoginPageState extends State<LoginPage> {
                               }).toList(),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return "Select your preferred language";
+                                  return context.tr(
+                                    "Select your preferred language",
+                                  );
                                 }
                                 return null;
                               },
@@ -562,7 +580,7 @@ class _LoginPageState extends State<LoginPage> {
                                   initialValue: "NCR",
                                   enabled: false,
                                   decoration: InputDecoration(
-                                    labelText: "Province",
+                                    labelText: context.tr("Province"),
                                     prefixIcon: Icon(
                                       Icons.location_city_outlined,
                                     ),
@@ -631,7 +649,7 @@ class _LoginPageState extends State<LoginPage> {
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: _showPasswordResetDialog,
-                                child: const Text("Forgot password?"),
+                                child: Text(context.tr("Forgot password?")),
                               ),
                             ),
                           ],
@@ -647,7 +665,9 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               onPressed: _submit,
                               child: Text(
-                                isRegistering ? "Register" : "Login",
+                                isRegistering
+                                    ? context.tr("Register")
+                                    : context.tr("Login"),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -667,8 +687,8 @@ class _LoginPageState extends State<LoginPage> {
                               child: OutlinedButton.icon(
                                 onPressed: _loginWithBiometrics,
                                 icon: const Icon(Icons.fingerprint),
-                                label: const Text(
-                                  "Login with Biometrics",
+                                label: Text(
+                                  context.tr("Login with Biometrics"),
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -685,8 +705,8 @@ class _LoginPageState extends State<LoginPage> {
                               child: OutlinedButton.icon(
                                 onPressed: _continueAsGuest,
                                 icon: const Icon(Icons.person_outline),
-                                label: const Text(
-                                  "Continue as Guest",
+                                label: Text(
+                                  context.tr("Continue as Guest"),
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -702,8 +722,10 @@ class _LoginPageState extends State<LoginPage> {
                               },
                               child: Text(
                                 isRegistering
-                                    ? "Already have an account? Login"
-                                    : "New User? Create an account",
+                                    ? context.tr(
+                                        "Already have an account? Login",
+                                      )
+                                    : context.tr("New User? Create an account"),
                               ),
                             ),
                           ),
@@ -798,13 +820,16 @@ class _PinLoginDialogState extends State<_PinLoginDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Enter PIN"),
+      title: Text(context.tr("Enter PIN")),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Enter the six-digit PIN for ${widget.profile.email}.",
+            context.tr(
+              "Enter the six-digit PIN for {widget.profile.email}.",
+              parameters: {"widget.profile.email": widget.profile.email},
+            ),
             style: const TextStyle(fontSize: 13),
           ),
           const SizedBox(height: 18),
@@ -825,7 +850,7 @@ class _PinLoginDialogState extends State<_PinLoginDialog> {
           if (errorMessage != null) ...[
             const SizedBox(height: 12),
             Text(
-              errorMessage!,
+              context.tr(errorMessage!),
               style: const TextStyle(color: AppTheme.highRisk, fontSize: 12),
             ),
           ],
@@ -834,7 +859,7 @@ class _PinLoginDialogState extends State<_PinLoginDialog> {
       actions: [
         TextButton(
           onPressed: isVerifying ? null : () => Navigator.pop(context),
-          child: const Text("Cancel"),
+          child: Text(context.tr("Cancel")),
         ),
         ElevatedButton(
           onPressed: isVerifying ? null : _verifyPin,
@@ -844,7 +869,7 @@ class _PinLoginDialogState extends State<_PinLoginDialog> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text("Verify"),
+              : Text(context.tr("Verify")),
         ),
       ],
     );

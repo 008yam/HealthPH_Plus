@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import '../main_page.dart';
 import '../theme/app_theme.dart';
@@ -276,7 +277,7 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                                         0,
                                                       ),
                                                       child: Text(
-                                                        item.title,
+                                                        context.tr(item.title),
                                                         textAlign:
                                                             TextAlign.center,
                                                         style: TextStyle(
@@ -301,7 +302,9 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                                         0,
                                                       ),
                                                       child: Text(
-                                                        item.description,
+                                                        context.tr(
+                                                          item.description,
+                                                        ),
                                                         textAlign:
                                                             TextAlign.center,
                                                         style: TextStyle(
@@ -371,7 +374,7 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
-                                        child: const Text("Skip"),
+                                        child: Text(context.tr("Skip")),
                                       ),
                                       const Spacer(),
                                       ElevatedButton(
@@ -389,7 +392,9 @@ class _IntroTutorialPageState extends State<IntroTutorialPage> {
                                           ),
                                         ),
                                         child: Text(
-                                          isLastPage ? "Continue" : "Next",
+                                          isLastPage
+                                              ? context.tr("Continue")
+                                              : context.tr("Next"),
                                         ),
                                       ),
                                     ],

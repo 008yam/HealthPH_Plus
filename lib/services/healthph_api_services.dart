@@ -1,13 +1,54 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../data/app_taxonomy.dart';
 import 'profile_store.dart';
 import 'self_report_store.dart';
 
+class SelfReportSubmissionException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  const SelfReportSubmissionException(this.message, {this.statusCode});
+
+  @override
+  String toString() => message;
+}
+
+class SelfReportSubmissionResult {
+  final String id;
+  final String status;
+  final String? analyticsEntryId;
+
+  const SelfReportSubmissionResult({
+    required this.id,
+    required this.status,
+    this.analyticsEntryId,
+  });
+
+  factory SelfReportSubmissionResult.fromJson(Map<String, dynamic> json) {
+    final item = json['item'];
+    if (item is! Map ||
+        item['id'] is! String ||
+        (item['id'] as String).isEmpty ||
+        item['status'] != 'submitted') {
+      throw const FormatException('Invalid self-report submission response');
+    }
+    final analyticsId = json['analyticsEntryId'] ?? item['analyticsEntryId'];
+    return SelfReportSubmissionResult(
+      id: item['id'] as String,
+      status: item['status'] as String,
+      analyticsEntryId: analyticsId is String ? analyticsId : null,
+    );
+  }
+}
+
 class HealthPhApiService {
   final String baseUrl;
+  final http.Client? _client;
 
-  HealthPhApiService({required this.baseUrl});
+  HealthPhApiService({required this.baseUrl, http.Client? client})
+    : _client = client;
 
   Future<Map<String, dynamic>> fetchDiseasePoints() async {
     final response = await http.get(Uri.parse('$baseUrl/api/points/disease'));
@@ -19,7 +60,7 @@ class HealthPhApiService {
     throw Exception('Failed to loaod disease points');
   }
 
-  Future<void> submitSelfReport({
+  Future<SelfReportSubmissionResult> submitSelfReport({
     required SelfReport report,
     required String regionName,
     String? provinceCode,
@@ -32,7 +73,20 @@ class HealthPhApiService {
         AppTaxonomy.isGuestRole(profile.roleId) ||
         profile.email == AppTaxonomy.guestEmail;
 
+    final token = profile?.accessToken?.trim() ?? '';
+    if (!isGuest && token.isEmpty) {
+      throw const SelfReportSubmissionException(
+        'Please sign in again before submitting your report.',
+        statusCode: 401,
+      );
+    }
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (!isGuest) 'Authorization': 'Bearer $token',
+    };
 
+    // Explicit request fields exclude all server-owned analytics/language data.
     final payload = {
       "reporter": {
         "userId": isGuest ? null : profile.id,
@@ -62,18 +116,47 @@ class HealthPhApiService {
       "possibleConditionLabel": report.possibleCondition,
       "notes": report.notes,
       "source": "mobile_self_report",
-      "createdAt": report.createdAt.toIso8601String(),
+      "createdAt": report.createdAt.toUtc().toIso8601String(),
     };
 
-    final response = await http.post(
-      Uri.parse("$baseUrl/api/mobile/self-reports"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(payload),
+    final base = Uri.parse(baseUrl);
+    var path = base.path.replaceFirst(RegExp(r'/+$'), '');
+    if (path.endsWith('/api')) path = path.substring(0, path.length - 4);
+    final uri = base.replace(
+      path: '$path/api/mobile/self-reports',
+      query: null,
+      fragment: null,
     );
-
-    if (response.statusCode != 201) {
-      throw Exception("Failed to sync self-report to MongoDB");
+    final post = _client?.post ?? http.post;
+    if (kDebugMode) debugPrint('SELF REPORT URL: $uri');
+    final response = await post(
+      uri,
+      headers: headers,
+      body: jsonEncode(payload),
+    ).timeout(const Duration(seconds: 30));
+    // Temporary diagnostics; response bodies may contain private report data.
+    if (kDebugMode) {
+      debugPrint('STATUS: ${response.statusCode}');
+      debugPrint('BODY: ${response.body}');
     }
+
+    if (response.statusCode == 401) {
+      throw const SelfReportSubmissionException(
+        'Your session has expired. Please sign in again.',
+        statusCode: 401,
+      );
+    }
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw SelfReportSubmissionException(
+        'The server did not accept your report. Please review your details and try again.',
+        statusCode: response.statusCode,
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Invalid self-report submission response');
+    }
+    return SelfReportSubmissionResult.fromJson(decoded);
   }
 
   Future<List<dynamic>> fetchSelfReportMapPins() async {

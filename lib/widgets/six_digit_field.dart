@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_translations.dart';
 import 'package:flutter/services.dart';
 
 class SixDigitPinField extends StatefulWidget {
@@ -72,7 +73,7 @@ class _SixDigitPinFieldState extends State<SixDigitPinField> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Semantics(
-      label: "Six-digit PIN",
+      label: context.tr("Six-digit PIN"),
       textField: true,
       child: SizedBox(
         height: 56,

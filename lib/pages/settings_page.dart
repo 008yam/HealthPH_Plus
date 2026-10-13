@@ -91,8 +91,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (userId == null || userId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please sign in with a registered account first."),
+        SnackBar(
+          content: Text(
+            context.tr("Please sign in with a registered account first."),
+          ),
         ),
       );
       return;
@@ -124,7 +126,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Your PIN was saved successfully.")),
+        SnackBar(content: Text(context.tr("Your PIN was saved successfully."))),
       );
     } catch (error) {
       debugPrint("Unable to save PIN: $error");
@@ -132,9 +134,11 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "Unable to save PIN. Check your password and connection.",
+            context.tr(
+              "Unable to save PIN. Check your password and connection.",
+            ),
           ),
         ),
       );
@@ -146,8 +150,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Coach marks will replay when you revisit pages."),
+      SnackBar(
+        content: Text(
+          context.tr("Coach marks will replay when you revisit pages."),
+        ),
       ),
     );
   }
@@ -235,7 +241,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    context.tr("Account, preferences, security, and accessibility"),
+                    context.tr(
+                      "Account, preferences, security, and accessibility",
+                    ),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: appSettings.visualMode.onBackground,
@@ -259,10 +267,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     key: appearanceKey,
                     child: _SettingsTile(
                       icon: Icons.palette_outlined,
-                      title: context.tr("Account, preferences, security, and accessibility"),
+                      title: "Appearance",
                       subtitle: context.tr(
                         'Current theme: {theme}',
-                        parameters: {'theme': context.tr(appSettings.visualMode.label)},
+                        parameters: {
+                          'theme': context.tr(appSettings.visualMode.label),
+                        },
                       ),
                       isTablet: isTablet,
                       accentColor: appSettings.visualMode.accentColor,
@@ -354,12 +364,14 @@ class _ProfileCard extends StatelessWidget {
         AppTaxonomy.isGuestRole(profile!.roleId) ||
         profile!.email == AppTaxonomy.guestEmail;
 
-    final name = isGuest ? "Guest User" : profile!.fullName;
-    final email = isGuest ? "Tap to create your profile" : profile!.email;
-    final role = isGuest ? "Guest Access" : profile!.role;
+    final name = isGuest ? context.tr("Guest User") : profile!.fullName;
+    final email = isGuest
+        ? context.tr("Tap to create your profile")
+        : profile!.email;
+    final role = context.tr(isGuest ? "Guest Access" : profile!.role);
     final location = !isGuest && profile!.hasAddress
         ? profile!.locationLabel
-        : "Complete your address during registration";
+        : context.tr("Complete your address during registration");
 
     final accent = isGuest ? Colors.grey.shade600 : AppTheme.primary;
     final surfaceStart = isGuest
@@ -450,7 +462,7 @@ class _ProfileCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      isGuest ? "Register" : "Active",
+                      isGuest ? context.tr("Register") : context.tr("Active"),
                       style: TextStyle(
                         color: isGuest
                             ? Colors.grey.shade700
@@ -553,12 +565,14 @@ class _ProfileCard extends StatelessWidget {
                     ),
                     _ProfileInfoChip(
                       icon: Icons.home_work_outlined,
-                      label: isGuest ? "No saved address" : profile!.barangay,
+                      label: isGuest
+                          ? context.tr("No saved address")
+                          : profile!.barangay,
                       isGuest: isGuest,
                     ),
                     _ProfileInfoChip(
                       icon: Icons.location_city_outlined,
-                      label: isGuest ? "No city" : profile!.city,
+                      label: isGuest ? context.tr("No city") : profile!.city,
                       isGuest: isGuest,
                     ),
                   ],
@@ -798,7 +812,7 @@ class _SurveyButtonState extends State<_SurveyButton> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Mobile Surveys",
+                          context.tr("Mobile Surveys"),
                           style: TextStyle(
                             color: AppTheme.text,
                             fontSize: widget.isTablet ? 28 : 23,
@@ -808,8 +822,11 @@ class _SurveyButtonState extends State<_SurveyButton> {
                         const SizedBox(height: 4),
                         Text(
                           hasSurvey
-                              ? "$count survey ready to answer"
-                              : "Check available surveys",
+                              ? context.tr(
+                                  "{count} survey ready to answer",
+                                  parameters: {"count": count},
+                                )
+                              : context.tr("Check available surveys"),
                           style: TextStyle(
                             color: hasSurvey
                                 ? AppTheme.info
@@ -916,13 +933,15 @@ class _SetPinDialogState extends State<_SetPinDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Set six-digit PIN"),
+      title: Text(context.tr("Set six-digit PIN")),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "Enter a six-digit numeric PIN. Each digit uses a separate box.",
+            Text(
+              context.tr(
+                "Enter a six-digit numeric PIN. Each digit uses a separate box.",
+              ),
             ),
             const SizedBox(height: 18),
             SixDigitPinField(
@@ -946,8 +965,8 @@ class _SetPinDialogState extends State<_SetPinDialog> {
               focusNode: passwordFocusNode,
               obscureText: true,
               textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                labelText: "Current password",
+              decoration: InputDecoration(
+                labelText: context.tr("Current password"),
                 prefixIcon: Icon(Icons.lock_outline),
               ),
               onSubmitted: (_) => submit(),
@@ -955,7 +974,7 @@ class _SetPinDialogState extends State<_SetPinDialog> {
             if (errorMessage != null) ...[
               const SizedBox(height: 12),
               Text(
-                errorMessage!,
+                context.tr(errorMessage!),
                 style: const TextStyle(color: AppTheme.highRisk, fontSize: 12),
               ),
             ],
@@ -965,9 +984,9 @@ class _SetPinDialogState extends State<_SetPinDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
+          child: Text(context.tr("Cancel")),
         ),
-        ElevatedButton(onPressed: submit, child: const Text("Save PIN")),
+        ElevatedButton(onPressed: submit, child: Text(context.tr("Save PIN"))),
       ],
     );
   }
@@ -1002,9 +1021,11 @@ class _AuthenticationSection extends StatelessWidget {
           onTap: () {
             if (!settings.hasPin) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text(
-                    "You need to set a six-digit PIN before enabling PIN login.",
+                    context.tr(
+                      "You need to set a six-digit PIN before enabling PIN login.",
+                    ),
                   ),
                 ),
               );
@@ -1039,7 +1060,9 @@ class _AuthenticationSection extends StatelessWidget {
 
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Biometric login disabled.")),
+                SnackBar(
+                  content: Text(context.tr("Biometric login disabled.")),
+                ),
               );
               return;
             }
@@ -1047,8 +1070,10 @@ class _AuthenticationSection extends StatelessWidget {
             final profile = ProfileStore.instance.profile;
             if (profile == null || profile.id == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Login first before enabling biometrics."),
+                SnackBar(
+                  content: Text(
+                    context.tr("Login first before enabling biometrics."),
+                  ),
                 ),
               );
               return;
@@ -1060,9 +1085,11 @@ class _AuthenticationSection extends StatelessWidget {
 
             if (!unlocked) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text(
-                    "Biometrics authentication is unavailable or cancelled.",
+                    context.tr(
+                      "Biometrics authentication is unavailable or cancelled.",
+                    ),
                   ),
                 ),
               );
@@ -1076,7 +1103,7 @@ class _AuthenticationSection extends StatelessWidget {
 
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Biometric login enabled")),
+              SnackBar(content: Text(context.tr("Biometric login enabled"))),
             );
           },
         ),

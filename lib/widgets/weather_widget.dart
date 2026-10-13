@@ -1,3 +1,4 @@
+import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
@@ -5,10 +6,7 @@ import '../theme/app_theme.dart';
 
 class WeatherWidget extends StatefulWidget {
   final bool compact;
-  const WeatherWidget({
-    super.key,
-    this.compact = false,
-  });
+  const WeatherWidget({super.key, this.compact = false});
 
   @override
   State<WeatherWidget> createState() => _WeatherWidgetState();
@@ -44,10 +42,9 @@ class _WeatherWidgetState extends State<WeatherWidget> {
               border: Border.all(color: AppTheme.border),
               borderRadius: BorderRadius.circular(12),
             ),
-            child:  const Text(
-              "Wearher unavailable",
+            child: Text(
+              context.tr("Wearher unavailable"),
               style: TextStyle(color: AppTheme.mutedText),
-
             ),
           );
         }
@@ -77,8 +74,8 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                 ),
               ),
 
-              const Text(
-                "Today",
+              Text(
+                context.tr("Today"),
                 style: TextStyle(color: AppTheme.mutedText, fontSize: 10),
               ),
 
@@ -98,7 +95,13 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                         const SizedBox(width: 12),
 
                         Text(
-                          "${weather.temperature.toInt()}°C",
+                          context.tr(
+                            "{weather.temperature.toInt()}°C",
+                            parameters: {
+                              "weather.temperature.toInt()": weather.temperature
+                                  .toInt(),
+                            },
+                          ),
                           style: const TextStyle(
                             fontSize: 42,
                             fontWeight: FontWeight.bold,
@@ -109,8 +112,8 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                     ),
                     const SizedBox(height: 4),
 
-                    const Text(
-                      "Sunny",
+                    Text(
+                      context.tr("Sunny"),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey,
@@ -237,7 +240,13 @@ class _CompactWeatherCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  "${weather.temperature.round()}°C · Today",
+                  context.tr(
+                    "{weather.temperature.round()}°C · Today",
+                    parameters: {
+                      "weather.temperature.round()": weather.temperature
+                          .round(),
+                    },
+                  ),
                   style: const TextStyle(
                     color: AppTheme.navy,
                     fontSize: 18,
@@ -327,7 +336,7 @@ class WeatherInfoItem extends StatelessWidget {
             ),
 
             Text(
-              label,
+              context.tr(label),
               style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ],
