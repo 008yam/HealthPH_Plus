@@ -83,6 +83,14 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      elevatedButtonTheme: lightTheme.elevatedButtonTheme,
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF243B8F),
+          backgroundColor: Colors.white,
+          side: const BorderSide(color: AppTheme.border),
+        ),
+      ),
       scaffoldBackgroundColor: const Color(0xFF111827),
       colorScheme: const ColorScheme.dark(
         primary: info,

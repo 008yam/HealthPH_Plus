@@ -258,7 +258,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  _SettingsSectionTitle(
+                  _SettingsSectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _SettingsSectionTitle(
                     title: "Preferences",
                     isTablet: isTablet,
                   ),
@@ -315,16 +319,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     isTablet: isTablet,
                     onTap: _replayCoachMarks,
                   ),
+                      ]
+                    )
+                  ),
 
                   const SizedBox(height: 24),
 
                   KeyedSubtree(
                     key: authenticationKey,
+                    child: _SettingsSectionCard(
                     child: _AuthenticationSection(
                       isTablet: isTablet,
                       settings: appSettings,
                       onSetPin: _setPin,
                     ),
+                  ),
                   ),
                   const SizedBox(height: 24),
 
@@ -853,6 +862,26 @@ class _SurveyButtonState extends State<_SurveyButton> {
   }
 }
 
+class _SettingsSectionCard extends StatelessWidget {
+  final Widget child;
+
+  const _SettingsSectionCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceSoft,
+        border: Border.all(color: AppTheme.border),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: child,
+    );
+  }
+}
+
 class _SettingsSectionTitle extends StatelessWidget {
   final String title;
   final bool isTablet;
@@ -861,19 +890,15 @@ class _SettingsSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mode = AppSettingsStore.instance.visualMode;
 
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         context.tr(title),
         style: TextStyle(
-          color: mode.onBackground,
+          color: AppTheme.text,
           fontSize: isTablet ? 18 : 15,
           fontWeight: FontWeight.w800,
-          shadows: mode == HealthPhVisualMode.dark
-              ? const [Shadow(color: Colors.black45, blurRadius: 3)]
-              : null,
         ),
       ),
     );
@@ -1129,7 +1154,7 @@ class _SettingsTile extends StatelessWidget {
     required this.isTablet,
     this.borderColor = AppTheme.border,
     this.accentColor = AppTheme.primary,
-    this.surfaceColor = const Color(0xFFF8FAFF),
+    this.surfaceColor = AppTheme.surface,
     required this.onTap,
   });
 
