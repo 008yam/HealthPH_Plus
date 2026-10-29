@@ -76,6 +76,7 @@ flutter:
     - assets/images/
     - assets/data/locations/
     - assets/data/locations/barangays_by_region/
+    - assets/data/boundaries/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpegr

@@ -11,13 +11,16 @@ import 'settings_page.dart';
 import '../services/healthph_api_services.dart';
 import '../services/api_config.dart';
 import '../theme/app_theme.dart';
-import '../services/self_report_store.dart';
+import '../models/surveillance_pin.dart';
+import '../widgets/surveillance_pin_details.dart';
 import '../theme/responsive.dart';
 import '../widgets/weather_widget.dart';
 import '../widgets/floating_navbar.dart';
+import '../services/region_boundary_service.dart';
 
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  final HealthPhApiService? service;
+  const MapPage({super.key, this.service});
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -29,94 +32,98 @@ class _MapPageState extends State<MapPage> {
   static const Color _lightPurple = Color(0xFFDDE6FF);
   static const Color _yellow = Color(0xFFFFD84D);
 
-  static const List<String> diseaseFilterOptions = [
-    "AURI",
-    "Cough",
-    "Fever",
-    "Sore throat",
-    "Influenza-like illness",
-    "Pneumonia",
-    "Bronchitis",
-    "Asthma flare-up",
-    "Shortness of breath",
-    "Wheezing",
-    "COVID-like symptoms",
-    "Tuberculosis symptoms",
-  ];
-
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final MapController mapController = MapController();
-
-  final Set<String> selectedFilters = <String>{};
-
   final LatLng philippinesCenter = const LatLng(12.8797, 121.7740);
+  late final HealthPhApiService _service;
+  List<SurveillancePin> _pins = [];
+  bool _loading = true;
+  bool _failed = false;
+  String? _errorDetail;
+  int _requestId = 0;
+  int _days = 7;
+  String _region = 'all';
+  String _disease = 'all';
 
-  final List<Map<String, dynamic>> outbreaks = [
-    {
-      "name": "Manila City",
-      "disease": "Acute Upper Respiratory Infection",
-      "category": "Upper Respiratory",
-      "reports": 42,
-      "updated": "Updated: June 1, 2026",
-      "lat": 14.5995,
-      "lng": 120.9842,
-      "tags": [
-        "AURI",
-        "Cough",
-        "Fever",
-        "Sore throat",
-        "Influenza-like illness",
-        "COVID-like symptoms",
-      ],
-    },
-    {
-      "name": "Laguna Province",
-      "disease": "Pneumonia",
-      "category": "Lower Respiratory",
-      "reports": 28,
-      "updated": "Updated: May 31, 2026",
-      "lat": 14.1709,
-      "lng": 121.2446,
-      "tags": [
-        "Pneumonia",
-        "Bronchitis",
-        "Asthma flare-up",
-        "Shortness of breath",
-        "Wheezing",
-        "Fever",
-      ],
-    },
-    {
-      "name": "Bulacan Province",
-      "disease": "Tuberculosis",
-      "category": "Respiratory",
-      "reports": 15,
-      "updated": "Updated: May 30, 2026",
-      "lat": 14.7943,
-      "lng": 120.8799,
-      "tags": ["Tuberculosis symptoms", "Cough", "Shortness of breath"],
-    },
-  ];
+  static const timelineOptions = {
+    1: 'Last 24 hours',
+    7: 'Last 7 days',
+    30: 'Last 30 days',
+  };
 
-  List<Map<String, dynamic>> get allOutbreaks {
-    return [...outbreaks, ...SelfReportStore.instance.mapReports];
+  String get filterSummary =>
+      '${context.tr(timelineOptions[_days]!)} · $_region · $_disease';
+
+  RegionBoundary? _selectedBoundary;
+  int _boundaryRequest = 0;
+
+  Future<void> _focusRegion() async {
+    final request = ++_boundaryRequest;
+    final region = _region;
+    setState(() => _selectedBoundary = null);
+    if (region == 'all') {
+      resetMapView();
+      return;
+    }
+    try {
+      final boundaries = await RegionBoundaryService.load();
+      if (!mounted || request != _boundaryRequest) return;
+      final boundary = boundaries[region];
+      if (boundary == null || boundary.outlinePoints.isEmpty) {
+        throw const FormatException('Region boundary unavailable');
+      }
+      setState(() => _selectedBoundary = boundary);
+      final size = MediaQuery.sizeOf(context);
+      mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: LatLngBounds.fromPoints(boundary.outlinePoints),
+          padding: EdgeInsets.fromLTRB(
+            32,
+            size.height * 0.25,
+            32,
+            size.height * 0.20,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted || request != _boundaryRequest) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to load the region boundary.')),
+      );
+    }
   }
 
-  List<Map<String, dynamic>> get filteredOutbreaks {
-    if (selectedFilters.isEmpty) return allOutbreaks;
-
-    return allOutbreaks.where((outbreak) {
-      final tags = List<String>.from(outbreak["tags"] ?? []);
-      return tags.any(selectedFilters.contains);
-    }).toList();
-  }
-
-  String get filterSummary {
-    if (selectedFilters.isEmpty) return context.tr("All diseases & symptoms");
-    return context.tr(
-      '{count} selected',
-      parameters: {'count': selectedFilters.length},
-    );
+  Future<void> _loadPins() async {
+    final request = ++_requestId;
+    setState(() {
+      _loading = true;
+      _failed = false;
+      _errorDetail = null;
+      _pins = [];
+    });
+    try {
+      final pins = await _service.fetchSurveillanceMapPins(
+        days: _days,
+        region: _region,
+        disease: _disease,
+      );
+      if (!mounted || request != _requestId) return;
+      setState(() {
+        _pins = pins;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted || request != _requestId) return;
+      setState(() {
+        _failed = true;
+        _errorDetail = error is SurveillanceMapException
+            ? error.message
+            : error is FormatException
+            ? 'The backend returned an incompatible surveillance response.'
+            : 'The map request failed. Check the backend connection.';
+        _loading = false;
+      });
+    }
   }
 
   void resetMapView() {
@@ -135,188 +142,132 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _openDiseaseFilterSheet() {
-    final draftFilters = Set<String>.from(selectedFilters);
-
+    var days = _days;
+    var region = _region;
+    var disease = _disease;
+    final form = GlobalKey<FormState>();
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final mediaQuery = MediaQuery.of(sheetContext);
-
-            return Container(
-              constraints: BoxConstraints(
-                maxHeight: mediaQuery.size.height * 0.78,
-              ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 44,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.black26,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              context.tr("Select Diseases / Symptoms"),
-                              style: TextStyle(
-                                color: _navy,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: context.tr("Close"),
-                            onPressed: () => Navigator.pop(sheetContext),
-                            icon: const Icon(Icons.close, color: _navy),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        draftFilters.isEmpty
-                            ? context.tr(
-                                "No filters selected. All reports will be shown.",
-                              )
-                            : context.tr(
-                                "{draftFilters.length} selected",
-                                parameters: {
-                                  "draftFilters.length": draftFilters.length,
-                                },
-                              ),
-                        style: const TextStyle(
-                          color: _deepBlue,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Flexible(
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: diseaseFilterOptions.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 6),
-                          itemBuilder: (context, index) {
-                            final option = diseaseFilterOptions[index];
-                            final isSelected = draftFilters.contains(option);
-
-                            return Material(
-                              color: isSelected
-                                  ? _lightPurple.withValues(alpha: 0.65)
-                                  : const Color(0xFFF7F8FF),
-                              borderRadius: BorderRadius.circular(12),
-                              child: CheckboxListTile(
-                                value: isSelected,
-                                onChanged: (checked) {
-                                  setSheetState(() {
-                                    if (checked ?? false) {
-                                      draftFilters.add(option);
-                                    } else {
-                                      draftFilters.remove(option);
-                                    }
-                                  });
-                                },
-                                activeColor: _deepBlue,
-                                checkColor: Colors.white,
-                                controlAffinity:
-                                    ListTileControlAffinity.leading,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                title: Text(
-                                  context.tr(option),
-                                  style: const TextStyle(
-                                    color: Color(0xFF1D2450),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: _deepBlue,
-                                side: const BorderSide(color: _deepBlue),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 13,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: () {
-                                setSheetState(draftFilters.clear);
-                              },
-                              child: Text(
-                                context.tr("Clear All"),
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _deepBlue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 13,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  selectedFilters
-                                    ..clear()
-                                    ..addAll(draftFilters);
-                                });
-                                Navigator.pop(sheetContext);
-                              },
-                              child: Text(
-                                context.tr("Apply"),
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+      useSafeArea: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, update) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              MediaQuery.viewInsetsOf(context).bottom + 20,
+            ),
+            child: Form(
+              key: form,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.tr('Disease-signal filters'),
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    key: const ValueKey('surveillance-timeline'),
+                    initialValue: days,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: context.tr('Timeline'),
+                    ),
+                    items: timelineOptions.entries
+                        .map(
+                          (entry) => DropdownMenuItem(
+                            value: entry.key,
+                            child: Text(context.tr(entry.value)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => update(() => days = value!),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: region,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: context.tr('Region'),
+                    ),
+                    items:
+                        [
+                              'all',
+                              'NCR',
+                              'I',
+                              'II',
+                              'III',
+                              'IVA',
+                              'IVB',
+                              'V',
+                              'VI',
+                              'VII',
+                              'VIII',
+                              'IX',
+                              'X',
+                              'XI',
+                              'XII',
+                              'XIII',
+                              'CAR',
+                              'BARMM',
+                            ]
+                            .map(
+                              (code) => DropdownMenuItem(
+                                value: code,
+                                child: Text(
+                                  code == 'all'
+                                      ? context.tr('All regions')
+                                      : code,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (value) => update(() => region = value!),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: disease,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: context.tr('Disease'),
+                    ),
+                    items: ['all', ...SurveillancePin.diseases]
+                        .map(
+                          (code) => DropdownMenuItem(
+                            value: code,
+                            child: Text(
+                              code == 'all' ? context.tr('All diseases') : code,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => update(() => disease = value!),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () {
+                      if (!form.currentState!.validate()) return;
+                      form.currentState!.save();
+                      setState(() {
+                        _days = days;
+                        _region = region;
+                        _disease = disease;
+                      });
+                      Navigator.pop(sheetContext);
+                      _loadPins();
+                      _focusRegion();
+                    },
+                    child: Text(context.tr('Apply')),
+                  ),
+                ],
               ),
-            );
-          },
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -326,45 +277,70 @@ class _MapPageState extends State<MapPage> {
     navigator.pushReplacement(MaterialPageRoute(builder: (_) => page));
   }
 
-  late Future<Map<String, dynamic>> diseaseFuture;
-
-  void _refreshSelfReports() {
-    if (mounted) setState(() {});
-  }
-
   @override
   void dispose() {
-    SelfReportStore.instance.removeListener(_refreshSelfReports);
+    mapController.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    SelfReportStore.instance.addListener(_refreshSelfReports);
-    diseaseFuture = HealthPhApiService(
-      baseUrl: ApiConfig.baseUrl,
-    ).fetchDiseasePoints();
+    _service = widget.service ?? HealthPhApiService(baseUrl: ApiConfig.baseUrl);
+    _loadPins();
   }
 
-  final Map<String, LatLng> regionCenters = {
-    "NCR": LatLng(14.5995, 120.9842),
-    "I": LatLng(16.0832, 120.6199),
-    "II": LatLng(17.6132, 121.7270),
-    "III": LatLng(15.4828, 120.7120),
-    "IVA": LatLng(14.1008, 121.0794),
-    "V": LatLng(13.6218, 123.1948),
-    "VI": LatLng(11.0050, 122.5373),
-    "VII": LatLng(10.3157, 123.8854),
-    "VIII": LatLng(11.2433, 125.0046),
-    "IX": LatLng(7.8383, 123.2967),
-    "X": LatLng(8.4542, 124.6319),
-    "XI": LatLng(7.1907, 125.4553),
-    "XII": LatLng(6.2707, 124.6857),
-    "XIII": LatLng(8.9475, 125.5406),
-    "CAR": LatLng(16.4023, 120.5960),
-    "BARMM": LatLng(7.2167, 124.2500),
-  };
+  void _openPin(SurveillancePin pin) {
+    mapController.move(
+      LatLng(pin.latitude, pin.longitude),
+      mapController.camera.zoom.clamp(7.5, 9.0).toDouble(),
+    );
+    final region = pin.region?.trim();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      barrierColor: Colors.black.withValues(alpha: 0.12),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (sheetContext) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.82,
+        minChildSize: 0.40,
+        maxChildSize: 0.94,
+        builder: (context, controller) => ListView(
+          controller: controller,
+          padding: EdgeInsets.only(
+            bottom: 16 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: [
+            SurveillancePinDetails(
+              pin: pin,
+              embedded: true,
+              onClose: () => Navigator.pop(sheetContext),
+            ),
+            const Divider(height: 1, indent: 16, endIndent: 16),
+            if (region != null && region.isNotEmpty)
+              WeatherWidget(
+                key: ValueKey('pin-weather-${pin.id}'),
+                region: region,
+                lockRegion: true,
+                embedded: true,
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  context.tr(
+                    'Weather unavailable: this pin has no region code.',
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override //build()
   Widget build(BuildContext context) {
@@ -387,6 +363,7 @@ class _MapPageState extends State<MapPage> {
     final pinIconSize = isTablet ? 50.0 : (isLandscapePhone ? 38.0 : 44.0);
     return Scaffold(
       key: _scaffoldKey,
+      extendBody: true,
       backgroundColor: Colors.transparent,
       drawer: _buildDrawer(context),
       body: Stack(
@@ -403,31 +380,33 @@ class _MapPageState extends State<MapPage> {
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.example.healthphplus',
                 ),
+                if (_selectedBoundary != null)
+                  IgnorePointer(
+                    child: PolygonLayer(
+                      polygons: [
+                        for (final rings in _selectedBoundary!.polygons)
+                          Polygon(
+                            points: rings.first,
+                            holePointsList: rings.skip(1).toList(),
+                            color: const Color(0x2231459B),
+                            borderColor: const Color(0xFF31459B),
+                            borderStrokeWidth: 2,
+                          ),
+                      ],
+                    ),
+                  ),
                 MarkerLayer(
-                  markers: filteredOutbreaks.map((outbreak) {
+                  markers: _pins.map((pin) {
                     return Marker(
-                      point: LatLng(outbreak["lat"], outbreak["lng"]),
+                      key: ValueKey(pin.id),
+                      point: LatLng(pin.latitude, pin.longitude),
                       width: markerSize,
                       height: markerSize,
                       child: GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(20),
-                              ),
-                            ),
-                            builder: (_) {
-                              return OutbreakDetailsSheet(outbreak: outbreak);
-                            },
-                          );
-                        },
+                        onTap: () => _openPin(pin),
                         child: Icon(
                           Icons.location_on,
-                          color: outbreak['source'] == "selfReport"
-                              ? AppTheme.info
-                              : Colors.redAccent,
+                          color: AppTheme.info,
                           size: pinIconSize,
                         ),
                       ),
@@ -453,7 +432,10 @@ class _MapPageState extends State<MapPage> {
             child: SizedBox(
               width: headerWidth,
               child: _MapHeader(
-                reportCount: filteredOutbreaks.length,
+                reportCount: _pins.fold<int>(
+                  0,
+                  (sum, pin) => sum + pin.processedEntryCount,
+                ),
                 filterSummary: filterSummary,
               ),
             ),
@@ -464,10 +446,77 @@ class _MapPageState extends State<MapPage> {
             top: safeTop + (isLandscapePhone ? 78 : 94),
             child: SizedBox(
               width: filterWidth,
-              child: _FilterButton(
-                summary: filterSummary,
-                selectedCount: selectedFilters.length,
-                onTap: _openDiseaseFilterSheet,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _FilterButton(
+                    summary: filterSummary,
+                    selectedCount:
+                        (_days != 7 ? 1 : 0) +
+                        (_region != 'all' ? 1 : 0) +
+                        (_disease != 'all' ? 1 : 0),
+                    onTap: _openDiseaseFilterSheet,
+                  ),
+                  const SizedBox(height: 8),
+                  Material(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _loading
+                                ? const LinearProgressIndicator()
+                                : Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        context.tr(
+                                          _failed
+                                              ? 'Unable to load disease signals.'
+                                              : _pins.isEmpty
+                                              ? 'No processed disease signals for these filters.'
+                                              : 'Processed disease signals',
+                                        ),
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      if (_failed && _errorDetail != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 4,
+                                          ),
+                                          child: Text(
+                                            context.tr(_errorDetail!),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                          ),
+                          IconButton(
+                            tooltip: context.tr(_failed ? 'Retry' : 'Refresh'),
+                            onPressed: _loading ? null : _loadPins,
+                            icon: const Icon(Icons.refresh),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -484,20 +533,6 @@ class _MapPageState extends State<MapPage> {
                 const SizedBox(height: 8),
                 MapControlButton(icon: Icons.my_location, onTap: resetMapView),
               ],
-            ),
-          ),
-
-          // COMPACT WEATHER OVERLAY
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: 12,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 380),
-                child: const WeatherWidget(compact: true),
-              ),
             ),
           ),
         ],
@@ -631,7 +666,7 @@ class _MapHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  context.tr("Outbreak Map"),
+                  context.tr('Disease-signal Map'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -642,7 +677,7 @@ class _MapHeader extends StatelessWidget {
                 ),
                 Text(
                   context.tr(
-                    "{reportCount} active reports",
+                    "{reportCount} processed entries",
                     parameters: {"reportCount": reportCount},
                   ),
                   maxLines: 1,
@@ -705,7 +740,7 @@ class _FilterButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      context.tr("Select Diseases / Symptoms"),
+                      context.tr('Filter disease signals'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -832,68 +867,92 @@ class MapControlButton extends StatelessWidget {
 
 class OutbreakDetailsSheet extends StatelessWidget {
   final Map<String, dynamic> outbreak;
-
   const OutbreakDetailsSheet({super.key, required this.outbreak});
 
   @override
   Widget build(BuildContext context) {
-    final tags = outbreak["tags"] as List<String>;
-
-    return Padding(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            outbreak["disease"],
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF243B8F),
-            ),
+    final colors = Theme.of(context).colorScheme;
+    final rawTags = outbreak['tags'];
+    final tags = rawTags is List
+        ? rawTags.whereType<String>().toList()
+        : <String>[];
+    String value(String key) => outbreak[key]?.toString() ?? '';
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: DefaultTextStyle(
+          style: TextStyle(color: colors.onSurface, fontSize: 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.tr(value('disease')),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: colors.primary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: context.tr('Close'),
+                    color: colors.onSurface,
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                value('name'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                context.tr(value('category')),
+                style: TextStyle(color: colors.onSurfaceVariant),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                context.tr(
+                  '{count} reports',
+                  parameters: {'count': outbreak['reports'] ?? 0},
+                ),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                value('updated'),
+                style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+              ),
+              if (value('pinAccuracy').isNotEmpty)
+                Text(
+                  context.tr(value('pinAccuracy')),
+                  style: TextStyle(color: colors.onSurfaceVariant),
+                ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: tags
+                    .map(
+                      (tag) => Chip(
+                        label: Text(
+                          context.tr(tag),
+                          style: TextStyle(color: colors.onSecondaryContainer),
+                        ),
+                        backgroundColor: colors.secondaryContainer,
+                        side: BorderSide(color: colors.outlineVariant),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
           ),
-
-          const SizedBox(height: 6),
-
-          Text(
-            outbreak["name"],
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-
-          Text(
-            outbreak["category"],
-            style: const TextStyle(color: Colors.grey),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            context.tr(
-              "{outbreak[\"reports\"]} reports",
-              parameters: {"outbreak[\"reports\"]": outbreak["reports"]},
-            ),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.redAccent,
-            ),
-          ),
-
-          Text(outbreak["updated"], style: const TextStyle(fontSize: 11)),
-
-          const SizedBox(height: 12),
-
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: tags.map((tag) {
-              return Chip(
-                label: Text(tag, style: const TextStyle(fontSize: 11)),
-                backgroundColor: const Color(0xFFDDE6FF),
-              );
-            }).toList(),
-          ),
-        ],
+        ),
       ),
     );
   }

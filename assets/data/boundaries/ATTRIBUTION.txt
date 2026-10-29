@@ -1,0 +1,6 @@
+Philippine regional boundaries:
+NAMRIA and PSA, through OCHA COD-AB.
+Underlying boundaries licensed under CC BY-IGO.
+GeoJSON distributed by faeldon/philippines-json-maps.
+Dataset version: see source_manifest.json.
+https://github.com/faeldon/philippines-json-maps
