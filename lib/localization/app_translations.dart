@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'sentiment_reporting_translations.dart';
 
 // Starter translations: have native speakers review these before release.
 // Keys match the English phrases in the static text inventory.
@@ -698,7 +699,8 @@ String translateText(
   String language, {
   Map<String, Object> parameters = const {},
 }) {
-  final translated = appTranslations[language]?[english];
+  final translated = appTranslations[language]?[english] ??
+      sentimentReportingTranslations[language]?[english];
   final template = translated == null || translated.trim().isEmpty
       ? english
       : translated;

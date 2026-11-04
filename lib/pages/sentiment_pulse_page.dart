@@ -7,15 +7,132 @@ import '../models/mobile_survey.dart';
 import '../services/api_config.dart';
 import '../services/profile_store.dart';
 import '../services/sentiment_survey_service.dart';
+import '../models/sentiment_pulse_report.dart';
+import '../models/sentiment_report_filters.dart';
+import '../widgets/sentiment_report_filter_sheet.dart';
+import '../widgets/satisfaction_trend_chart.dart';
 
-class SentimentPulsePage extends StatelessWidget {
+class SentimentPulsePage extends StatefulWidget {
   final int initialTabIndex;
+  final SentimentPulseReport? report;
+  final bool reportLoading;
+  final String? reportError;
+  final VoidCallback? onRetryReport;
+  final ValueChanged<SentimentReportFilters>? onReportFiltersChanged;
 
-  const SentimentPulsePage({super.key, this.initialTabIndex = 0});
+  const SentimentPulsePage({
+    super.key,
+    this.initialTabIndex = 0,
+    this.report,
+    this.reportLoading = false,
+    this.reportError,
+    this.onRetryReport,
+    this.onReportFiltersChanged,
+  });
+
+  @override
+  State<SentimentPulsePage> createState() => _SentimentPulsePageState();
+}
+
+class _SentimentPulsePageState extends State<SentimentPulsePage> {
+  SentimentReportFilters _filters = const SentimentReportFilters();
+
+  Future<void> _chooseFilters() async {
+    final selected = await showModalBottomSheet<SentimentReportFilters>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => SentimentReportFilterSheet(initial: _filters),
+    );
+    if (!mounted || selected == null) return;
+    setState(() => _filters = selected);
+    widget.onReportFiltersChanged?.call(selected);
+  }
+
+  Widget _reportTab(BuildContext context, Widget content) => Column(
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              '${context.tr(SentimentReportFilters.ranges[_filters.timeRange]!)}'
+              ' · ${_filters.region ?? context.tr('All regions')}',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+          IconButton(
+            onPressed: _chooseFilters,
+            tooltip: context.tr('Reporting filters'),
+            icon: const Icon(Icons.filter_list),
+          ),
+          if (widget.onRetryReport != null)
+            IconButton(
+              onPressed: widget.reportLoading ? null : widget.onRetryReport,
+              tooltip: context.tr('Refresh'),
+              icon: const Icon(Icons.refresh),
+            ),
+        ],
+      ),
+      if (_filters.timeRange == 'custom')
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text('${_filters.startDate} - ${_filters.endDate}'),
+        ),
+      Expanded(child: _reportContent(context, content)),
+    ],
+  );
+
+  Widget _reportContent(BuildContext context, Widget content) {
+    if (widget.reportLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          semanticsLabel: context.tr('Loading report'),
+        ),
+      );
+    }
+    if (widget.reportError != null) {
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                context.tr(widget.reportError!),
+                textAlign: TextAlign.center,
+              ),
+              if (widget.onRetryReport != null) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: widget.onRetryReport,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(context.tr('Retry')),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+    if (widget.report != null && !_filters.matches(widget.report!.filters)) {
+      return Center(
+        child: Text(
+          context.tr('Selected filters have not been loaded yet.'),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    return content;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final safeInitialIndex = initialTabIndex.clamp(0, 3).toInt();
+    final safeInitialIndex = widget.initialTabIndex.clamp(0, 3).toInt();
     final pagePadding = Responsive.pagePadding(context);
     final headerRadius = Responsive.isLandscapePhone(context) ? 24.0 : 45.0;
     final contentMargin = Responsive.isLandscapePhone(context)
@@ -76,10 +193,11 @@ class SentimentPulsePage extends StatelessWidget {
                             ),
                           ),
 
-                          Image.asset(
-                            'assets/images/healthphplusbarlogo.png',
-                            height: Responsive.logoHeight(context),
-                          ),
+                          if (!Responsive.isLandscapePhone(context))
+                            Image.asset(
+                              'assets/images/healthphplusbarlogo.png',
+                              height: Responsive.logoHeight(context),
+                            ),
 
                           Text(
                             context.tr("Sentiment Pulse"),
@@ -92,15 +210,16 @@ class SentimentPulsePage extends StatelessWidget {
                             ),
                           ),
 
-                          Text(
-                            context.tr(
-                              "Evidence-based health infomration and fact-checking",
+                          if (!Responsive.isLandscapePhone(context))
+                            Text(
+                              context.tr(
+                                "Community sentiment and survey satisfaction",
+                              ),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.indigo,
+                              ),
                             ),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.indigo,
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -125,6 +244,8 @@ class SentimentPulsePage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: TabBar(
+                              isScrollable: true,
+                              tabAlignment: TabAlignment.start,
                               labelColor: Colors.black,
                               unselectedLabelColor: Colors.grey,
                               indicatorColor: Colors.indigo,
@@ -142,8 +263,14 @@ class SentimentPulsePage extends StatelessWidget {
                           Expanded(
                             child: TabBarView(
                               children: [
-                                OverviewTab(),
-                                TrendsTab(),
+                                _reportTab(
+                                  context,
+                                  OverviewTab(report: widget.report),
+                                ),
+                                _reportTab(
+                                  context,
+                                  TrendsTab(report: widget.report),
+                                ),
                                 RegionalTab(),
                                 SurveyTab(),
                               ],
@@ -164,153 +291,235 @@ class SentimentPulsePage extends StatelessWidget {
 }
 
 class OverviewTab extends StatelessWidget {
-  const OverviewTab({super.key});
+  final SentimentPulseReport? report;
+  const OverviewTab({super.key, this.report});
+
+  String _percent(double? value) =>
+      value == null ? '—' : '${value.toStringAsFixed(1)}%';
 
   @override
   Widget build(BuildContext context) {
+    final data = report;
+    if (data == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(context.tr('Reporting data is not connected yet.')),
+        ),
+      );
+    }
+    final sentiment = data.sentiment;
+    final satisfaction = data.satisfaction;
+    final String dominant;
+    if (sentiment.status == 'not_configured') {
+      dominant = context.tr('Not configured');
+    } else if (sentiment.eligibleAnswers == 0) {
+      dominant = context.tr('No eligible answers');
+    } else if (sentiment.dominantCategory == null) {
+      dominant = context.tr('No results yet');
+    } else if (sentiment.dominantCategory == 'tie') {
+      dominant = context.tr('Calm / Worried: 50% each');
+    } else {
+      final category = sentiment.dominantCategory == 'calm'
+          ? context.tr('Calm')
+          : context.tr('Worried');
+      dominant = '$category · ${_percent(sentiment.dominantShare)}';
+    }
+    Widget summary(String title, String value, String detail) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.tr(title),
+            style: const TextStyle(color: AppTheme.mutedText),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.text,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(detail, style: const TextStyle(color: AppTheme.text)),
+          const Divider(height: 24),
+        ],
+      ),
+    );
     return ListView(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.all(12),
       children: [
-        Text(
-          context.tr("Overall Sentiment"),
-          style: TextStyle(
-            color: AppTheme.text,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+        summary(
+          'Overall Sentiment',
+          dominant,
+          context.tr('Shares are based on classified answers.'),
+        ),
+        summary(
+          'Analysis coverage',
+          sentiment.status == 'not_configured'
+              ? context.tr('Not configured')
+              : sentiment.eligibleAnswers == 0
+              ? context.tr('No eligible answers')
+              : _percent(sentiment.analysisCoverage),
+          context.tr(
+            '{analyzed}/{total} analyzed; {missing} without results',
+            parameters: {
+              'analyzed': sentiment.predictedAnswers,
+              'total': sentiment.eligibleAnswers,
+              'missing': sentiment.answersWithoutResults,
+            },
           ),
         ),
-
-        SizedBox(height: 12),
-
-        Row(
-          children: [
-            SentimentBox(
-              percent: "25%", //"${count['AURI']}%",
-              label: "Concerned",
-              icon: Icons.sentiment_dissatisfied,
-              color: Color(0xFFFFD98A),
-            ),
-
-            SizedBox(width: 8),
-
-            SentimentBox(
-              percent: "14%", //"${count['PN']}%",
-              label: "Misinformed",
-              icon: Icons.warning_amber_rounded,
-              color: Color(0xFFFFB3B3),
-            ),
-          ],
+        summary(
+          'Satisfaction',
+          satisfaction.status == 'not_configured'
+              ? context.tr('Not configured')
+              : satisfaction.satisfactionAnswers == 0
+              ? context.tr('No scored answers')
+              : _percent(satisfaction.satisfactionShare),
+          context.tr(
+            '{satisfied}/{total} answers satisfied',
+            parameters: {
+              'satisfied': satisfaction.satisfiedAnswers,
+              'total': satisfaction.satisfactionAnswers,
+            },
+          ),
         ),
-
-        SizedBox(height: 8),
-
-        Row(
-          children: [
-            SentimentBox(
-              percent: "12%", //"${count['TB']}%",
-              label: "Neutral",
-              icon: Icons.sentiment_neutral,
-              color: Color(0xFFBBD7FF),
-            ),
-            SizedBox(width: 8),
-            SentimentBox(
-              percent: "24", //"${count['COVID']}%",
-              label: "Proactive",
-              icon: Icons.sentiment_satisfied_alt,
-              color: Color(0xFFBDF2CD),
-            ),
-          ],
-        ),
-
-        SizedBox(height: 16),
-
-        BarGraphCard(),
       ],
     );
   }
 }
 
 class TrendsTab extends StatelessWidget {
-  const TrendsTab({super.key});
+  final SentimentPulseReport? report;
+  const TrendsTab({super.key, this.report});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        Text(
-          context.tr("Sentiment Trends"),
-          style: TextStyle(
-            color: AppTheme.text,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+    final data = report;
+    if (data == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(context.tr('Reporting data is not connected yet.')),
         ),
-
-        Text(
-          context.tr("Sentiment changes over time"),
-          style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
-        ),
-
-        SizedBox(height: 12),
-
-        TrendLineCard(),
-
-        SizedBox(height: 16),
-
-        Text(
-          context.tr("Trends Insights"),
-          style: TextStyle(
-            color: AppTheme.text,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        SizedBox(height: 8),
-
-        Row(
+      );
+    }
+    String percentage(double? value) => value == null
+        ? context.tr('Unavailable')
+        : '${value.toStringAsFixed(1)}%';
+    Widget heading(String title) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Text(
+        context.tr(title),
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+    );
+    Widget category(String label, int? count, double? share) {
+      const colors = {
+        'Calm': Color(0xFF2572A5),
+        'Worried': Color(0xFFB45309),
+        'Satisfied': Color(0xFF15803D),
+        'Neutral': Color(0xFF687582),
+        'Dissatisfied': Color(0xFFD82727),
+      };
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            InsightCard(
-              title: "Concerned",
-              value: "+6%",
-              description: 'Increase from last week',
-              color: Color(0xFFFFE082),
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              spacing: 12,
+              children: [Text(context.tr(label)), Text(percentage(share))],
             ),
-            SizedBox(width: 8),
-            InsightCard(
-              title: "Proactive",
-              value: "+6%",
-              description: "Increase from last week",
-              color: Color(0xFFC8E6C9),
+            Text(
+              count == null
+                  ? context.tr('Unavailable')
+                  : context.tr('{count} answers', parameters: {'count': count}),
             ),
+            if (share != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: LinearProgressIndicator(
+                  value: share / 100,
+                  color: colors[label],
+                  backgroundColor: const Color(0xFFE5E7EB),
+                  semanticsLabel: context.tr(label),
+                  semanticsValue: percentage(share),
+                ),
+              ),
           ],
         ),
+      );
+    }
 
-        SizedBox(height: 16),
-
-        Text(
-          context.tr("Region Trend Changes"),
-          style: TextStyle(
-            color: AppTheme.text,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        SizedBox(height: 8),
-
-        RegionMiniCard(region: "NCR", sentiment: "Concerned", change: "+6%"),
-        RegionMiniCard(
-          region: "Region III",
-          sentiment: "Neutral",
-          change: "+9%",
-        ),
-        RegionMiniCard(
-          region: "Region V",
-          sentiment: "Misinformed",
-          change: "+6%",
-        ),
+    final sentiments = {
+      for (final item in data.sentimentDistribution) item.category: item,
+    };
+    final satisfaction = {
+      for (final item in data.satisfactionDistribution) item.category: item,
+    };
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        heading('Sentiment distribution'),
+        if (data.sentiment.status == 'not_configured')
+          Text(context.tr('Not configured'))
+        else
+          for (final entry in {'calm': 'Calm', 'worried': 'Worried'}.entries)
+            category(
+              entry.value,
+              sentiments[entry.key]?.answers,
+              sentiments[entry.key]?.share,
+            ),
+        heading('Satisfaction distribution'),
+        if (data.satisfaction.status == 'not_configured')
+          Text(context.tr('Not configured'))
+        else
+          for (final entry in {
+            'satisfied': 'Satisfied',
+            'neutral': 'Neutral',
+            'dissatisfied': 'Dissatisfied',
+          }.entries)
+            category(
+              entry.value,
+              satisfaction[entry.key]?.answers,
+              satisfaction[entry.key]?.share,
+            ),
+        heading('Daily satisfied share'),
+        if (data.satisfaction.status != 'not_configured' &&
+            data.satisfactionTrend.isNotEmpty)
+          SatisfactionTrendChart(points: data.satisfactionTrend),
+        if (data.satisfaction.status == 'not_configured')
+          Text(context.tr('Not configured'))
+        else if (data.satisfactionTrend.isEmpty)
+          Text(context.tr('No daily observations'))
+        else
+          for (final point in data.satisfactionTrend)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${point.date} · ${percentage(point.satisfactionShare)}',
+                  ),
+                  Text(
+                    context.tr(
+                      '{satisfied}/{total} answers satisfied',
+                      parameters: {
+                        'satisfied': point.satisfiedAnswers,
+                        'total': point.satisfactionAnswers,
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
       ],
     );
   }

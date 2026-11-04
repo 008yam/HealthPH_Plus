@@ -1,0 +1,163 @@
+// Draft reporting translations; native-speaker review is recommended.
+const sentimentReportingTranslations = <String, Map<String, String>>{
+  'Filipino': {
+    "Reporting data is not connected yet.":
+        "Hindi pa nakakonekta ang datos ng ulat.",
+    "Loading report": "Naglo-load ng ulat",
+    "Not configured": "Hindi pa naitakda",
+    "No eligible answers": "Walang kwalipikadong sagot",
+    "No results yet": "Wala pang resulta",
+    "Calm": "Kalmado",
+    "Worried": "Nag-aalala",
+    "Calm / Worried: 50% each": "Kalmado / Nag-aalala: tig-50%",
+    "Analysis coverage": "Saklaw ng pagsusuri",
+    "Satisfaction": "Kasiyahan",
+    "Shares are based on classified answers.":
+        "Batay ang mga bahagdan sa mga sagot na nauri.",
+    "{analyzed}/{total} analyzed; {missing} without results":
+        "{analyzed}/{total} nasuri; {missing} walang resulta",
+    "No scored answers": "Walang sagot na may marka",
+    "{satisfied}/{total} answers satisfied":
+        "{satisfied}/{total} sagot na nasiyahan",
+    "Unavailable": "Hindi magagamit",
+    "{count} answers": "{count} sagot",
+    "Sentiment distribution": "Distribusyon ng saloobin",
+    "Satisfaction distribution": "Distribusyon ng kasiyahan",
+    "Satisfied": "Nasiyahan",
+    "Dissatisfied": "Hindi nasiyahan",
+    "Daily satisfied share": "Pang-araw-araw na bahagdan ng nasiyahan",
+    "No daily observations": "Walang pang-araw-araw na datos",
+    "Reporting filters": "Mga filter ng ulat",
+    "Time range": "Saklaw ng panahon",
+    "Last 7 days": "Nakaraang 7 araw",
+    "Last 30 days": "Nakaraang 30 araw",
+    "Last 90 days": "Nakaraang 90 araw",
+    "Custom dates": "Piling mga petsa",
+    "Choose dates": "Pumili ng mga petsa",
+    "All regions": "Lahat ng rehiyon",
+    "Selected filters have not been loaded yet.":
+        "Hindi pa na-load ang ulat para sa napiling mga filter.",
+    "Community sentiment and survey satisfaction":
+        "Saloobin ng komunidad at kasiyahan mula sa survey",
+  },
+  'Cebuano': {
+    "Reporting data is not connected yet.":
+        "Wala pa makonektar ang datos sa taho.",
+    "Loading report": "Nagkarga sa taho",
+    "Not configured": "Wala pa matakda",
+    "No eligible answers": "Walay kwalipikadong tubag",
+    "No results yet": "Wala pay resulta",
+    "Calm": "Kalma",
+    "Worried": "Nabalaka",
+    "Calm / Worried: 50% each": "Kalma / Nabalaka: tag-50%",
+    "Analysis coverage": "Sakop sa pagtuki",
+    "Satisfaction": "Katagbawan",
+    "Shares are based on classified answers.":
+        "Ang mga porsiyento gibase sa mga tubag nga naklasipikar.",
+    "{analyzed}/{total} analyzed; {missing} without results":
+        "{analyzed}/{total} natuki; {missing} walay resulta",
+    "No scored answers": "Walay tubag nga adunay puntos",
+    "{satisfied}/{total} answers satisfied":
+        "{satisfied}/{total} tubag nga natagbaw",
+    "Unavailable": "Dili magamit",
+    "{count} answers": "{count} ka tubag",
+    "Sentiment distribution": "Pag-apod-apod sa pagbati",
+    "Satisfaction distribution": "Pag-apod-apod sa katagbawan",
+    "Satisfied": "Natagbaw",
+    "Dissatisfied": "Wala matagbaw",
+    "Daily satisfied share": "Adlaw-adlaw nga porsiyento sa natagbaw",
+    "No daily observations": "Walay adlaw-adlaw nga datos",
+    "Reporting filters": "Mga filter sa taho",
+    "Time range": "Sakop sa panahon",
+    "Last 7 days": "Miaging 7 ka adlaw",
+    "Last 30 days": "Miaging 30 ka adlaw",
+    "Last 90 days": "Miaging 90 ka adlaw",
+    "Custom dates": "Piniling mga petsa",
+    "Choose dates": "Pilia ang mga petsa",
+    "All regions": "Tanang rehiyon",
+    "Selected filters have not been loaded yet.":
+        "Wala pa makarga ang taho alang sa piniling mga filter.",
+    "Community sentiment and survey satisfaction":
+        "Pagbati sa komunidad ug katagbawan gikan sa survey",
+  },
+  'Ilocano': {
+    "Reporting data is not connected yet.":
+        "Saan pay a naisilpo ti datos ti report.",
+    "Loading report": "Ikarkarga ti report",
+    "Not configured": "Saan pay a naitakder",
+    "No eligible answers": "Awan ti maikari a sungbat",
+    "No results yet": "Awan pay ti resulta",
+    "Calm": "Natalna",
+    "Worried": "Madanagan",
+    "Calm / Worried: 50% each": "Natalna / Madanagan: 50% tunggal maysa",
+    "Analysis coverage": "Sakup ti panangusisa",
+    "Satisfaction": "Pannakapnek",
+    "Shares are based on classified answers.":
+        "Naibatay dagiti porsiento kadagiti naiklasipikar a sungbat.",
+    "{analyzed}/{total} analyzed; {missing} without results":
+        "{analyzed}/{total} nausisa; {missing} awan ti resulta",
+    "No scored answers": "Awan ti sungbat nga addaan puntos",
+    "{satisfied}/{total} answers satisfied":
+        "{satisfied}/{total} sungbat a napnek",
+    "Unavailable": "Saan a magun-od",
+    "{count} answers": "{count} a sungbat",
+    "Sentiment distribution": "Panagbingay ti rikna",
+    "Satisfaction distribution": "Panagbingay ti pannakapnek",
+    "Satisfied": "Napnek",
+    "Dissatisfied": "Saan a napnek",
+    "Daily satisfied share": "Inaldaw a porsiento dagiti napnek",
+    "No daily observations": "Awan ti inaldaw a datos",
+    "Reporting filters": "Dagiti filter ti report",
+    "Time range": "Sakup ti tiempo",
+    "Last 7 days": "Napalabas a 7 nga aldaw",
+    "Last 30 days": "Napalabas a 30 nga aldaw",
+    "Last 90 days": "Napalabas a 90 nga aldaw",
+    "Custom dates": "Napili a petsa",
+    "Choose dates": "Pilien dagiti petsa",
+    "All regions": "Amin a rehion",
+    "Selected filters have not been loaded yet.":
+        "Saan pay a naikarga ti report para kadagiti napili a filter.",
+    "Community sentiment and survey satisfaction":
+        "Rikna ti komunidad ken pannakapnek manipud iti survey",
+  },
+  'Hiligaynon': {
+    "Reporting data is not connected yet.":
+        "Wala pa makonekta ang datos sang report.",
+    "Loading report": "Nagakarga sang report",
+    "Not configured": "Wala pa matakda",
+    "No eligible answers": "Wala sing kwalipikado nga sabat",
+    "No results yet": "Wala pa sing resulta",
+    "Calm": "Kalma",
+    "Worried": "Nabalaka",
+    "Calm / Worried: 50% each": "Kalma / Nabalaka: tag-50%",
+    "Analysis coverage": "Sakop sang pag-usisa",
+    "Satisfaction": "Katagbawan",
+    "Shares are based on classified answers.":
+        "Ang mga porsiyento ginbase sa mga sabat nga naklasipikar.",
+    "{analyzed}/{total} analyzed; {missing} without results":
+        "{analyzed}/{total} nausisa; {missing} wala sing resulta",
+    "No scored answers": "Wala sing sabat nga may puntos",
+    "{satisfied}/{total} answers satisfied":
+        "{satisfied}/{total} sabat nga natagbaw",
+    "Unavailable": "Indi magamit",
+    "{count} answers": "{count} ka sabat",
+    "Sentiment distribution": "Distribusyon sang balatyagon",
+    "Satisfaction distribution": "Distribusyon sang katagbawan",
+    "Satisfied": "Natagbaw",
+    "Dissatisfied": "Wala natagbaw",
+    "Daily satisfied share": "Adlaw-adlaw nga porsiyento sang natagbaw",
+    "No daily observations": "Wala sing adlaw-adlaw nga datos",
+    "Reporting filters": "Mga filter sang report",
+    "Time range": "Sakop sang tion",
+    "Last 7 days": "Nagligad nga 7 ka adlaw",
+    "Last 30 days": "Nagligad nga 30 ka adlaw",
+    "Last 90 days": "Nagligad nga 90 ka adlaw",
+    "Custom dates": "Pinili nga mga petsa",
+    "Choose dates": "Magpili sang mga petsa",
+    "All regions": "Tanan nga rehiyon",
+    "Selected filters have not been loaded yet.":
+        "Wala pa makarga ang report para sa pinili nga mga filter.",
+    "Community sentiment and survey satisfaction":
+        "Balatyagon sang komunidad kag katagbawan halin sa survey",
+  },
+};
