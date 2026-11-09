@@ -2,7 +2,6 @@ import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
-import '../theme/responsive.dart';
 import '../models/mobile_survey.dart';
 import '../services/api_config.dart';
 import '../services/profile_store.dart';
@@ -10,7 +9,10 @@ import '../services/sentiment_survey_service.dart';
 import '../models/sentiment_pulse_report.dart';
 import '../models/sentiment_report_filters.dart';
 import '../widgets/sentiment_report_filter_sheet.dart';
-import '../widgets/satisfaction_trend_chart.dart';
+import '../widgets/sentiment_report_sections.dart';
+import '../services/sentiment_reporting_service.dart';
+import '../services/sentiment_reporting_controller.dart';
+import '../login_page.dart';
 
 class SentimentPulsePage extends StatefulWidget {
   final int initialTabIndex;
@@ -19,6 +21,7 @@ class SentimentPulsePage extends StatefulWidget {
   final String? reportError;
   final VoidCallback? onRetryReport;
   final ValueChanged<SentimentReportFilters>? onReportFiltersChanged;
+  final SentimentReportingService? reportingService;
 
   const SentimentPulsePage({
     super.key,
@@ -28,14 +31,92 @@ class SentimentPulsePage extends StatefulWidget {
     this.reportError,
     this.onRetryReport,
     this.onReportFiltersChanged,
+    this.reportingService,
   });
 
   @override
   State<SentimentPulsePage> createState() => _SentimentPulsePageState();
 }
 
-class _SentimentPulsePageState extends State<SentimentPulsePage> {
+class _SentimentPulsePageState extends State<SentimentPulsePage>
+    with WidgetsBindingObserver {
   SentimentReportFilters _filters = const SentimentReportFilters();
+  SentimentReportingController? _controller;
+  SentimentReportingService? _service;
+  bool _ownsService = false;
+  bool get _external =>
+      widget.report != null ||
+      widget.reportLoading ||
+      widget.reportError != null ||
+      widget.onRetryReport != null ||
+      widget.onReportFiltersChanged != null;
+  SentimentPulseReport? get _report =>
+      _external ? widget.report : _controller?.report;
+  bool get _loading =>
+      _external ? widget.reportLoading : (_controller?.loading ?? false);
+  String? get _error => _external ? widget.reportError : _controller?.error;
+  VoidCallback? get _retry =>
+      _external ? widget.onRetryReport : () => _controller?.refresh();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _configureReporting();
+  }
+
+  void _configureReporting() {
+    _controller?.removeListener(_reportChanged);
+    _controller?.dispose();
+    _controller = null;
+    if (_ownsService) _service?.dispose();
+    _service = null;
+    _ownsService = false;
+    if (_external) return;
+    _service =
+        widget.reportingService ??
+        SentimentReportingService(baseUrl: ApiConfig.sentimentBaseUrl);
+    _ownsService = widget.reportingService == null;
+    _controller = SentimentReportingController(_service!);
+    _controller!.addListener(_reportChanged);
+    _controller!.refresh();
+  }
+
+  void _reportChanged() {
+    if (mounted) setState(() => _filters = _controller!.filters);
+  }
+
+  @override
+  void didUpdateWidget(covariant SentimentPulsePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final wasExternal =
+        oldWidget.report != null ||
+        oldWidget.reportLoading ||
+        oldWidget.reportError != null ||
+        oldWidget.onRetryReport != null ||
+        oldWidget.onReportFiltersChanged != null;
+    if (wasExternal != _external ||
+        oldWidget.reportingService != widget.reportingService) {
+      _configureReporting();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        ModalRoute.of(context)?.isCurrent == true) {
+      _controller?.refresh();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller?.removeListener(_reportChanged);
+    _controller?.dispose();
+    if (_ownsService) _service?.dispose();
+    super.dispose();
+  }
 
   Future<void> _chooseFilters() async {
     final selected = await showModalBottomSheet<SentimentReportFilters>(
@@ -47,16 +128,21 @@ class _SentimentPulsePageState extends State<SentimentPulsePage> {
     if (!mounted || selected == null) return;
     setState(() => _filters = selected);
     widget.onReportFiltersChanged?.call(selected);
+    _controller?.select(selected);
   }
 
-  Widget _reportTab(BuildContext context, Widget content) => Column(
+  Widget _reportTab(
+    BuildContext context,
+    Widget content, {
+    bool regional = false,
+  }) => Column(
     children: [
       Row(
         children: [
           Expanded(
             child: Text(
               '${context.tr(SentimentReportFilters.ranges[_filters.timeRange]!)}'
-              ' · ${_filters.region ?? context.tr('All regions')}',
+              ' · ${regional ? (_filters.regionalRegion ?? context.tr('Account region')) : (_filters.region ?? context.tr('All regions'))}',
               style: const TextStyle(fontSize: 12),
             ),
           ),
@@ -65,9 +151,9 @@ class _SentimentPulsePageState extends State<SentimentPulsePage> {
             tooltip: context.tr('Reporting filters'),
             icon: const Icon(Icons.filter_list),
           ),
-          if (widget.onRetryReport != null)
+          if (_retry != null)
             IconButton(
-              onPressed: widget.reportLoading ? null : widget.onRetryReport,
+              onPressed: _loading ? null : _retry,
               tooltip: context.tr('Refresh'),
               icon: const Icon(Icons.refresh),
             ),
@@ -83,14 +169,14 @@ class _SentimentPulsePageState extends State<SentimentPulsePage> {
   );
 
   Widget _reportContent(BuildContext context, Widget content) {
-    if (widget.reportLoading) {
+    if (_loading) {
       return Center(
         child: CircularProgressIndicator(
           semanticsLabel: context.tr('Loading report'),
         ),
       );
     }
-    if (widget.reportError != null) {
+    if (_error != null) {
       return Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -102,14 +188,18 @@ class _SentimentPulsePageState extends State<SentimentPulsePage> {
                 color: Theme.of(context).colorScheme.error,
               ),
               const SizedBox(height: 12),
-              Text(
-                context.tr(widget.reportError!),
-                textAlign: TextAlign.center,
-              ),
-              if (widget.onRetryReport != null) ...[
+              Text(context.tr(_error!), textAlign: TextAlign.center),
+              if (!_external && _controller?.authenticationRequired == true)
+                FilledButton(
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => const LoginPage())),
+                  child: Text(context.tr('Login')),
+                )
+              else if (_retry != null) ...[
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: widget.onRetryReport,
+                  onPressed: _retry,
                   icon: const Icon(Icons.refresh),
                   label: Text(context.tr('Retry')),
                 ),
@@ -119,7 +209,7 @@ class _SentimentPulsePageState extends State<SentimentPulsePage> {
         ),
       );
     }
-    if (widget.report != null && !_filters.matches(widget.report!.filters)) {
+    if (_report != null && !_filters.matches(_report!.filters)) {
       return Center(
         child: Text(
           context.tr('Selected filters have not been loaded yet.'),
@@ -133,157 +223,80 @@ class _SentimentPulsePageState extends State<SentimentPulsePage> {
   @override
   Widget build(BuildContext context) {
     final safeInitialIndex = widget.initialTabIndex.clamp(0, 3).toInt();
-    final pagePadding = Responsive.pagePadding(context);
-    final headerRadius = Responsive.isLandscapePhone(context) ? 24.0 : 45.0;
-    final contentMargin = Responsive.isLandscapePhone(context)
-        ? EdgeInsets.fromLTRB(pagePadding, 8, pagePadding, 8)
-        : EdgeInsets.all(pagePadding * 0.8);
-
-    return DefaultTabController(
-      length: 4,
-      initialIndex: safeInitialIndex,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            Column(
-              children: [
-                // HEADER
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: DefaultTabController(
+        length: 4,
+        initialIndex: safeInitialIndex,
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF7F9FC),
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            leading: IconButton(
+              tooltip: context.tr('Back'),
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MainPage()),
+                  );
+                }
+              },
+            ),
+            title: Text(
+              context.tr('Sentiment Pulse'),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(56),
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2F7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicatorPadding: const EdgeInsets.all(4),
+                  indicator: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(headerRadius),
-                      bottomRight: Radius.circular(headerRadius),
-                    ),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE0E6EF)),
                   ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        pagePadding,
-                        10,
-                        pagePadding,
-                        Responsive.verticalGap(context, 25, compact: 12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              if (Navigator.canPop(context)) {
-                                Navigator.pop(context);
-                              } else {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const MainPage(),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text(context.tr("Back")),
-                          ),
-                          SizedBox(
-                            height: Responsive.verticalGap(
-                              context,
-                              10,
-                              compact: 6,
-                            ),
-                          ),
-
-                          if (!Responsive.isLandscapePhone(context))
-                            Image.asset(
-                              'assets/images/healthphplusbarlogo.png',
-                              height: Responsive.logoHeight(context),
-                            ),
-
-                          Text(
-                            context.tr("Sentiment Pulse"),
-                            style: TextStyle(
-                              fontSize: Responsive.isLandscapePhone(context)
-                                  ? 20
-                                  : 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.indigo,
-                            ),
-                          ),
-
-                          if (!Responsive.isLandscapePhone(context))
-                            Text(
-                              context.tr(
-                                "Community sentiment and survey satisfaction",
-                              ),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.indigo,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  labelColor: AppTheme.text,
+                  unselectedLabelColor: AppTheme.mutedText,
+                  tabs: [
+                    Tab(text: context.tr('Overview')),
+                    Tab(text: context.tr('Trends')),
+                    Tab(text: context.tr('Regional')),
+                    Tab(text: context.tr('Survey')),
+                  ],
                 ),
-                Expanded(
-                  child: Container(
-                    margin: contentMargin,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: AppTheme.border),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Theme(
-                      data: AppTheme.lightTheme,
-                      child: Column(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: TabBar(
-                              isScrollable: true,
-                              tabAlignment: TabAlignment.start,
-                              labelColor: Colors.black,
-                              unselectedLabelColor: Colors.grey,
-                              indicatorColor: Colors.indigo,
-                              tabs: [
-                                Tab(text: context.tr("Overview")),
-                                Tab(text: context.tr("Trends")),
-                                Tab(text: context.tr("Regional")),
-                                Tab(text: context.tr("Survey")),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 14),
-
-                          Expanded(
-                            child: TabBarView(
-                              children: [
-                                _reportTab(
-                                  context,
-                                  OverviewTab(report: widget.report),
-                                ),
-                                _reportTab(
-                                  context,
-                                  TrendsTab(report: widget.report),
-                                ),
-                                RegionalTab(),
-                                SurveyTab(),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+              ),
+            ),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TabBarView(
+              children: [
+                _reportTab(context, OverviewTab(report: _report)),
+                _reportTab(context, TrendsTab(report: _report)),
+                _reportTab(
+                  context,
+                  RegionalTab(report: _report, onChooseRegion: _chooseFilters),
+                  regional: true,
                 ),
+                const SurveyTab(),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -293,292 +306,29 @@ class _SentimentPulsePageState extends State<SentimentPulsePage> {
 class OverviewTab extends StatelessWidget {
   final SentimentPulseReport? report;
   const OverviewTab({super.key, this.report});
-
-  String _percent(double? value) =>
-      value == null ? '—' : '${value.toStringAsFixed(1)}%';
-
   @override
-  Widget build(BuildContext context) {
-    final data = report;
-    if (data == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(context.tr('Reporting data is not connected yet.')),
-        ),
-      );
-    }
-    final sentiment = data.sentiment;
-    final satisfaction = data.satisfaction;
-    final String dominant;
-    if (sentiment.status == 'not_configured') {
-      dominant = context.tr('Not configured');
-    } else if (sentiment.eligibleAnswers == 0) {
-      dominant = context.tr('No eligible answers');
-    } else if (sentiment.dominantCategory == null) {
-      dominant = context.tr('No results yet');
-    } else if (sentiment.dominantCategory == 'tie') {
-      dominant = context.tr('Calm / Worried: 50% each');
-    } else {
-      final category = sentiment.dominantCategory == 'calm'
-          ? context.tr('Calm')
-          : context.tr('Worried');
-      dominant = '$category · ${_percent(sentiment.dominantShare)}';
-    }
-    Widget summary(String title, String value, String detail) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.tr(title),
-            style: const TextStyle(color: AppTheme.mutedText),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.text,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(detail, style: const TextStyle(color: AppTheme.text)),
-          const Divider(height: 24),
-        ],
-      ),
-    );
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: [
-        summary(
-          'Overall Sentiment',
-          dominant,
-          context.tr('Shares are based on classified answers.'),
-        ),
-        summary(
-          'Analysis coverage',
-          sentiment.status == 'not_configured'
-              ? context.tr('Not configured')
-              : sentiment.eligibleAnswers == 0
-              ? context.tr('No eligible answers')
-              : _percent(sentiment.analysisCoverage),
-          context.tr(
-            '{analyzed}/{total} analyzed; {missing} without results',
-            parameters: {
-              'analyzed': sentiment.predictedAnswers,
-              'total': sentiment.eligibleAnswers,
-              'missing': sentiment.answersWithoutResults,
-            },
-          ),
-        ),
-        summary(
-          'Satisfaction',
-          satisfaction.status == 'not_configured'
-              ? context.tr('Not configured')
-              : satisfaction.satisfactionAnswers == 0
-              ? context.tr('No scored answers')
-              : _percent(satisfaction.satisfactionShare),
-          context.tr(
-            '{satisfied}/{total} answers satisfied',
-            parameters: {
-              'satisfied': satisfaction.satisfiedAnswers,
-              'total': satisfaction.satisfactionAnswers,
-            },
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => report == null
+      ? Center(child: Text(context.tr('Reporting data is not connected yet.')))
+      : ReportingOverview(report: report!);
 }
 
 class TrendsTab extends StatelessWidget {
   final SentimentPulseReport? report;
   const TrendsTab({super.key, this.report});
-
   @override
-  Widget build(BuildContext context) {
-    final data = report;
-    if (data == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(context.tr('Reporting data is not connected yet.')),
-        ),
-      );
-    }
-    String percentage(double? value) => value == null
-        ? context.tr('Unavailable')
-        : '${value.toStringAsFixed(1)}%';
-    Widget heading(String title) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Text(
-        context.tr(title),
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-    );
-    Widget category(String label, int? count, double? share) {
-      const colors = {
-        'Calm': Color(0xFF2572A5),
-        'Worried': Color(0xFFB45309),
-        'Satisfied': Color(0xFF15803D),
-        'Neutral': Color(0xFF687582),
-        'Dissatisfied': Color(0xFFD82727),
-      };
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              spacing: 12,
-              children: [Text(context.tr(label)), Text(percentage(share))],
-            ),
-            Text(
-              count == null
-                  ? context.tr('Unavailable')
-                  : context.tr('{count} answers', parameters: {'count': count}),
-            ),
-            if (share != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: LinearProgressIndicator(
-                  value: share / 100,
-                  color: colors[label],
-                  backgroundColor: const Color(0xFFE5E7EB),
-                  semanticsLabel: context.tr(label),
-                  semanticsValue: percentage(share),
-                ),
-              ),
-          ],
-        ),
-      );
-    }
-
-    final sentiments = {
-      for (final item in data.sentimentDistribution) item.category: item,
-    };
-    final satisfaction = {
-      for (final item in data.satisfactionDistribution) item.category: item,
-    };
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        heading('Sentiment distribution'),
-        if (data.sentiment.status == 'not_configured')
-          Text(context.tr('Not configured'))
-        else
-          for (final entry in {'calm': 'Calm', 'worried': 'Worried'}.entries)
-            category(
-              entry.value,
-              sentiments[entry.key]?.answers,
-              sentiments[entry.key]?.share,
-            ),
-        heading('Satisfaction distribution'),
-        if (data.satisfaction.status == 'not_configured')
-          Text(context.tr('Not configured'))
-        else
-          for (final entry in {
-            'satisfied': 'Satisfied',
-            'neutral': 'Neutral',
-            'dissatisfied': 'Dissatisfied',
-          }.entries)
-            category(
-              entry.value,
-              satisfaction[entry.key]?.answers,
-              satisfaction[entry.key]?.share,
-            ),
-        heading('Daily satisfied share'),
-        if (data.satisfaction.status != 'not_configured' &&
-            data.satisfactionTrend.isNotEmpty)
-          SatisfactionTrendChart(points: data.satisfactionTrend),
-        if (data.satisfaction.status == 'not_configured')
-          Text(context.tr('Not configured'))
-        else if (data.satisfactionTrend.isEmpty)
-          Text(context.tr('No daily observations'))
-        else
-          for (final point in data.satisfactionTrend)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${point.date} · ${percentage(point.satisfactionShare)}',
-                  ),
-                  Text(
-                    context.tr(
-                      '{satisfied}/{total} answers satisfied',
-                      parameters: {
-                        'satisfied': point.satisfiedAnswers,
-                        'total': point.satisfactionAnswers,
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => report == null
+      ? Center(child: Text(context.tr('Reporting data is not connected yet.')))
+      : ReportingTrends(report: report!);
 }
 
 class RegionalTab extends StatelessWidget {
-  const RegionalTab({super.key});
-
+  final SentimentPulseReport? report;
+  final VoidCallback? onChooseRegion;
+  const RegionalTab({super.key, this.report, this.onChooseRegion});
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        Text(
-          context.tr("Regional Sentiment"),
-          style: TextStyle(
-            color: AppTheme.text,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        Text(
-          context.tr("Dominant sentiment by region"),
-          style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
-        ),
-
-        SizedBox(height: 12),
-
-        RegionalSentimentCard(
-          region: "NCR",
-          sentiment: "Concerned",
-          percent: 45,
-          color: Colors.amber,
-        ),
-
-        RegionalSentimentCard(
-          region: "Region III",
-          sentiment: 'Neutral',
-          percent: 38,
-          color: Colors.green,
-        ),
-
-        RegionalSentimentCard(
-          region: "Region IV-A",
-          sentiment: "Proactive",
-          percent: 38,
-          color: Colors.blue,
-        ),
-
-        RegionalSentimentCard(
-          region: "Region VII",
-          sentiment: "Concerned",
-          percent: 48,
-          color: Colors.amber,
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => report == null
+      ? Center(child: Text(context.tr('Reporting data is not connected yet.')))
+      : ReportingRegional(report: report!, onChooseRegion: onChooseRegion);
 }
 
 class SurveyTab extends StatefulWidget {
@@ -591,7 +341,9 @@ class SurveyTab extends StatefulWidget {
 class _SurveyTabState extends State<SurveyTab> {
   late Future<List<MobileSurvey>> surveyFuture;
 
-  final surveyService = SentimentSurveyService(baseUrl: ApiConfig.baseUrl);
+  final surveyService = SentimentSurveyService(
+    baseUrl: ApiConfig.sentimentBaseUrl,
+  );
 
   @override
   void initState() {
@@ -786,6 +538,7 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
         answers: cleanedAnswers,
         region: profile?.regionLabel,
         userId: profile?.id,
+        accessToken: profile?.accessToken,
         userLocation: userLocation,
         metadata: metadata,
       );
@@ -812,67 +565,96 @@ class _SurveyResponseSheetState extends State<SurveyResponseSheet> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          18,
-          16,
-          18,
-          MediaQuery.of(context).viewInsets.bottom + 18,
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.survey.title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 18, 8),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: context.tr('Back'),
+                  onPressed: isSubmitting
+                      ? null
+                      : () => Navigator.of(context).maybePop(),
                   color: AppTheme.primary,
+                  icon: const Icon(Icons.arrow_back),
                 ),
-              ),
-              if (widget.survey.subtitle.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  widget.survey.subtitle,
-                  style: const TextStyle(color: AppTheme.mutedText),
-                ),
-              ],
-              const SizedBox(height: 16),
-              ...List.generate(widget.survey.questions.length, (index) {
-                return _QuestionCard(
-                  number: index + 1,
-                  question: widget.survey.questions[index],
-                  answers: answers,
-                  isSubmitting: isSubmitting,
-                  onChanged: () => setState(() {}),
-                );
-              }),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: isSubmitting ? null : _submit,
-                  icon: isSubmitting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.send),
-                  label: Text(
-                    isSubmitting
-                        ? context.tr("Submitting...")
-                        : context.tr("Submit"),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    widget.survey.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                18,
+                0,
+                18,
+                MediaQuery.of(context).viewInsets.bottom + 18,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (widget.survey.subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.survey.subtitle,
+                        style: const TextStyle(color: AppTheme.mutedText),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    ...List.generate(widget.survey.questions.length, (index) {
+                      return _QuestionCard(
+                        number: index + 1,
+                        question: widget.survey.questions[index],
+                        answers: answers,
+                        isSubmitting: isSubmitting,
+                        onChanged: () => setState(() {}),
+                      );
+                    }),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: isSubmitting ? null : _submit,
+                        icon: isSubmitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.send),
+                        label: Text(
+                          isSubmitting
+                              ? context.tr("Submitting...")
+                              : context.tr("Submit"),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -10,7 +10,7 @@ import 'package:healthphplus/widgets/satisfaction_trend_chart.dart';
 import 'package:healthphplus/widgets/sentiment_report_filter_sheet.dart';
 
 // Synthetic handoff data only. Never imported by application code.
-Map<String, dynamic> fixture() =>
+Map<String, dynamic> legacyFixture() =>
     jsonDecode('''{
   "sources": ["mobile"],
   "filters": {"timeRange":"last-30-days", "startDate":"2026-09-30",
@@ -33,6 +33,83 @@ Map<String, dynamic> fixture() =>
     "satisfiedAnswers":5,"satisfactionShare":83.33333333333334}]
 }''')
         as Map<String, dynamic>;
+
+Map<String, dynamic> fixture() {
+  final json = legacyFixture();
+  Map<String, dynamic> summary(int calm, int worried) => {
+    'status': 'configured',
+    'dominantCategory': calm == worried
+        ? 'tie'
+        : calm > worried
+        ? 'calm'
+        : 'worried',
+    'dominantShare': 100 * (calm > worried ? calm : worried) / (calm + worried),
+    'eligibleAnswers': calm + worried,
+    'predictedAnswers': calm + worried,
+    'answersWithoutResults': 0,
+    'analysisCoverage': 100,
+  };
+  List<Map<String, dynamic>> distribution(int calm, int worried) => [
+    {
+      'category': 'calm',
+      'answers': calm,
+      'share': 100 * calm / (calm + worried),
+    },
+    {
+      'category': 'worried',
+      'answers': worried,
+      'share': 100 * worried / (calm + worried),
+    },
+  ];
+  json['asOf'] = '2026-10-29T12:00:00+08:00';
+  json['sentimentTrends'] = {
+    'comparison': 'previous-equal-calendar-period',
+    'changeUnit': 'percentage-points',
+    'baseline': {
+      'startDate': '2026-08-31',
+      'endDate': '2026-09-29',
+      'sentiment': summary(1, 1),
+      'sentimentDistribution': distribution(1, 1),
+    },
+    'overviewChange': {
+      'calm': 15.38461538461539,
+      'worried': -15.38461538461539,
+    },
+    'surveys': [
+      {
+        'surveyId': 'SUR00012',
+        'title': 'Ended survey A',
+        'sentiment': summary(1, 3),
+        'sentimentDistribution': distribution(1, 3),
+        'previousSentiment': summary(3, 1),
+        'previousSentimentDistribution': distribution(3, 1),
+        'changeFromOverviewBaseline': {'calm': -25, 'worried': 25},
+        'changeFromPreviousPeriod': {'calm': -50, 'worried': 50},
+      },
+    ],
+  };
+  json['regional'] = {
+    'status': 'available',
+    'regionCode': 'NCR',
+    'regionLabel': 'National Capital Region',
+    'regionSource': 'profile',
+    'filters': {
+      ...json['filters'] as Map<String, dynamic>,
+      'regions': ['NCR'],
+      'unknownRegionIncluded': false,
+      'surveyVisibility': 'all-existing-surveys',
+    },
+    'sentiment': summary(1, 3),
+    'sentimentDistribution': distribution(1, 3),
+    'satisfaction': json['satisfaction'],
+    'satisfactionDistribution': json['satisfactionDistribution'],
+    'analyzedSubmissions': null,
+    'linkedAnalyzedSubmissions': 2,
+    'submissionCountStatus': 'incomplete',
+    'satisfactionScope': 'linked_analyzed_submissions',
+  };
+  return json;
+}
 
 void main() {
   test('parses integer percentages, null categories, and measured zeros', () {
@@ -176,9 +253,11 @@ void main() {
       tester,
       OverviewTab(report: SentimentPulseReport.fromJson(fixture())),
     );
-    expect(find.text('Calm · 65.4%'), findsOneWidget);
+    expect(find.text('65.4%'), findsOneWidget);
     expect(find.text('130/160 analyzed; 30 without results'), findsOneWidget);
-    expect(find.text('60.0%'), findsOneWidget);
+    await tester.drag(find.byType(ListView), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(find.text('60.0%'), findsWidgets);
     expect(find.text('6/10 answers satisfied'), findsOneWidget);
   });
   testWidgets('tie, no results, and not-configured have distinct labels', (
@@ -205,7 +284,7 @@ void main() {
       tester,
       OverviewTab(report: SentimentPulseReport.fromJson(json)),
     );
-    expect(find.text('Not configured'), findsNWidgets(2));
+    expect(find.text('Not configured'), findsOneWidget);
   });
   for (final size in [const Size(320, 568), const Size(844, 390)]) {
     testWidgets('report page fits $size with enlarged text', (tester) async {
@@ -223,6 +302,11 @@ void main() {
       expect(find.byType(TrendsTab), findsOneWidget);
       await tester.drag(find.byType(ListView).last, const Offset(0, -1600));
       await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text('Regional'));
+      await tester.tap(find.text('Regional'));
+      await tester.pumpAndSettle();
+      expect(find.byType(RegionalTab), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }
@@ -260,7 +344,7 @@ void main() {
     tester,
   ) async {
     await render(tester, const SentimentPulsePage());
-    expect(find.text('Reporting data is not connected yet.'), findsOneWidget);
+    expect(find.text('Sign in to view reporting data.'), findsOneWidget);
     var retries = 0;
     await render(
       tester,
@@ -292,13 +376,17 @@ void main() {
   ) async {
     await render(
       tester,
-      TrendsTab(report: SentimentPulseReport.fromJson(fixture())),
+      OverviewTab(report: SentimentPulseReport.fromJson(fixture())),
     );
     await tester.drag(find.byType(ListView), const Offset(0, -1200));
     await tester.pumpAndSettle();
-    expect(find.text('2026-10-27 · 25.0%'), findsOneWidget);
-    expect(find.text('2026-10-29 · 83.3%'), findsOneWidget);
-    expect(find.text('5/6 answers satisfied'), findsOneWidget);
+    await tester.tap(find.text('Daily satisfied share'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -900));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('2026-10-27: 25.0%'), findsOneWidget);
+    expect(find.textContaining('2026-10-29: 83.3%'), findsOneWidget);
+    expect(find.textContaining('5/6 answers satisfied'), findsOneWidget);
     final painter = tester
         .widgetList<CustomPaint>(find.byType(CustomPaint))
         .map((widget) => widget.painter)

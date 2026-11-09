@@ -731,7 +731,7 @@ class _SurveyButton extends StatefulWidget {
 class _SurveyButtonState extends State<_SurveyButton> {
   late Future<List<MobileSurvey>> surveyFuture;
 
-  final surveyService = SentimentSurveyService(baseUrl: ApiConfig.baseUrl);
+  final surveyService = SentimentSurveyService(baseUrl: ApiConfig.sentimentBaseUrl);
 
   @override
   void initState() {

@@ -5,6 +5,11 @@ import 'sentiment_reporting_translations.dart';
 // Keys match the English phrases in the static text inventory.
 const appTranslations = <String, Map<String, String>>{
   'Filipino': {
+    'All alerts': 'Lahat ng abiso',
+    'Unread': 'Hindi pa nababasa',
+    'Read': 'Nabasa na',
+    'Clear': 'Burahin',
+    'Sentiment Trends': 'Mga Pagbabago sa Saloobin',
     'Search alerts': 'Maghanap ng mga abiso',
     'No matching alerts.': 'Walang tumugmang abiso.',
     'Refresh': 'I-refresh',
@@ -124,8 +129,38 @@ const appTranslations = <String, Map<String, String>>{
     'Video is unavailable.': 'Hindi available ang video.',
     'Watch video': 'Panoorin ang Video',
     'Open PDF': 'Buksan ang PDF',
+    'Loading...': 'Naglo-load...',
+    'Login': 'Mag-sign in',
+    'User Login': 'Pag-sign in ng Gumagamit',
+    'Sign in using your email and password.':
+        'Mag-sign in gamit ang iyong email at password.',
+    'Enter your email': 'Ilagay ang iyong email',
+    'Enter a valid email': 'Maglagay ng wastong email address',
+    'Enter your password': 'Ilagay ang iyong password',
+    'Forgot password?': 'Nakalimutan ang password?',
+    'Continue as Guest': 'Magpatuloy bilang Bisita',
+    'New User? Create an account':
+        'Bagong gumagamit? Gumawa ng account',
+    'Already have an account? Login':
+        'May account ka na? Mag-sign in',
+    'Create Account': 'Gumawa ng Account',
+    'Full Name': 'Buong Pangalan',
+    'your full name': 'iyong buong pangalan',
+    'Confirm Password': 'Kumpirmahin ang Password',
+    'Passwords do not match': 'Hindi magkapareho ang mga password',
+    'Password must be at least 6 characters':
+        'Dapat may hindi bababa sa 6 na karakter ang password',
+    'Account Created.': 'Nagawa na ang account.',
+    'Reset Password': 'I-reset ang Password',
+    'Send Link': 'Ipadala ang Link',
+    'Password reset link sent.':
+        'Naipadala na ang link para i-reset ang password.',
   },
   'Cebuano': {
+    'All alerts': 'Tanang pahibalo',
+    'Unread': 'Wala pa mabasa',
+    'Read': 'Nabasa na',
+    'Clear': 'Hawani',
     'Search alerts': 'Pangitaa ang mga pahibalo',
     'No matching alerts.': 'Walay katugbang nga pahibalo.',
     'Refresh': 'I-refresh',
@@ -681,16 +716,85 @@ const appTranslations = <String, Map<String, String>>{
     "{count} selected": "{count} ang napili",
     "{count} surveys ready to answer": "{count} ka survey ang andam tubagon",
     "Duration: {days} days": "Gidugayon: {days} ka adlaw",
+    'Loading...': 'Nagkarga...',
   },
-  'Ilocano': {
+    'Ilocano': {
+      'All alerts': 'Amin a pakdaar',
+      'Unread': 'Saan pay a nabasa',
+      'Read': 'Nabasan',
+      'Clear': 'Ikkaten',
+      'Sentiment Trends': 'Dagiti Panagbalbaliw ti Rikna',
     'Home': 'Rugian',
     'Profile': 'Profile',
     'Disease Map': 'Mapa dagiti Sakit',
+    'Preferences': 'Dagiti Kayat a Pagpilian',
+    'Appearance': 'Langana',
+    'Language Selection': 'Panagpili ti Pagsasao',
+    'Choose your preferred application language':
+        'Pilien ti pagsasao a kayatmo nga usaren iti app',
+    'Current theme: {theme}': 'Agdama a tema: {theme}',
+    'Authentication': 'Panangpaneknek ti Pakabigbigan',
+    'Account': 'Account',
+    'Logout': 'Rummuar',
+    'Clear this session and return to login.':
+        'Agpatingga iti sesion ken agsubli iti pag-login.',
+    'Your Health Contribution': 'Ti Kontribusionmo iti Salun-at',
+    'Report symptoms, review contribution, or answer surveys':
+        'Ipadamag dagiti sintomas, kitaen dagiti kontribusion, wenno sungbatan dagiti survey',
+    'Data Collection and Self-Report':
+        'Panagurnong ti Datos ken Bukod a Report',
+    'Submit symptoms and health information':
+        'Isubmitir dagiti sintomas ken impormasion maipapan iti salun-at',
+    'My Self-Reports': 'Dagiti Bukodko a Report',
+    'Review your previous contributions':
+        'Kitaen dagiti napalabas a kontribusionmo',
+    'Quick Actions': 'Dagiti Napartak nga Aksion',
+    'Quick Actions ⓘ': 'Dagiti Napartak nga Aksion ⓘ',
+    'Disease Watch': 'Panagbantay kadagiti Sakit',
+    'Health Literacy': 'Pannakaammo iti Salun-at',
+    'Health Alerts': 'Dagiti Pakdaar iti Salun-at',
+    'Recent Alerts': 'Dagiti Kabaro a Pakdaar',
+    'Recent Alerts ⓘ': 'Dagiti Kabaro a Pakdaar ⓘ',
+    'No recent alerts right now.': 'Awan pay kabaro a pakdaar ita.',
   },
   'Hiligaynon': {
+    'All alerts': 'Tanan nga pahibalo',
+    'Unread': 'Wala pa nabasa',
+    'Read': 'Nabasa na',
+    'Clear': 'Hawani',
+    'Sentiment Trends': 'Mga Pagbag-o sang Balatyagon',
     'Home': 'Sinugdanan',
     'Profile': 'Profile',
     'Disease Map': 'Mapa sang mga Balatian',
+    'Preferences': 'Mga Ginapili',
+    'Appearance': 'Hitsura',
+    'Language Selection': 'Pagpili sang Lengguwahe',
+    'Choose your preferred application language':
+        'Pilia ang lengguwahe nga gusto mo gamiton sa app',
+    'Current theme: {theme}': 'Karon nga tema: {theme}',
+    'Authentication': 'Pagpamatuod sang Pagkilala',
+    'Account': 'Account',
+    'Logout': 'Maggwa',
+    'Clear this session and return to login.':
+        'Tapuson ang sesyon kag magbalik sa pag-login.',
+    'Your Health Contribution': 'Ang Imo Kontribusyon sa Panglawas',
+    'Report symptoms, review contribution, or answer surveys':
+        'Ireport ang mga sintomas, usisaon ang mga kontribusyon, ukon sabton ang mga survey',
+    'Data Collection and Self-Report':
+        'Pagtipon sang Datos kag Kaugalingon nga Report',
+    'Submit symptoms and health information':
+        'Isumiter ang mga sintomas kag impormasyon parte sa panglawas',
+    'My Self-Reports': 'Ang Akon Kaugalingon nga mga Report',
+    'Review your previous contributions':
+        'Usisaa ang imo nagligad nga mga kontribusyon',
+    'Quick Actions': 'Mga Madasig nga Aksyon',
+    'Quick Actions ⓘ': 'Mga Madasig nga Aksyon ⓘ',
+    'Disease Watch': 'Pagbantay sang mga Balatian',
+    'Health Literacy': 'Ihibalo sa Panglawas',
+    'Health Alerts': 'Mga Paandam sa Panglawas',
+    'Recent Alerts': 'Bag-o nga mga Paandam',
+    'Recent Alerts ⓘ': 'Bag-o nga mga Paandam ⓘ',
+    'No recent alerts right now.': 'Wala sing bag-o nga mga paandam subong.',
   },
 };
 

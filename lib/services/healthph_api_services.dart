@@ -1,9 +1,36 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../data/app_taxonomy.dart';
+import '../models/surveillance_pin.dart';
 import 'profile_store.dart';
 import 'self_report_store.dart';
+
+class SelfReportAuthenticationException implements Exception {
+  final String message;
+  const SelfReportAuthenticationException(this.message);
+  @override
+  String toString() => message;
+}
+
+class SurveillanceMapException implements Exception {
+  final String message;
+  final int? statusCode;
+  const SurveillanceMapException(this.message, {this.statusCode});
+  @override
+  String toString() => message;
+}
+
+class LanguageUpdateException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  const LanguageUpdateException(this.message, {this.statusCode});
+
+  @override
+  String toString() => message;
+}
 
 class SelfReportSubmissionException implements Exception {
   final String message;
@@ -89,7 +116,7 @@ class HealthPhApiService {
     // Explicit request fields exclude all server-owned analytics/language data.
     final payload = {
       "reporter": {
-        "userId": isGuest ? null : profile.id,
+        "userId": isGuest ? "GUEST" : profile.id,
         "reporterType": isGuest ? "guest" : "registered",
         "roleId": isGuest ? "guest" : "user",
         "roleLabel": isGuest ? "Guest" : "User",
@@ -159,58 +186,119 @@ class HealthPhApiService {
     return SelfReportSubmissionResult.fromJson(decoded);
   }
 
-  Future<List<dynamic>> fetchSelfReportMapPins() async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/api/mobile/self-reports/map-pins"),
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body) as List<dynamic>;
+  Future<List<SurveillancePin>> fetchSurveillanceMapPins({
+    int days = 7,
+    String region = 'all',
+    String disease = 'all',
+  }) async {
+    if (days < 1 || days > 365) throw ArgumentError.value(days, 'days');
+    if (disease != 'all' && !SurveillancePin.diseases.contains(disease)) {
+      throw ArgumentError.value(disease, 'disease');
     }
-
-    throw Exception('Failed to load self-report map pings');
+    if (region.trim().isEmpty) throw ArgumentError.value(region, 'region');
+    final base = Uri.parse(baseUrl);
+    var path = base.path.replaceFirst(RegExp(r'/+$'), '');
+    if (!path.endsWith('/api')) path = '$path/api';
+    final uri = base.replace(
+      path: '$path/mobile/surveillance/map-pins',
+      queryParameters: {
+        if (days == 1) 'hours': '24' else 'days': '$days',
+        'region': region,
+        'disease': disease,
+      },
+      fragment: '',
+    );
+    // Public read-only aggregation: no mobile token or raw-report fallback.
+    if (kDebugMode) debugPrint('SURVEILLANCE MAP URL: $uri');
+    late final http.Response response;
+    try {
+      response = await (_client?.get ?? http.get)(
+        uri,
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw const SurveillanceMapException(
+        'The map request timed out. Check the backend connection.',
+      );
+    } on http.ClientException {
+      throw const SurveillanceMapException(
+        'Cannot reach the map backend. Check the API address and network.',
+      );
+    }
+    if (kDebugMode) {
+      debugPrint('SURVEILLANCE MAP STATUS: ${response.statusCode}');
+    }
+    if (response.statusCode != 200) {
+      throw SurveillanceMapException(
+        response.statusCode == 404
+            ? 'Surveillance endpoint not found (HTTP 404). Check the backend deployment.'
+            : 'The map backend returned HTTP ${response.statusCode}.',
+        statusCode: response.statusCode,
+      );
+    }
+    final data = jsonDecode(response.body);
+    if (data is! Map<String, dynamic> || data['items'] is! List) {
+      throw const FormatException('Surveillance response must contain items');
+    }
+    final result = <SurveillancePin>[];
+    final ids = <String>{};
+    for (final item in data['items'] as List) {
+      if (item is! Map<String, dynamic>) {
+        throw const FormatException('Invalid pin');
+      }
+      final pin = SurveillancePin.fromJson(item);
+      if (!ids.add(pin.id)) {
+        throw const FormatException('Duplicate surveillance pin id');
+      }
+      result.add(pin);
+    }
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> fetchMySelfReports({
-    String? userId,
-    String? email,
+    required String? accessToken,
   }) async {
-    final query = <String, String>{};
-    final cleanedUserId = userId?.trim();
-    final cleanedEmail = email?.trim();
-
-    if (cleanedUserId != null && cleanedUserId.isNotEmpty) {
-      query["user_id"] = cleanedUserId;
-    } else if (cleanedEmail != null && cleanedEmail.isNotEmpty) {
-      query["email"] = cleanedEmail;
+    final token = accessToken?.trim() ?? '';
+    if (token.isEmpty) {
+      throw const SelfReportAuthenticationException(
+        'Please sign in again to view your self-reports.',
+      );
     }
-
-    if (query.isEmpty) {
-      throw ArgumentError("A user id or email is required.");
+    final base = Uri.parse(baseUrl);
+    var path = base.path.replaceFirst(RegExp(r'/+$'), '');
+    if (!path.endsWith('/api')) path = '$path/api';
+    final uri = base
+        .replace(
+          path: '$path/mobile/self-reports/mine',
+          queryParameters: const {},
+          fragment: '',
+        )
+        .removeFragment();
+    // The backend determines ownership from the mobile JWT, not a query user ID.
+    final response = await (_client?.get ?? http.get)(
+      uri,
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    ).timeout(const Duration(seconds: 12));
+    if (response.statusCode == 401) {
+      throw const SelfReportAuthenticationException(
+        'Your session has expired or is invalid. Please sign in again.',
+      );
     }
-
-    final uri = Uri.parse(
-      "$baseUrl/api/mobile/self-reports/mine",
-    ).replace(queryParameters: query);
-
-    final response = await http.get(uri).timeout(const Duration(seconds: 12));
-
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-
-      if (decoded is List) {
-        return decoded
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
+      final items = decoded is Map<String, dynamic>
+          ? decoded['items']
+          : decoded;
+      if (items is! List ||
+          items.any((item) => item is! Map<String, dynamic>)) {
+        throw const FormatException('Invalid self-report history response');
       }
-
-      return [];
+      return items.cast<Map<String, dynamic>>();
     }
 
     throw Exception(
       "Failed to load your self-reports "
-      "(${response.statusCode}): ${response.body}",
+      "(${response.statusCode})",
     );
   }
 
@@ -313,6 +401,15 @@ class HealthPhApiService {
     final token = decoded["access_token"]?.toString();
     final userPayload = decoded["user"];
 
+    if (kDebugMode) {
+      final fields = userPayload is Map ? userPayload : decoded;
+      debugPrint('LOGIN HOST: ${Uri.parse(baseUrl).origin}');
+      debugPrint(
+        'LOGIN pinConfigured present: ${fields.containsKey("pinConfigured")}',
+      );
+      debugPrint('LOGIN pinConfigured: ${fields["pinConfigured"]}');
+    }
+
     if (userPayload is Map) {
       return _profileFromJson(
         Map<String, dynamic>.from(userPayload),
@@ -335,6 +432,11 @@ class HealthPhApiService {
       body: jsonEncode({"pin": pin, "currentPassword": currentPassword}),
     );
 
+    if (kDebugMode) {
+    debugPrint('PIN SETUP HOST: ${Uri.parse(baseUrl).origin}');
+    debugPrint('PIN SETUP STATUS: ${response.statusCode}');
+  }
+
     if (response.statusCode != 200) {
       throw Exception("Failed to set Pin: ${response.body}");
     }
@@ -351,6 +453,11 @@ class HealthPhApiService {
       body: jsonEncode({"pin": pin}),
     );
 
+    if (kDebugMode) {
+      debugPrint('PIN VERIFY HOST: ${Uri.parse(baseUrl).origin}');
+      debugPrint('PIN VERIFY STATUS: ${response.statusCode}');
+    }
+
     if (response.statusCode != 200) {
       throw Exception("Failed to verify PIN: ${response.body}");
     }
@@ -363,17 +470,57 @@ class HealthPhApiService {
     required String language,
     required String? accessToken,
   }) async {
-    final response = await http.patch(
-      Uri.parse("$baseUrl/api/mobile/users/$userId/language"),
-      headers: _authenticatedHeaders(accessToken),
-      body: jsonEncode({"language": language}),
+    if (accessToken == null || accessToken.trim().isEmpty) {
+      throw const LanguageUpdateException(
+        'Please sign in again to save your account language.',
+        statusCode: 401,
+      );
+    }
+    final root = baseUrl.replaceFirst(RegExp(r'/+$'), '');
+    final apiRoot = root.endsWith('/api') ? root : '$root/api';
+    final url = Uri.parse(
+      '$apiRoot/mobile/users/${Uri.encodeComponent(userId)}/language',
     );
-
-    if (response.statusCode != 200) {
-      throw Exception("Failed to update language: ${response.body}");
+    final client = _client ?? http.Client();
+    late final http.Response response;
+    try {
+      response = await client
+          .patch(
+            url,
+            headers: _authenticatedHeaders(accessToken),
+            body: jsonEncode({'language': language}),
+          )
+          .timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      throw const LanguageUpdateException(
+        'Saving your account language timed out. Please try again.',
+      );
+    } on http.ClientException {
+      throw const LanguageUpdateException(
+        'Could not connect to save your account language. Please try again.',
+      );
+    } finally {
+      if (_client == null) client.close();
     }
 
-    return _profileFromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    if (response.statusCode != 200) {
+      final message = switch (response.statusCode) {
+        404 || 405 =>
+          'Account language saving is unavailable on this backend (HTTP ${response.statusCode}).',
+        401 => 'Please sign in again to save your account language.',
+        403 => 'You do not have permission to change this account language.',
+        _ => 'Could not save your account language. Please try again.',
+      };
+      throw LanguageUpdateException(message, statusCode: response.statusCode);
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic> ||
+        decoded['id'] != userId ||
+        decoded['language'] != language) {
+      throw const FormatException('Invalid language-update response');
+    }
+    return _profileFromJson(decoded);
   }
 
   Future<int> fetchMobileUsersCount() async {

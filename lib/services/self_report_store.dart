@@ -101,6 +101,7 @@ class SelfReportStore extends ChangeNotifier {
         "tagIds": report.symptomIds,
         "tags": report.symptoms,
         "source": "selfReport",
+        "regionCode": report.region,
         "pinAccuracy": report.hasCoordinates
             ? "Exact address geocoded"
             : "Region-level estimate",

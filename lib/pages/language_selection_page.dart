@@ -12,8 +12,13 @@ import '../services/app_settings_store.dart';
 
 class LanguageSelectionPage extends StatefulWidget {
   final bool returnToSettings;
+  final HealthPhApiService? api;
 
-  const LanguageSelectionPage({super.key, this.returnToSettings = false});
+  const LanguageSelectionPage({
+    super.key,
+    this.returnToSettings = false,
+    this.api,
+  });
 
   @override
   State<LanguageSelectionPage> createState() => _LanguageSelectionPageState();
@@ -22,6 +27,7 @@ class LanguageSelectionPage extends StatefulWidget {
 class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   String selectedLanguage = "";
   bool isLoadingLanguage = true;
+  bool isSaving = false;
 
   final List<String> languages = const [
     "English",
@@ -59,6 +65,9 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
   }
 
   Future<void> _continueToApp() async {
+    if (isSaving || isLoadingLanguage) return;
+    setState(() => isSaving = true);
+    final language = selectedLanguage;
     final profile = ProfileStore.instance.profile;
     final isRegistered =
         profile != null &&
@@ -67,31 +76,77 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
         profile.email != AppTaxonomy.guestEmail &&
         !AppTaxonomy.isGuestRole(profile.roleId);
 
-    if (isRegistered) {
-      final api = HealthPhApiService(baseUrl: ApiConfig.baseUrl);
-      final updatedProfile = await api.updatedMobileUserLanguage(
-        userId: profile.id!,
-        language: selectedLanguage,
-        accessToken: profile.accessToken,
-      );
-      ProfileStore.instance.saveProfile(
-        updatedProfile.copyWith(accessToken: profile.accessToken),
-      );
-    } else {
-      ProfileStore.instance.updateLanguage(selectedLanguage);
-    }
+    try {
+      if (isRegistered) {
+        try {
+          final api =
+              widget.api ?? HealthPhApiService(baseUrl: ApiConfig.baseUrl);
+          await api.updatedMobileUserLanguage(
+            userId: profile.id!,
+            language: language,
+            accessToken: profile.accessToken,
+          );
+        } catch (error) {
+          if (!mounted || !identical(ProfileStore.instance.profile, profile)) {
+            return;
+          }
+          final message = error is LanguageUpdateException
+              ? error.message
+              : 'Could not confirm that your account language was saved.';
+          final useLocally = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(context.tr('Account language not saved')),
+              content: Text(
+                '${context.tr(message)}\n\n'
+                '${context.tr('You can use this language on this device only. It will not be synced to your account.')}',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(context.tr('Cancel')),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(context.tr('Use on this device')),
+                ),
+              ],
+            ),
+          );
+          if (useLocally != true) return;
+        }
+      }
 
-    await AppSettingsStore.instance.setLanguage(selectedLanguage);
+      if (!mounted || !identical(ProfileStore.instance.profile, profile)) {
+        return;
+      }
+      await AppSettingsStore.instance.setLanguage(language);
+      if (!mounted || !identical(ProfileStore.instance.profile, profile)) {
+        return;
+      }
+      // Only update the language; keep the existing identity, token and PIN state.
+      ProfileStore.instance.updateLanguage(language);
 
-    if (!mounted) return;
-
-    if (widget.returnToSettings) {
-      Navigator.pop(context);
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const IntroTutorialPage()),
-      );
+      if (widget.returnToSettings) {
+        Navigator.pop(context);
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const IntroTutorialPage()),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr('Could not save your language. Please try again.'),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isSaving = false);
     }
   }
 
@@ -123,13 +178,30 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                       compact: isLandscapePhone ? 4 : 12,
                     ),
                   ),
-                  Text(
-                    context.tr("Choose Language"),
-                    style: TextStyle(
-                      color: visualMode.onBackground,
-                      fontSize: isLandscapePhone ? 21 : 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      if (Navigator.canPop(context)) ...[
+                        IconButton(
+                          tooltip: context.tr('Back'),
+                          onPressed: isSaving
+                              ? null
+                              : () => Navigator.of(context).maybePop(),
+                          color: visualMode.onBackground,
+                          icon: const Icon(Icons.arrow_back),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: Text(
+                          context.tr("Choose Language"),
+                          style: TextStyle(
+                            color: visualMode.onBackground,
+                            fontSize: isLandscapePhone ? 21 : 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: isLandscapePhone ? 3 : 6),
                   Text(
@@ -158,11 +230,13 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
 
                         return InkWell(
                           borderRadius: BorderRadius.circular(8),
-                          onTap: () {
-                            setState(() {
-                              selectedLanguage = language;
-                            });
-                          },
+                          onTap: isSaving || isLoadingLanguage
+                              ? null
+                              : () {
+                                  setState(() {
+                                    selectedLanguage = language;
+                                  });
+                                },
                           child: Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 14,
@@ -239,11 +313,19 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
                     width: double.infinity,
                     height: Responsive.buttonHeight(context),
                     child: ElevatedButton(
-                      onPressed: _continueToApp,
-                      child: Text(
-                        context.tr("Continue"),
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      onPressed: isSaving || isLoadingLanguage
+                          ? null
+                          : _continueToApp,
+                      child: isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              context.tr("Continue"),
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ),
                 ],

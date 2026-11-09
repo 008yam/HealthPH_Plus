@@ -62,14 +62,8 @@ class FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mode = AppSettingsStore.instance.visualMode;
-    final isDark = mode == HealthPhVisualMode.dark;
-    final navSurface = isDark
-        ? const Color(0xFF1F2937).withValues(alpha: 0.96)
-        : Colors.white;
-    final navBorder = isDark
-        ? Colors.white.withValues(alpha: 0.20)
-        : AppTheme.border;
+    const navSurface = Colors.white;
+    const navBorder = AppTheme.border;
     final navHeight = Responsive.bottomNavHeight(context);
     final horizontalPadding = Responsive.isLandscapePhone(context)
         ? 28.0
@@ -166,7 +160,7 @@ class FloatingNavBar extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _navItem(
     BuildContext context, {
     required int index,
@@ -262,9 +256,7 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem> {
   @override
   Widget build(BuildContext context) {
     final mode = AppSettingsStore.instance.visualMode;
-    final inactiveColor = mode == HealthPhVisualMode.dark
-        ? Colors.white70
-        : Colors.grey.shade600;
+    final inactiveColor = Colors.grey.shade600;
     return GestureDetector(
       onTap: _handleTap,
       child: AnimatedScale(

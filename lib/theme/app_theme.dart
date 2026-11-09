@@ -80,24 +80,9 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      elevatedButtonTheme: lightTheme.elevatedButtonTheme,
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF243B8F),
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: AppTheme.border),
-        ),
-      ),
+    // Dark is a background variant; controls retain the default light palette.
+    return lightTheme.copyWith(
       scaffoldBackgroundColor: const Color(0xFF111827),
-      colorScheme: const ColorScheme.dark(
-        primary: info,
-        secondary: warning,
-        surface: Color(0xFF1F2937),
-        error: highRisk,
-      ),
     );
   }
 

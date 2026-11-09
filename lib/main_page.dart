@@ -61,10 +61,11 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     _statsCarouselController = PageController(viewportFraction: 0.9);
 
-    mobileSurveyCountFuture = SentimentSurveyService(baseUrl: ApiConfig.baseUrl)
-        .fetchPublicSurveys()
-        .then((surveys) => surveys.length)
-        .catchError((_) => 0);
+    mobileSurveyCountFuture =
+        SentimentSurveyService(baseUrl: ApiConfig.sentimentBaseUrl)
+            .fetchPublicSurveys()
+            .then((surveys) => surveys.length)
+            .catchError((_) => 0);
 
     _startStatsCarousel();
     _loadMobileAlertFutures();
@@ -242,6 +243,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [

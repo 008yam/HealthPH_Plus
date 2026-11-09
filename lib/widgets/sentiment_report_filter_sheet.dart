@@ -12,6 +12,7 @@ class SentimentReportFilterSheet extends StatefulWidget {
 class _FilterState extends State<SentimentReportFilterSheet> {
   late String range = widget.initial.timeRange;
   late String? region = widget.initial.region;
+  late String? regionalRegion = widget.initial.regionalRegion;
   late String? start = widget.initial.startDate;
   late String? end = widget.initial.endDate;
 
@@ -67,7 +68,9 @@ class _FilterState extends State<SentimentReportFilterSheet> {
           DropdownButtonFormField<String>(
             initialValue: region ?? 'all',
             isExpanded: true,
-            decoration: InputDecoration(labelText: context.tr('Region')),
+            decoration: InputDecoration(
+              labelText: context.tr('Overview / Trends region'),
+            ),
             items: [
               DropdownMenuItem(
                 value: 'all',
@@ -78,6 +81,25 @@ class _FilterState extends State<SentimentReportFilterSheet> {
             ],
             onChanged: (value) =>
                 setState(() => region = value == 'all' ? null : value),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            initialValue: regionalRegion ?? 'profile',
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: context.tr('Regional analysis region'),
+            ),
+            items: [
+              DropdownMenuItem(
+                value: 'profile',
+                child: Text(context.tr('Account region')),
+              ),
+              for (final code in SentimentReportFilters.regions)
+                DropdownMenuItem(value: code, child: Text(code)),
+            ],
+            onChanged: (value) => setState(
+              () => regionalRegion = value == 'profile' ? null : value,
+            ),
           ),
           if (range == 'custom')
             TextButton.icon(
@@ -95,6 +117,8 @@ class _FilterState extends State<SentimentReportFilterSheet> {
                     final filters = SentimentReportFilters(
                       timeRange: range,
                       region: region,
+                      regionalRegion: regionalRegion,
+                      surveyId: widget.initial.surveyId,
                       startDate: range == 'custom' ? start : null,
                       endDate: range == 'custom' ? end : null,
                     );

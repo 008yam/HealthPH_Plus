@@ -11,7 +11,8 @@ import '../theme/responsive.dart';
 import '../widgets/app_skeleton.dart';
 
 class SelfReportHistoryPage extends StatefulWidget {
-  const SelfReportHistoryPage({super.key});
+  final HealthPhApiService? service;
+  const SelfReportHistoryPage({super.key, this.service});
 
   @override
   State<SelfReportHistoryPage> createState() => _SelfReportHistoryPageState();
@@ -28,29 +29,41 @@ class _SelfReportHistoryPageState extends State<SelfReportHistoryPage> {
 
   Future<_ContributionLoadResult> _loadReports() async {
     final profile = ProfileStore.instance.profile;
-    final userId = profile?.id?.trim() ?? "";
     final isGuest =
         profile == null ||
         AppTaxonomy.isGuestRole(profile.roleId) ||
         profile.email == AppTaxonomy.guestEmail;
 
-    if (isGuest || userId.isEmpty) {
+    if (isGuest) {
       return const _ContributionLoadResult(
         reports: [],
         isLocalFallback: false,
         warning:
             "Login with a registered account to view your account self-reports.",
+        authenticationRequired: true,
       );
     }
 
-    final rows = await HealthPhApiService(
-      baseUrl: ApiConfig.baseUrl,
-    ).fetchMySelfReports(userId: userId);
-
-    return _ContributionLoadResult(
-      reports: rows.map(_ContributionReport.fromJson).toList(),
-      isLocalFallback: false,
-    );
+    try {
+      final rows =
+          await (widget.service ??
+                  HealthPhApiService(baseUrl: ApiConfig.baseUrl))
+              .fetchMySelfReports(accessToken: profile.accessToken);
+      return _ContributionLoadResult(
+        reports: rows.map(_ContributionReport.fromJson).toList(),
+      );
+    } on SelfReportAuthenticationException catch (error) {
+      return _ContributionLoadResult(
+        reports: [],
+        warning: error.message,
+        authenticationRequired: true,
+      );
+    } catch (_) {
+      return const _ContributionLoadResult(
+        reports: [],
+        error: 'Unable to load self-reports. Check your backend connection.',
+      );
+    }
   }
 
   Future<void> _refresh() async {
@@ -104,13 +117,26 @@ class _SelfReportHistoryPageState extends State<SelfReportHistoryPage> {
                         const SizedBox(height: 18),
                         if (snapshot.connectionState == ConnectionState.waiting)
                           const _LoadingCard()
-                        else if (snapshot.hasError)
+                        else if (snapshot.hasError || result?.error != null)
                           _ErrorCard(
                             message:
+                                result?.error ??
                                 "Unable to load self-reports. Check your backend connection.",
                             onRetry: _refresh,
                           )
-                        else ...[
+                        else if (result?.authenticationRequired == true) ...[
+                          _NoticeCard(message: result!.warning!),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: () =>
+                                Navigator.of(context).pushNamedAndRemoveUntil(
+                                  '/login',
+                                  (route) => false,
+                                ),
+                            icon: const Icon(Icons.login),
+                            label: Text(context.tr('Login')),
+                          ),
+                        ] else ...[
                           if (result?.warning != null) ...[
                             _NoticeCard(message: result!.warning!),
                             const SizedBox(height: 12),
@@ -673,11 +699,15 @@ class _ContributionLoadResult {
   final List<_ContributionReport> reports;
   final bool isLocalFallback;
   final String? warning;
+  final String? error;
+  final bool authenticationRequired;
 
   const _ContributionLoadResult({
     required this.reports,
     this.isLocalFallback = false,
     this.warning,
+    this.error,
+    this.authenticationRequired = false,
   });
 }
 

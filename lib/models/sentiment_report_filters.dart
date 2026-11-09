@@ -40,16 +40,22 @@ class SentimentReportFilters {
   final String? region;
   final String? startDate;
   final String? endDate;
+  final String? regionalRegion;
+  final String? surveyId;
   const SentimentReportFilters({
     this.timeRange = 'last-30-days',
     this.region,
     this.startDate,
     this.endDate,
+    this.regionalRegion,
+    this.surveyId,
   });
 
   Map<String, String> toQuery() {
     if (!ranges.containsKey(timeRange) ||
-        (region != null && !regions.contains(region))) {
+        (region != null && !regions.contains(region)) ||
+        (regionalRegion != null && !regions.contains(regionalRegion)) ||
+        (surveyId != null && surveyId!.trim().isEmpty)) {
       throw const FormatException('Invalid reporting filters');
     }
     if (timeRange == 'custom') {
@@ -62,6 +68,8 @@ class SentimentReportFilters {
     return {
       'timeRange': timeRange,
       'regions': ?region,
+      'regionalRegion': ?regionalRegion,
+      'surveyId': ?surveyId,
       if (timeRange == 'custom') ...{
         'startDate': startDate!,
         'endDate': endDate!,
@@ -72,7 +80,7 @@ class SentimentReportFilters {
   bool matches(Map<String, dynamic> applied) {
     final appliedRegions = applied['regions'];
     return applied['timeRange'] == timeRange &&
-        applied['surveyId'] == null &&
+        applied['surveyId'] == surveyId &&
         applied['timezone'] == 'Asia/Manila' &&
         appliedRegions is List &&
         (region == null

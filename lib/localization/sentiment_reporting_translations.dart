@@ -1,6 +1,35 @@
 // Draft reporting translations; native-speaker review is recommended.
 const sentimentReportingTranslations = <String, Map<String, String>>{
   'Filipino': {
+    "Current period": "Kasalukuyang panahon",
+    "Previous period": "Nakaraang panahon",
+    "Observed through": "Datos hanggang",
+    "vs previous Overview": "kumpara sa nakaraang pangkalahatang ulat",
+    "vs this survey's previous period":
+        "kumpara sa nakaraang panahon ng survey na ito",
+    "No comparable results": "Walang maihahambing na resulta",
+    "No eligible surveys": "Walang kwalipikadong survey",
+    "Choose a region to view Regional analysis.":
+        "Pumili ng rehiyon upang makita ang pagsusuri.",
+    "Choose region": "Pumili ng rehiyon",
+    "Account region": "Rehiyon ng account",
+    "Overview / Trends region": "Rehiyon ng pangkalahatang ulat at trend",
+    "Regional analysis region": "Rehiyon para sa pagsusuri",
+    "Regional includes all existing surveys.":
+        "Kasama sa rehiyonal na ulat ang lahat ng umiiral na survey.",
+    "Analyzed submissions": "Nasuring pagsusumite",
+    "Exact count unavailable; {count} linked submissions":
+        "Walang eksaktong bilang; {count} naka-link na pagsusumite",
+    "Submission links are incomplete.":
+        "Hindi kumpleto ang mga link ng pagsusumite.",
+    "Scored answers linked to analyzed submissions only.":
+        "Mga sagot na may marka na naka-link lamang sa nasuring pagsusumite.",
+    "Sign in to view reporting data.":
+        "Mag-sign in upang makita ang datos ng ulat.",
+    "Incompatible reporting response. Ask for the updated backend build.":
+        "Hindi tugma ang sagot ng ulat. Hilingin ang na-update na backend.",
+    "Unable to load reporting data. Please retry.":
+        "Hindi ma-load ang datos ng ulat. Subukang muli.",
     "Reporting data is not connected yet.":
         "Hindi pa nakakonekta ang datos ng ulat.",
     "Loading report": "Naglo-load ng ulat",
@@ -41,6 +70,35 @@ const sentimentReportingTranslations = <String, Map<String, String>>{
         "Saloobin ng komunidad at kasiyahan mula sa survey",
   },
   'Cebuano': {
+    "Current period": "Kasamtangang panahon",
+    "Previous period": "Miaging panahon",
+    "Observed through": "Datos hangtod",
+    "vs previous Overview": "itandi sa miaging kinatibuk-ang taho",
+    "vs this survey's previous period":
+        "itandi sa miaging panahon niini nga survey",
+    "No comparable results": "Walay matandi nga resulta",
+    "No eligible surveys": "Walay kwalipikadong survey",
+    "Choose a region to view Regional analysis.":
+        "Pagpili og rehiyon aron makita ang pagtuki.",
+    "Choose region": "Pagpili og rehiyon",
+    "Account region": "Rehiyon sa account",
+    "Overview / Trends region": "Rehiyon sa kinatibuk-ang taho ug trend",
+    "Regional analysis region": "Rehiyon alang sa pagtuki",
+    "Regional includes all existing surveys.":
+        "Apil sa rehiyonal nga taho ang tanang anaa nga survey.",
+    "Analyzed submissions": "Natuki nga mga gisumite",
+    "Exact count unavailable; {count} linked submissions":
+        "Walay eksaktong ihap; {count} ka nalambigit nga gisumite",
+    "Submission links are incomplete.":
+        "Dili kompleto ang mga link sa gisumite.",
+    "Scored answers linked to analyzed submissions only.":
+        "Mga tubag nga adunay puntos ug nalambigit lamang sa natuki nga gisumite.",
+    "Sign in to view reporting data.":
+        "Pag-sign in aron makita ang datos sa taho.",
+    "Incompatible reporting response. Ask for the updated backend build.":
+        "Dili tugma ang tubag sa taho. Pangayoa ang na-update nga backend.",
+    "Unable to load reporting data. Please retry.":
+        "Dili makarga ang datos sa taho. Sulayi pag-usab.",
     "Reporting data is not connected yet.":
         "Wala pa makonektar ang datos sa taho.",
     "Loading report": "Nagkarga sa taho",
@@ -81,6 +139,35 @@ const sentimentReportingTranslations = <String, Map<String, String>>{
         "Pagbati sa komunidad ug katagbawan gikan sa survey",
   },
   'Ilocano': {
+    "Current period": "Agdama a tiempo",
+    "Previous period": "Napalabas a tiempo",
+    "Observed through": "Datos agingga",
+    "vs previous Overview": "maidilig iti napalabas a sapasap a report",
+    "vs this survey's previous period":
+        "maidilig iti napalabas a tiempo daytoy a survey",
+    "No comparable results": "Awan ti maidilig a resulta",
+    "No eligible surveys": "Awan ti maikari a survey",
+    "Choose a region to view Regional analysis.":
+        "Agpili ti rehion tapno makita ti panangusisa.",
+    "Choose region": "Agpili ti rehion",
+    "Account region": "Rehion ti account",
+    "Overview / Trends region": "Rehion ti sapasap a report ken trend",
+    "Regional analysis region": "Rehion para iti panangusisa",
+    "Regional includes all existing surveys.":
+        "Iraman ti rehional a report ti amin nga adda a survey.",
+    "Analyzed submissions": "Nausisa a naisubmitir",
+    "Exact count unavailable; {count} linked submissions":
+        "Awan ti eksakto a bilang; {count} a naisilpo a naisubmitir",
+    "Submission links are incomplete.":
+        "Saan a kompleto dagiti silpo ti naisubmitir.",
+    "Scored answers linked to analyzed submissions only.":
+        "Dagiti sungbat nga addaan puntos ken naisilpo laeng kadagiti nausisa a naisubmitir.",
+    "Sign in to view reporting data.":
+        "Ag-sign in tapno makita ti datos ti report.",
+    "Incompatible reporting response. Ask for the updated backend build.":
+        "Saan a maitunos ti sungbat ti report. Kiddawen ti na-update a backend.",
+    "Unable to load reporting data. Please retry.":
+        "Saan a maikarga ti datos ti report. Padasen manen.",
     "Reporting data is not connected yet.":
         "Saan pay a naisilpo ti datos ti report.",
     "Loading report": "Ikarkarga ti report",
@@ -121,6 +208,35 @@ const sentimentReportingTranslations = <String, Map<String, String>>{
         "Rikna ti komunidad ken pannakapnek manipud iti survey",
   },
   'Hiligaynon': {
+    "Current period": "Subong nga tion",
+    "Previous period": "Nagligad nga tion",
+    "Observed through": "Datos tubtob",
+    "vs previous Overview": "ikumparar sa nagligad nga kabilugan nga report",
+    "vs this survey's previous period":
+        "ikumparar sa nagligad nga tion sini nga survey",
+    "No comparable results": "Wala sing makumparar nga resulta",
+    "No eligible surveys": "Wala sing kwalipikado nga survey",
+    "Choose a region to view Regional analysis.":
+        "Magpili sang rehiyon agod makita ang pag-usisa.",
+    "Choose region": "Magpili sang rehiyon",
+    "Account region": "Rehiyon sang account",
+    "Overview / Trends region": "Rehiyon sang kabilugan nga report kag trend",
+    "Regional analysis region": "Rehiyon para sa pag-usisa",
+    "Regional includes all existing surveys.":
+        "Lakip sa rehiyonal nga report ang tanan nga yara nga survey.",
+    "Analyzed submissions": "Nausisa nga mga ginsumiter",
+    "Exact count unavailable; {count} linked submissions":
+        "Wala sing eksakto nga kadamuon; {count} ka naangot nga ginsumiter",
+    "Submission links are incomplete.":
+        "Indi kompleto ang mga link sang ginsumiter.",
+    "Scored answers linked to analyzed submissions only.":
+        "Mga sabat nga may puntos kag naangot lamang sa nausisa nga ginsumiter.",
+    "Sign in to view reporting data.":
+        "Mag-sign in agod makita ang datos sang report.",
+    "Incompatible reporting response. Ask for the updated backend build.":
+        "Indi tugma ang sabat sang report. Pangayua ang na-update nga backend.",
+    "Unable to load reporting data. Please retry.":
+        "Indi makarga ang datos sang report. Tilawi liwat.",
     "Reporting data is not connected yet.":
         "Wala pa makonekta ang datos sang report.",
     "Loading report": "Nagakarga sang report",

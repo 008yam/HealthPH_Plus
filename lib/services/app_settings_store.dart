@@ -39,7 +39,7 @@ extension HealthPhVisualModeLabel on HealthPhVisualMode {
       case HealthPhVisualMode.grey:
         return const Color(0xFF607080);
       case HealthPhVisualMode.dark:
-        return const Color(0xFF72A7FF);
+        return const Color(0xFF31459B);
     }
   }
 

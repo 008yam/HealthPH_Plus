@@ -5,6 +5,8 @@ import '../services/api_config.dart';
 import '../services/mobile_alert_service.dart';
 import '../services/profile_store.dart';
 import '../theme/responsive.dart';
+import '../theme/app_theme.dart';
+import '../widgets/disease_alert_card.dart';
 
 class DiseaseWatchPage extends StatefulWidget {
   final MobileAlertService? alertService;
@@ -21,6 +23,7 @@ class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
   String? _error;
   bool _loading = false;
   bool _opening = false;
+  String _readFilter = 'all';
   int _generation = 0;
 
   @override
@@ -89,39 +92,46 @@ class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
       setState(() => _opening = false);
       await showDialog<void>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(detail.title),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  detail.regionName.isEmpty ? detail.region : detail.regionName,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  detail.message.isEmpty
-                      ? context.tr('No additional alert details were provided.')
-                      : detail.message,
-                ),
-                if (detail.publishedAt != null) ...[
+        builder: (dialogContext) => Theme(
+          data: AppTheme.lightTheme,
+          child: AlertDialog(
+            title: Text(detail.title),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    detail.regionName.isEmpty
+                        ? detail.region
+                        : detail.regionName,
+                  ),
                   const SizedBox(height: 12),
                   Text(
-                    MaterialLocalizations.of(
-                      context,
-                    ).formatMediumDate(detail.publishedAt!.toLocal()),
+                    detail.message.isEmpty
+                        ? context.tr(
+                            'No additional alert details were provided.',
+                          )
+                        : detail.message,
                   ),
+                  if (detail.publishedAt != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      MaterialLocalizations.of(
+                        context,
+                      ).formatMediumDate(detail.publishedAt!.toLocal()),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(context.tr('Close')),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(context.tr('Close')),
-            ),
-          ],
         ),
       );
       if (!mounted || token != ProfileStore.instance.profile?.accessToken) {
@@ -172,7 +182,7 @@ class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = AppTheme.lightTheme.colorScheme;
     final query = _search.text.trim().toLowerCase();
     final visible = _alerts
         .where(
@@ -180,160 +190,159 @@ class _DiseaseWatchPageState extends State<DiseaseWatchPage> {
               .toLowerCase()
               .contains(query),
         )
+        .where(
+          (a) =>
+              _readFilter == 'all' ||
+              (_readFilter == 'unread' ? a.readAt == null : a.readAt != null),
+        )
         .toList();
-    return Scaffold(
-      backgroundColor: colors.surface,
-      appBar: AppBar(
-        title: Text(context.tr('Disease Watch')),
-        actions: [
-          IconButton(
-            tooltip: context.tr('Refresh'),
-            onPressed: _loading ? null : () => _load(),
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => _load(),
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.all(Responsive.pagePadding(context)),
-          children: [
-            Text(
-              context.tr('Health Alerts'),
-              style: Theme.of(context).textTheme.titleLarge,
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF7F9FC),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          title: Text(context.tr('Disease Watch')),
+          actions: [
+            IconButton(
+              tooltip: context.tr('Refresh'),
+              onPressed: _loading ? null : () => _load(),
+              icon: const Icon(Icons.refresh),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _search,
-              onChanged: (_) => setState(() {}),
-              style: TextStyle(color: colors.onSurface),
-              decoration: InputDecoration(
-                hintText: context.tr('Search alerts'),
-                hintStyle: TextStyle(color: colors.onSurfaceVariant),
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: colors.surfaceContainerHighest,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (_opening) const LinearProgressIndicator(),
-            if (_loading && _alerts.isEmpty)
-              Semantics(
-                label: context.tr('Loading...'),
-                child: Column(
-                  children: List.generate(
-                    3,
-                    (_) => Container(
-                      height: 108,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colors.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Center(child: LinearProgressIndicator()),
-                    ),
-                  ),
-                ),
-              )
-            else if (_error == null && visible.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text(
-                  context.tr(
-                    query.isEmpty
-                        ? 'No recent alerts right now.'
-                        : 'No matching alerts.',
-                  ),
-                ),
-              ),
-            for (final alert in visible)
-              Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: colors.outlineVariant),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: _opening ? null : () => _open(alert),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              alert.readAt == null
-                                  ? Icons.notifications_active_outlined
-                                  : Icons.notifications_none,
-                              color: colors.primary,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                alert.title,
-                                style: TextStyle(
-                                  color: colors.onSurface,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          alert.regionName.isEmpty
-                              ? alert.region
-                              : alert.regionName,
-                          style: TextStyle(color: colors.onSurfaceVariant),
-                        ),
-                        if (alert.message.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            alert.message,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: colors.onSurface),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Text(
-                          context.tr(
-                            '{reports} reports',
-                            parameters: {'reports': alert.reportCount},
-                          ),
-                          style: TextStyle(color: colors.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            if (_error != null) ...[
-              Text(context.tr(_error!), style: TextStyle(color: colors.error)),
-              TextButton.icon(
-                onPressed: _loading
-                    ? null
-                    : () => _load(more: _alerts.isNotEmpty),
-                icon: const Icon(Icons.refresh),
-                label: Text(context.tr('Retry')),
-              ),
-            ],
-            if (_cursor != null && _error == null)
-              TextButton(
-                onPressed: _loading ? null : () => _load(more: true),
-                child: Text(context.tr(_loading ? 'Loading...' : 'Load more')),
-              ),
-            const SizedBox(height: 24),
           ],
+        ),
+        body: RefreshIndicator(
+          onRefresh: () => _load(),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.all(Responsive.pagePadding(context)),
+            children: [
+              Text(
+                context.tr('Health Alerts'),
+                style: const TextStyle(
+                  color: AppTheme.text,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _search,
+                onChanged: (_) => setState(() {}),
+                style: TextStyle(color: colors.onSurface),
+                decoration: InputDecoration(
+                  hintText: context.tr('Search alerts'),
+                  hintStyle: TextStyle(color: colors.onSurfaceVariant),
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  suffixIcon: query.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: context.tr('Clear'),
+                          onPressed: () => setState(() => _search.clear()),
+                          icon: const Icon(Icons.close),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SegmentedButton<String>(
+                  showSelectedIcon: false,
+                  segments: [
+                    ButtonSegment(
+                      value: 'all',
+                      label: Text(context.tr('All alerts')),
+                    ),
+                    ButtonSegment(
+                      value: 'unread',
+                      label: Text(context.tr('Unread')),
+                    ),
+                    ButtonSegment(
+                      value: 'read',
+                      label: Text(context.tr('Read')),
+                    ),
+                  ],
+                  selected: {_readFilter},
+                  onSelectionChanged: (selection) =>
+                      setState(() => _readFilter = selection.single),
+                  style: SegmentedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEEF2F7),
+                    selectedBackgroundColor: Colors.white,
+                    selectedForegroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.mutedText,
+                    side: const BorderSide(color: AppTheme.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (_opening) const LinearProgressIndicator(),
+              if (_loading && _alerts.isEmpty)
+                Semantics(
+                  label: context.tr('Loading...'),
+                  child: Column(
+                    children: List.generate(
+                      3,
+                      (_) => Container(
+                        height: 108,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(child: LinearProgressIndicator()),
+                      ),
+                    ),
+                  ),
+                )
+              else if (_error == null && visible.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    context.tr(
+                      query.isEmpty && _readFilter == 'all'
+                          ? 'No recent alerts right now.'
+                          : 'No matching alerts.',
+                    ),
+                  ),
+                ),
+              for (final alert in visible)
+                DiseaseAlertCard(
+                  alert: alert,
+                  onOpen: _opening ? null : () => _open(alert),
+                ),
+              if (_error != null) ...[
+                Text(
+                  context.tr(_error!),
+                  style: TextStyle(color: colors.error),
+                ),
+                TextButton.icon(
+                  onPressed: _loading
+                      ? null
+                      : () => _load(more: _alerts.isNotEmpty),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(context.tr('Retry')),
+                ),
+              ],
+              if (_cursor != null && _error == null)
+                TextButton(
+                  onPressed: _loading ? null : () => _load(more: true),
+                  child: Text(
+                    context.tr(_loading ? 'Loading...' : 'Load more'),
+                  ),
+                ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

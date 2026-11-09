@@ -8,17 +8,39 @@ import '../models/mobile_survey.dart';
 
 class SentimentSurveyService {
   final String baseUrl;
+  final http.Client? _client;
 
-  SentimentSurveyService({required this.baseUrl});
+  SentimentSurveyService({required this.baseUrl, http.Client? client})
+    : _client = client;
+
+  Uri _surveyUrl({String? surveyId}) {
+    final base = Uri.parse(baseUrl);
+    var path = base.path.replaceFirst(RegExp(r'/+$'), '');
+    if (!path.endsWith('/api')) path = '$path/api';
+    final root = Uri(
+      scheme: base.scheme,
+      host: base.host,
+      port: base.hasPort ? base.port : null,
+      path: '$path/sentiment-pulse/public-surveys',
+    );
+    if (surveyId == null) {
+      return root.replace(queryParameters: {'platform': 'mobile'});
+    }
+    return root.replace(
+      pathSegments: [...root.pathSegments, surveyId, 'responses'],
+    );
+  }
 
   Future<List<MobileSurvey>> fetchPublicSurveys() async {
-    final response = await http
-        .get(
-          Uri.parse(
-            "$baseUrl/api/sentiment-pulse/public-surveys?platform=mobile",
-          ),
-        )
-        .timeout(const Duration(seconds: 12));
+    final client = _client ?? http.Client();
+    late final http.Response response;
+    try {
+      response = await client
+          .get(_surveyUrl(), headers: {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 12));
+    } finally {
+      if (_client == null) client.close();
+    }
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
@@ -43,6 +65,7 @@ class SentimentSurveyService {
     required Map<String, dynamic> answers,
     String? region,
     String? userId,
+    String? accessToken,
     Map<String, dynamic>? userLocation,
     Map<String, dynamic>? metadata,
   }) async {
@@ -58,18 +81,29 @@ class SentimentSurveyService {
       "metadata": metadata ?? {},
     };
 
-    final response = await http
-        .post(
-          Uri.parse(
-            "$baseUrl/api/sentiment-pulse/public-surveys/$surveyId/responses",
-          ),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode(payload),
-        )
-        .timeout(const Duration(seconds: 12));
+    final token = accessToken?.trim() ?? '';
+    final client = _client ?? http.Client();
+    late final http.Response response;
+    try {
+      response = await client
+          .post(
+            _surveyUrl(surveyId: surveyId),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 12));
+    } finally {
+      if (_client == null) client.close();
+    }
 
-    if (response.statusCode != 201) {
-      throw Exception('Failed to submit survey response: ${response.body}');
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        'Failed to submit survey response: HTTP ${response.statusCode}',
+      );
     }
   }
 

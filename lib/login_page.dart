@@ -126,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _goToLanguageSelection() {
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
     );
@@ -207,9 +207,9 @@ class _LoginPageState extends State<LoginPage> {
 
         if (verifiedProfile == null) return;
 
-        profileForSession = verifiedProfile.copyWith(
-          accessToken: savedProfile.accessToken,
-        );
+        // Keep the account details returned by email/password login.
+        // The PIN dialog must still complete successfully before continuing.
+        profileForSession = savedProfile;
       }
 
       ProfileStore.instance.saveProfile(profileForSession);
@@ -805,7 +805,7 @@ class _PinLoginDialogState extends State<_PinLoginDialog> {
 
       setState(() {
         isVerifying = false;
-        errorMessage = "Incorrect PIN. Please try again.";
+        errorMessage = "PIN verification failed. Check your connection or sign in again.";
         pinController.clear();
       });
 

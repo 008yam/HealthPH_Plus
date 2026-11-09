@@ -73,6 +73,7 @@ void main() {
         expect(request.headers['Authorization'], 'Bearer test-token');
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         expect(body['reporter']['reporterType'], 'registered');
+        expect(body['reporter']['userId'], ProfileStore.instance.profile!.id);
         expect(body['symptomIds'], ['cough']);
         expect(body['notes'], 'Test notes');
         expect(body['location']['cityName'], 'Manila');
@@ -116,6 +117,7 @@ void main() {
         await submit(
           MockClient((request) async {
             expect(request.headers.containsKey('Authorization'), isFalse);
+            expect(jsonDecode(request.body)['reporter']['userId'], 'GUEST');
             expect(
               jsonDecode(request.body)['reporter']['reporterType'],
               'guest',
