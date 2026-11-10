@@ -1,6 +1,6 @@
 import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import '../widgets/literacy_media.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
@@ -18,6 +18,7 @@ class HealthLiteracyPage extends StatefulWidget {
 
 class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
   final TextEditingController _searchController = TextEditingController();
+  final LiteracyPreviewGroup _previewOwner = LiteracyPreviewGroup();
   final literacyHeaderKey = GlobalKey();
   final literacySearchKey = GlobalKey();
   final literacyTabsKey = GlobalKey();
@@ -84,6 +85,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
 
   @override
   void dispose() {
+    _previewOwner.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -238,6 +240,8 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
               final mediaUrl = _resolveMediaUrl(item);
 
               return HealthArticleCard(
+                key: ValueKey(item['id'] ?? '$type:$mediaUrl:${item['title']}'),
+                previewOwner: _previewOwner,
                 contentType: type,
                 mediaUrl: mediaUrl,
                 imageUrl: _resolveImageUrl(item),
@@ -498,9 +502,11 @@ class HealthArticleCard extends StatelessWidget {
   final String description;
   final String articleUrl;
   final List<String> tags;
+  final LiteracyPreviewGroup? previewOwner;
 
   const HealthArticleCard({
     super.key,
+    this.previewOwner,
     required this.contentType,
     required this.mediaUrl,
     required this.imageUrl,
@@ -518,8 +524,23 @@ class HealthArticleCard extends StatelessWidget {
           (contentType == "video" || contentType == "videos"));
 
   bool get _isPdf => mediaContentType == "application/pdf";
+  bool get _isInfographic =>
+      contentType == 'infographic' || contentType == 'infographics';
 
   Future<void> _openContent(BuildContext context) async {
+    if (_isInfographic && !_isPdf && imageUrl.isNotEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => InfographicViewer(
+          imageUrl: mediaContentType.startsWith('image/') && mediaUrl.isNotEmpty
+              ? mediaUrl
+              : imageUrl,
+          title: title,
+          caption: description,
+        ),
+      );
+      return;
+    }
     if (_isVideo) {
       if (mediaUrl.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -600,8 +621,15 @@ class HealthArticleCard extends StatelessWidget {
 
     final Uri url = Uri.parse(articleUrl);
 
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception("Could not launch $articleUrl");
+    try {
+      if (await launchUrl(url, mode: LaunchMode.externalApplication)) return;
+    } catch (_) {
+      // Leave the card available when the device cannot open the external link.
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('Unable to open content.'))),
+      );
     }
   }
 
@@ -639,41 +667,21 @@ class HealthArticleCard extends StatelessWidget {
 
     final thumbnail = buildThumbnail();
 
-    if (!_isVideo) {
-      return thumbnail;
+    if (_isVideo) {
+      return LiteracyVideoPreview(
+        url: mediaUrl,
+        title: title,
+        thumbnail: thumbnail,
+        previewOwner: previewOwner,
+      );
     }
 
-    return SizedBox(
-      height: 230,
-      width: double.infinity,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          thumbnail,
-          Container(color: Colors.black.withValues(alpha: 0.22)),
-          const Center(
-            child: Icon(Icons.play_circle_fill, color: Colors.white, size: 62),
-          ),
-          Positioned(
-            left: 12,
-            bottom: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.70),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                context.tr("Video"),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
+    return Semantics(
+      button: true,
+      label: '${context.tr('View')}: $title',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(onTap: () => _openContent(context), child: thumbnail),
       ),
     );
   }
@@ -723,16 +731,19 @@ class HealthArticleCard extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  Text(
-                    description,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppTheme.text,
-                      fontSize: 13,
-                      height: 1.4,
+                  if (_isInfographic)
+                    ExpandableMediaCaption(text: description)
+                  else
+                    Text(
+                      description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppTheme.text,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
                     ),
-                  ),
 
                   const SizedBox(height: 8),
 
@@ -798,163 +809,6 @@ class HealthArticleCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class VideoPlayerDialog extends StatefulWidget {
-  final String videoUrl;
-  final String title;
-
-  const VideoPlayerDialog({
-    super.key,
-    required this.videoUrl,
-    required this.title,
-  });
-
-  @override
-  State<VideoPlayerDialog> createState() => _VideoPlayerDialogState();
-}
-
-class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
-  late final VideoPlayerController _controller;
-  late final Future<void> _initializeVideoFuture;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
-
-    _initializeVideoFuture = _controller.initialize().then((_) {
-      if (!mounted) return;
-      _controller.play();
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _togglePlayback() {
-    setState(() {
-      if (_controller.value.isPlaying) {
-        _controller.pause();
-      } else {
-        _controller.play();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(18),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              color: AppTheme.primary,
-              padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-            FutureBuilder<void>(
-              future: _initializeVideoFuture,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return SizedBox(
-                    height: 260,
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Center(
-                        child: Text(
-                          context.tr(
-                            "Unable to play video. URL: {widget.videoUrl} Error: {snapshot.error}",
-                            parameters: {
-                              "widget.videoUrl": widget.videoUrl,
-                              "snapshot.error": snapshot.error.toString(),
-                            },
-                          ),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return const SizedBox(
-                    height: 220,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final aspectRatio = _controller.value.aspectRatio == 0
-                    ? 16 / 9
-                    : _controller.value.aspectRatio;
-
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        AspectRatio(
-                          aspectRatio: aspectRatio,
-                          child: VideoPlayer(_controller),
-                        ),
-                        IconButton(
-                          onPressed: _togglePlayback,
-                          iconSize: 64,
-                          icon: Icon(
-                            _controller.value.isPlaying
-                                ? Icons.pause_circle_filled
-                                : Icons.play_circle_fill,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                    VideoProgressIndicator(
-                      _controller,
-                      allowScrubbing: true,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                    ),
-                  ],
-                );
-              },
             ),
           ],
         ),
