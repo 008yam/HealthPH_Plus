@@ -14,6 +14,8 @@ import '../services/self_report_export_service.dart';
 import '../widgets/coach_mark.dart';
 import '../services/api_config.dart';
 import '../services/healthph_api_services.dart';
+import '../models/surveillance_pin.dart';
+import 'self_report_history_page.dart';
 
 class DataCollectionPage extends StatefulWidget {
   const DataCollectionPage({super.key});
@@ -26,6 +28,37 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
   final dataHeaderKey = GlobalKey();
   final dataTabsKey = GlobalKey();
   final dataContentKey = GlobalKey();
+  final reportSymptomsButtonKey = GlobalKey();
+
+  Future<void> _openSelfReportWizard() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        final screen = MediaQuery.sizeOf(dialogContext);
+
+        return Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 620,
+              maxHeight: screen.height * 0.90,
+            ),
+            child: _SelfReportWizard(
+              onSubmitted: () {
+                if (Navigator.of(dialogContext).canPop()) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -37,30 +70,30 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
 
         CoachMark.showOnce(
           context,
-          discoveryKey: "data_collection_v4",
+          discoveryKey: "health_contributions_v1",
           steps: [
             CoachMarkStep(
-              targetKey: dataHeaderKey, //Header Coach Mark
-              title: "Data Collection",
+              targetKey: dataHeaderKey,
+              title: "Health Contributions",
               description:
-                  "Contribute symptom information to disease surveillance and review reports connected to your account.",
-              icon: Icons.assignment,
+                  "Review your reports and explore anonymous community health trends.",
+              icon: Icons.health_and_safety_outlined,
               color: AppTheme.primary,
             ),
             CoachMarkStep(
-              targetKey: dataTabsKey, //Collection Coach Mark
-              title: "Collection Tabs",
+              targetKey: dataTabsKey,
+              title: "Contribution Views",
               description:
-                  "Switch between submitting a self-report, reviewing your reports, and community information.",
+                  "Switch between your previous reports and anonymous community information.",
               icon: Icons.tab,
               color: AppTheme.info,
             ),
             CoachMarkStep(
-              targetKey: dataContentKey, //Self-Report Coach Mark
-              title: "Self Report Form",
+              targetKey: reportSymptomsButtonKey,
+              title: "Report Symptoms",
               description:
-                  "Complete your location, symptoms, duration, severity, and notes before submitting your report.",
-              icon: Icons.add_location_alt_outlined,
+                  "Open the guided self-report form to submit symptoms and location information.",
+              icon: Icons.add_circle_outline,
               color: AppTheme.warning,
             ),
           ],
@@ -78,7 +111,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
         : EdgeInsets.all(pagePadding * 0.8);
 
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(
@@ -140,7 +173,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                             ),
 
                             Text(
-                              context.tr("Data Collection"),
+                              context.tr("Health Contributions"),
                               style: TextStyle(
                                 fontSize: Responsive.isLandscapePhone(context)
                                     ? 20
@@ -151,7 +184,7 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                             ),
 
                             Text(
-                              context.tr("Tracks symptoms & outbreaks"),
+                              context.tr("Reports and community health trends"),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.indigo,
@@ -197,9 +230,16 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                                   ),
                                 ),
                                 tabs: [
-                                  Tab(text: context.tr("Self Report")),
-                                  Tab(text: context.tr("My Reports")),
-                                  Tab(text: context.tr("Community")),
+                                  Tab(
+                                    icon: const Icon(
+                                      Icons.assignment_turned_in_outlined,
+                                    ),
+                                    text: context.tr("My Reports"),
+                                  ),
+                                  Tab(
+                                    icon: const Icon(Icons.groups_outlined),
+                                    text: context.tr("Community"),
+                                  ),
                                 ],
                               ),
                             ),
@@ -210,12 +250,8 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
                           Expanded(
                             child: KeyedSubtree(
                               key: dataContentKey,
-                              child: TabBarView(
-                                children: [
-                                  _SelfReportTab(),
-                                  _MyReportsTab(),
-                                  _CommunityTab(),
-                                ],
+                              child: const TabBarView(
+                                children: [_MyReportsTab(), _CommunityTab()],
                               ),
                             ),
                           ),
@@ -228,12 +264,24 @@ class _DataCollectionPageState extends State<DataCollectionPage> {
             ),
           ],
         ),
+        floatingActionButton: KeyedSubtree(
+          key: reportSymptomsButtonKey,
+          child: FloatingActionButton.extended(
+            onPressed: _openSelfReportWizard,
+            backgroundColor: AppTheme.primary,
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.add_circle_outline),
+            label: Text(context.tr("Report Symptoms")),
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }
 }
 
 class _MyReportsTab extends StatelessWidget {
+  const _MyReportsTab();
   bool get _canExportReports {
     final roleId = ProfileStore.instance.profile?.roleId ?? '';
     return roleId == "field_health_worker" || roleId == "lgu_doh_user";
@@ -272,145 +320,324 @@ class _MyReportsTab extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: SelfReportStore.instance,
-      builder: (context, _) {
-        final reports = SelfReportStore.instance.reports;
+    Widget build(BuildContext context) {
+      return Column(
+        children: [
+          if (_canExportReports)
+            AnimatedBuilder(
+              animation: SelfReportStore.instance,
+              builder: (context, _) {
+                final localReports = SelfReportStore.instance.reports;
 
-        if (reports.isEmpty) {
-          return ListView(
-            padding: EdgeInsets.zero,
+                return Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    tooltip: context.tr('Export CSV'),
+                    onPressed: localReports.isEmpty
+                        ? null
+                        : () => _exportReports(context, localReports),
+                    icon: const Icon(Icons.ios_share),
+                    color: AppTheme.primary,
+                  ),
+                );
+              },
+            ),
+          const Expanded(
+            child: SelfReportHistoryPage(embedded: true),
+          ),
+        ],
+      );
+    }
+}
+
+class _CommunityTab extends StatefulWidget {
+  const _CommunityTab();
+
+  @override
+  State<_CommunityTab> createState() => _CommunityTabState();
+}
+
+class _CommunityTabState extends State<_CommunityTab> {
+  late Future<List<SurveillancePin>> pinsFuture;
+
+  static const diseaseLabels = <String, String>{
+    'TB': 'Tuberculosis',
+    'PN': 'Pneumonia',
+    'COVID': 'COVID-19',
+    'AURI': 'Acute Upper Respiratory Infection',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    pinsFuture = _loadCommunityData();
+  }
+
+  Future<List<SurveillancePin>> _loadCommunityData() {
+    return HealthPhApiService(
+      baseUrl: ApiConfig.baseUrl,
+    ).fetchSurveillanceMapPins(days: 30);
+  }
+
+  void _retry() {
+    setState(() {
+      pinsFuture = _loadCommunityData();
+    });
+  }
+
+  String _regionLabel(String code) {
+    if (code == 'NCR') return 'National Capital Region';
+    return code.startsWith('Region ') ? code : 'Region $code';
+  }
+
+  Widget _metricRow({
+    required String label,
+    required int value,
+    required int total,
+    required Color color,
+  }) {
+    final percentage = total == 0 ? 0 : ((value / total) * 100).round();
+    final progress = total == 0
+        ? 0.0
+        : (value / total).clamp(0.0, 1.0).toDouble();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        children: [
+          Row(
             children: [
-              Text(
-                context.tr("Your Recent Reports"),
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  context.tr(label),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-              SizedBox(height: 12),
               Text(
-                context.tr("No self-reports submitted yet."),
-                style: TextStyle(fontSize: 12),
+                '$value ($percentage%)',
+                style: const TextStyle(
+                  color: AppTheme.mutedText,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              InfoBox(),
             ],
+          ),
+          const SizedBox(height: 7),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: AppTheme.border,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<SurveillancePin>>(
+      future: pinsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.cloud_off_outlined,
+                  size: 42,
+                  color: AppTheme.mutedText,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  context.tr('Unable to load community trends.'),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _retry,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(context.tr('Retry')),
+                ),
+              ],
+            ),
           );
         }
 
-        return ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    context.tr(
-                      "Your Recent Reports ({reports.length})",
-                      parameters: {"reports.length": reports.length},
+        final pins = snapshot.data ?? const <SurveillancePin>[];
+
+        if (pins.isEmpty) {
+          return Center(
+            child: Text(
+              context.tr(
+                'No processed community signals are available for the last 30 days.',
+              ),
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        final diseaseCounts = <String, int>{
+          for (final code in SurveillancePin.diseases) code: 0,
+        };
+        final regionCounts = <String, int>{};
+
+        for (final pin in pins) {
+          for (final entry in pin.diseaseCounts.entries) {
+            diseaseCounts.update(
+              entry.key,
+              (current) => current + entry.value,
+              ifAbsent: () => entry.value,
+            );
+          }
+
+          final region = pin.region?.trim() ?? '';
+          if (region.isNotEmpty) {
+            regionCounts.update(
+              region,
+              (current) => current + pin.processedEntryCount,
+              ifAbsent: () => pin.processedEntryCount,
+            );
+          }
+        }
+
+        final diseaseRows =
+            diseaseCounts.entries.where((entry) => entry.value > 0).toList()
+              ..sort((a, b) => b.value.compareTo(a.value));
+
+        final regionRows = regionCounts.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+        final diseaseTotal = diseaseRows.fold<int>(
+          0,
+          (total, entry) => total + entry.value,
+        );
+        final regionTotal = regionRows.fold<int>(
+          0,
+          (total, entry) => total + entry.value,
+        );
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            final refreshed = _loadCommunityData();
+            setState(() => pinsFuture = refreshed);
+            await refreshed;
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            children: [
+              Text(
+                context.tr('Community Trends'),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                context.tr(
+                  'Anonymous processed health signals from the community.',
+                ),
+                style: const TextStyle(color: AppTheme.mutedText),
+              ),
+              const SizedBox(height: 22),
+              Text(
+                context.tr('Top Disease Signals'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 14),
+              ...diseaseRows
+                  .take(4)
+                  .map(
+                    (entry) => _metricRow(
+                      label: diseaseLabels[entry.key] ?? entry.key,
+                      value: entry.value,
+                      total: diseaseTotal,
+                      color: AppTheme.primary,
                     ),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  ),
+              const SizedBox(height: 12),
+              Text(
+                context.tr('Processed Reports by Region'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 14),
+              ...regionRows
+                  .take(5)
+                  .map(
+                    (entry) => _metricRow(
+                      label: _regionLabel(entry.key),
+                      value: entry.value,
+                      total: regionTotal,
+                      color: AppTheme.success,
                     ),
+                  ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.18),
                   ),
                 ),
-                if (_canExportReports)
-                  IconButton(
-                    tooltip: context.tr("Export CSV"),
-                    onPressed: () => _exportReports(context, reports),
-                    icon: const Icon(Icons.ios_share, color: AppTheme.primary),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            ...reports.map((report) {
-              return ReportCard(
-                symptom: report.symptoms.join(", "),
-                location: report.locationLabel,
-                duration: "Self-reported",
-                severity: "For review",
-                date: report.reportedAtLabel,
-                comment: report.notes.isEmpty
-                    ? "No additional notes provided."
-                    : report.notes,
-                consideration: report.possibleCondition,
-                icon: Icons.assignment_turned_in,
-                severityColor: const Color(0xFFDDE6FF),
-              );
-            }),
-
-            const InfoBox(),
-          ],
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.privacy_tip_outlined,
+                      color: AppTheme.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        context.tr(
+                          'Community data is anonymized and aggregated to protect privacy. Disease signals are not confirmed diagnoses.',
+                        ),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 }
 
-class _CommunityTab extends StatelessWidget {
+class _SelfReportWizard extends StatefulWidget {
+  final VoidCallback onSubmitted;
+
+  const _SelfReportWizard({required this.onSubmitted});
+
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        Text(
-          context.tr("Community Reports"),
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-
-        SizedBox(height: 4),
-
-        Text(
-          context.tr("View symptom reports shared by other users."),
-          style: TextStyle(fontSize: 12),
-        ),
-
-        SizedBox(height: 12),
-
-        ReportCard(
-          symptom: "Fever",
-          location: "NCR",
-          duration: "2 days",
-          severity: "Moderate",
-          date: "Reported on May 6, 2025",
-          comment: "User experienced fever and fatigue.",
-          icon: Icons.thermostat,
-          severityColor: Color(0xFFE8C47C),
-        ),
-
-        ReportCard(
-          symptom: "Cough",
-          location: "Region IV-A",
-          duration: "4 days",
-          severity: "Mild",
-          date: "Reported on May 6, 2025",
-          comment: "User reported dry cough and throat irritation.",
-          icon: Icons.sick,
-          severityColor: Color(0xFFC9F2C7),
-        ),
-
-        ReportCard(
-          symptom: "Headache",
-          location: "Region III",
-          duration: "1 day",
-          severity: "Mild",
-          date: "Reported on May 5, 2025",
-          comment: "User reported mild headache and tiredness.",
-          icon: Icons.psychology,
-          severityColor: Color(0xFFC9F2C7),
-        ),
-      ],
-    );
-  }
+  State<_SelfReportWizard> createState() => _SelfReportWizardState();
 }
 
-class _SelfReportTab extends StatefulWidget {
-  @override
-  State<_SelfReportTab> createState() => _SelfReportTabState();
-}
-
-class _SelfReportTabState extends State<_SelfReportTab> {
+class _SelfReportWizardState extends State<_SelfReportWizard> {
+  final PageController pageController = PageController();
   final notesController = TextEditingController();
+
+  int currentStep = 0;
 
   bool locationLoaded = false;
   bool reportSubmitting = false;
@@ -498,7 +725,7 @@ class _SelfReportTabState extends State<_SelfReportTab> {
 
   @override
   void dispose() {
-    // locationController.dispose();
+    pageController.dispose();
     notesController.dispose();
     super.dispose();
   }
@@ -536,6 +763,51 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     }
 
     return AppTaxonomy.possibleConditions[4];
+  }
+
+  bool get _addressComplete {
+    return selectedRegion != null &&
+        (isNcrSelected || selectedProvince != null) &&
+        selectedCity != null &&
+        selectedBarangay != null;
+  }
+
+  void _showStepError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.tr(message))));
+  }
+
+  Future<void> _moveToStep(int targetStep) async {
+    if (targetStep > currentStep) {
+      if (currentStep == 0 && selectedSymptomIds.isEmpty) {
+        _showStepError('Select at least one symptom before continuing.');
+        return;
+      }
+
+      if (currentStep == 1 && !_addressComplete) {
+        _showStepError('Complete your address before continuing.');
+        return;
+      }
+    }
+
+    final safeTarget = targetStep.clamp(0, 2);
+
+    await pageController.animateToPage(
+      safeTarget,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _handleHorizontalSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+
+    if (velocity < -350 && currentStep < 2) {
+      _moveToStep(currentStep + 1);
+    } else if (velocity > 350 && currentStep > 0) {
+      _moveToStep(currentStep - 1);
+    }
   }
 
   Future<void> _submitReport() async {
@@ -626,8 +898,11 @@ class _SelfReportTabState extends State<_SelfReportTab> {
           ),
           actions: [
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.tr("Understood")),
+              onPressed: () {
+                Navigator.of(context).pop();
+                widget.onSubmitted();
+              },
+              child: Text(context.tr('Understood')),
             ),
           ],
         ),
@@ -665,146 +940,20 @@ class _SelfReportTabState extends State<_SelfReportTab> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSymptomsStep() {
     return ListView(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       children: [
         Text(
-          context.tr("Self Report Symptoms"),
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          context.tr('Select your symptoms'),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 5),
         Text(
-          context.tr(
-            "Report respiratory symptoms to supper surveillance mapping.",
-          ),
-          style: TextStyle(fontSize: 12),
+          context.tr("Select all symptoms you're experiencing."),
+          style: const TextStyle(color: AppTheme.mutedText),
         ),
-
-        const SizedBox(height: 14),
-
-        if (!locationLoaded)
-          const Center(child: CircularProgressIndicator())
-        else ...[
-          if (lockAddressFields) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.08),
-                border: Border.all(
-                  color: AppTheme.primary.withValues(alpha: 0.25),
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                context.tr(
-                  "Using your registered address. Adress fields are locked for account consistency.",
-                ),
-                style: TextStyle(
-                  color: AppTheme.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          LocationAutocompleteField(
-            label: "Region",
-            icon: Icons.map_outlined,
-            enabled: !lockAddressFields,
-            value: selectedRegion,
-            options: locationService.regions,
-            onSelected: (value) {
-              setState(() {
-                selectedRegion = value;
-                selectedProvince = null;
-                selectedCity = null;
-                selectedBarangay = null;
-              });
-            },
-          ),
-
-          const SizedBox(height: 12),
-
-          if (isNcrSelected) ...[
-            TextFormField(
-              initialValue: "NCR",
-              enabled: false,
-              decoration: InputDecoration(
-                labelText: context.tr("Province"),
-                prefixIcon: Icon(Icons.location_city_outlined),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ] else ...[
-            LocationAutocompleteField(
-              label: "Province",
-              icon: Icons.location_city_outlined,
-              enabled: !lockAddressFields && selectedRegion != null,
-              value: selectedProvince,
-              options: provinceOption,
-              onSelected: (value) {
-                setState(() {
-                  selectedProvince = value;
-                  selectedCity = null;
-                  selectedBarangay = null;
-                });
-              },
-            ),
-
-            const SizedBox(height: 12),
-          ],
-          LocationAutocompleteField(
-            refreshKey: "${selectedRegion?.code}_${selectedProvince?.code}",
-            label: "City / Municipality",
-            icon: Icons.apartment_outlined,
-            enabled:
-                !lockAddressFields &&
-                (isNcrSelected
-                    ? selectedRegion != null
-                    : selectedProvince != null),
-            value: selectedCity,
-            options: cityOptions,
-            onSelected: (value) {
-              setState(() {
-                selectedCity = value;
-                selectedBarangay = null;
-              });
-            },
-          ),
-
-          const SizedBox(height: 12),
-
-          LocationAutocompleteField(
-            key: ValueKey(
-              "self_report_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
-            ),
-            label: "Barangay",
-            refreshKey:
-                "${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
-            icon: Icons.home_work_outlined,
-            enabled: !lockAddressFields && selectedCity != null,
-            value: selectedBarangay,
-            options: barangayOptions,
-            onSelected: (value) {
-              setState(() {
-                selectedBarangay = value;
-              });
-            },
-          ),
-        ],
-
-        const SizedBox(height: 12),
-
-        Text(
-          context.tr("Symptoms"),
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-
+        const SizedBox(height: 18),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -828,209 +977,362 @@ class _SelfReportTabState extends State<_SelfReportTab> {
             );
           }).toList(),
         ),
-
-        const SizedBox(height: 14),
-
+        const SizedBox(height: 18),
         TextField(
           controller: notesController,
           maxLines: 3,
           decoration: InputDecoration(
-            labelText: context.tr("Additional notes (optional)"),
+            labelText: context.tr('Additional notes (optional)'),
             alignLabelWithHint: true,
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        SizedBox(
-          height: 46,
-          child: ElevatedButton.icon(
-            onPressed: reportSubmitting ? null : _submitReport,
-            icon: const Icon(Icons.add_location_alt_outlined),
-            label: Text(
-              reportSubmitting
-                  ? context.tr("Location Address...")
-                  : context.tr("Submit Self Report"),
-            ),
           ),
         ),
       ],
     );
   }
-}
 
-class ReportCard extends StatelessWidget {
-  final String symptom;
-  final String location;
-  final String duration;
-  final String severity;
-  final String date;
-  final String comment;
-  final String? consideration;
-  final IconData icon;
-  final Color severityColor;
+  Widget _buildAddressStep() {
+    if (!locationLoaded) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  const ReportCard({
-    super.key,
-    required this.symptom,
-    required this.location,
-    required this.duration,
-    required this.severity,
-    required this.date,
-    required this.comment,
-    this.consideration,
-    required this.icon,
-    required this.severityColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Colors.black),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: const Color(0xFFD7E9FF),
-                  child: Icon(icon, size: 34, color: Colors.black),
-                ),
-
-                const SizedBox(width: 12),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr(symptom),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "📍 $location",
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      Text(
-                        context.tr(
-                          "Duration: {duration}",
-                          parameters: {"duration": duration},
-                        ),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: severityColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    context.tr(severity),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-
-            if (consideration != null && consideration!.trim().isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF4D6),
-                  border: Border.all(color: AppTheme.warning),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  context.tr(
-                    "Possible / Consideration: {consideration}",
-                    parameters: {
-                      "consideration": context.tr(consideration ?? ''),
-                    },
-                  ),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.text,
-                  ),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 12),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black54),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '"$comment"',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                date,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-            ),
-          ],
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      children: [
+        Text(
+          context.tr('Report location'),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-      ),
+        const SizedBox(height: 5),
+        Text(
+          context.tr(
+            'Select the location where the symptoms were experienced.',
+          ),
+          style: const TextStyle(color: AppTheme.mutedText),
+        ),
+        const SizedBox(height: 18),
+        if (lockAddressFields) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.22),
+              ),
+            ),
+            child: Text(
+              context.tr(
+                'Using your registered address. Address fields are locked for account consistency.',
+              ),
+              style: const TextStyle(
+                color: AppTheme.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+        LocationAutocompleteField(
+          label: 'Region',
+          icon: Icons.map_outlined,
+          enabled: !lockAddressFields,
+          value: selectedRegion,
+          options: locationService.regions,
+          onSelected: (value) {
+            setState(() {
+              selectedRegion = value;
+              selectedProvince = null;
+              selectedCity = null;
+              selectedBarangay = null;
+            });
+          },
+        ),
+        const SizedBox(height: 12),
+        if (isNcrSelected)
+          TextFormField(
+            initialValue: 'NCR',
+            enabled: false,
+            decoration: InputDecoration(
+              labelText: context.tr('Province'),
+              prefixIcon: const Icon(Icons.location_city_outlined),
+            ),
+          )
+        else
+          LocationAutocompleteField(
+            label: 'Province',
+            icon: Icons.location_city_outlined,
+            enabled: !lockAddressFields && selectedRegion != null,
+            value: selectedProvince,
+            options: provinceOption,
+            onSelected: (value) {
+              setState(() {
+                selectedProvince = value;
+                selectedCity = null;
+                selectedBarangay = null;
+              });
+            },
+          ),
+        const SizedBox(height: 12),
+        LocationAutocompleteField(
+          refreshKey: '${selectedRegion?.code}_${selectedProvince?.code}',
+          label: 'City / Municipality',
+          icon: Icons.apartment_outlined,
+          enabled:
+              !lockAddressFields &&
+              (isNcrSelected
+                  ? selectedRegion != null
+                  : selectedProvince != null),
+          value: selectedCity,
+          options: cityOptions,
+          onSelected: (value) {
+            setState(() {
+              selectedCity = value;
+              selectedBarangay = null;
+            });
+          },
+        ),
+        const SizedBox(height: 12),
+        LocationAutocompleteField(
+          key: ValueKey(
+            'wizard_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}',
+          ),
+          refreshKey:
+              '${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}',
+          label: 'Barangay',
+          icon: Icons.home_work_outlined,
+          enabled: !lockAddressFields && selectedCity != null,
+          value: selectedBarangay,
+          options: barangayOptions,
+          onSelected: (value) {
+            setState(() => selectedBarangay = value);
+          },
+        ),
+      ],
     );
   }
-}
 
-class InfoBox extends StatelessWidget {
-  const InfoBox({super.key});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _reviewRow({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(top: 10),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFD8F7FA),
-        border: Border.all(color: Colors.cyan),
-        borderRadius: BorderRadius.circular(10),
+        color: AppTheme.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.health_and_safety, color: Colors.blue),
-          SizedBox(width: 8),
+          Icon(icon, color: AppTheme.primary),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              context.tr(
-                "Why Report Symptoms Your reports help public health officials track and monitor its origin.",
-              ),
-              style: TextStyle(fontSize: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr(title),
+                  style: const TextStyle(
+                    color: AppTheme.mutedText,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewStep() {
+    final symptoms = AppTaxonomy.labelsFor(
+      AppTaxonomy.symptoms,
+      selectedSymptomIds.toList(),
+    );
+    final condition = _possibleCondition();
+
+    final location = [
+      selectedBarangay?.name,
+      selectedCity?.name,
+      selectedProvince?.name,
+      selectedRegion?.name,
+    ].whereType<String>().where((value) => value.isNotEmpty).join(', ');
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      children: [
+        Text(
+          context.tr('Review your self-report'),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          context.tr('Confirm the information below before submitting.'),
+          style: const TextStyle(color: AppTheme.mutedText),
+        ),
+        const SizedBox(height: 18),
+        _reviewRow(
+          icon: Icons.sick_outlined,
+          title: 'Symptoms',
+          value: symptoms.map(context.tr).join(', '),
+        ),
+        _reviewRow(
+          icon: Icons.location_on_outlined,
+          title: 'Location',
+          value: location,
+        ),
+        _reviewRow(
+          icon: Icons.medical_information_outlined,
+          title: 'Possible condition',
+          value: context.tr(condition.label),
+        ),
+        _reviewRow(
+          icon: Icons.notes_outlined,
+          title: 'Additional notes',
+          value: notesController.text.trim().isEmpty
+              ? context.tr('No additional notes provided.')
+              : notesController.text.trim(),
+        ),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.warning.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            context.tr(
+              'This result is not a diagnosis. Consult a healthcare provider if symptoms worsen.',
+            ),
+            style: const TextStyle(fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const stepTitles = ['Symptoms', 'Address', 'Review'];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.tr('Report Symptoms'),
+                  style: const TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: context.tr('Close'),
+                onPressed: reportSubmitting
+                    ? null
+                    : () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${context.tr("Step")} ${currentStep + 1} ${context.tr("of")} 3: '
+            '${context.tr(stepTitles[currentStep])}',
+            style: const TextStyle(color: AppTheme.mutedText),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: List.generate(3, (index) {
+              return Expanded(
+                child: Container(
+                  height: 5,
+                  margin: EdgeInsets.only(right: index == 2 ? 0 : 7),
+                  decoration: BoxDecoration(
+                    color: index <= currentStep
+                        ? AppTheme.primary
+                        : AppTheme.border,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 18),
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragEnd: _handleHorizontalSwipe,
+              child: PageView(
+                controller: pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (index) {
+                  setState(() => currentStep = index);
+                },
+                children: [
+                  _buildSymptomsStep(),
+                  _buildAddressStep(),
+                  _buildReviewStep(),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              if (currentStep > 0)
+                OutlinedButton.icon(
+                  onPressed: reportSubmitting
+                      ? null
+                      : () => _moveToStep(currentStep - 1),
+                  icon: const Icon(Icons.arrow_back),
+                  label: Text(context.tr('Back')),
+                ),
+              const Spacer(),
+              ElevatedButton.icon(
+                onPressed: reportSubmitting
+                    ? null
+                    : currentStep == 2
+                    ? _submitReport
+                    : () => _moveToStep(currentStep + 1),
+                icon: reportSubmitting
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Icon(
+                        currentStep == 2
+                            ? Icons.send_outlined
+                            : Icons.arrow_forward,
+                      ),
+                label: Text(
+                  context.tr(
+                    reportSubmitting
+                        ? 'Submitting...'
+                        : currentStep == 2
+                        ? 'Submit Self Report'
+                        : 'Next',
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

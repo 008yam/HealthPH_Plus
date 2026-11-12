@@ -5,7 +5,6 @@ import 'package:healthphplus/widgets/floating_navbar.dart';
 import 'pages/health_literacy_page.dart';
 import 'pages/data_collection_page.dart';
 import 'pages/disease_watch_page.dart';
-import 'pages/self_report_history_page.dart';
 import 'theme/app_theme.dart';
 import 'theme/responsive.dart';
 import 'widgets/coach_mark.dart';
@@ -542,16 +541,6 @@ class _MainPageState extends State<MainPage> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const DataCollectionPage()),
-            ),
-          ),
-          QuickActionTile(
-            title: "My Self-Reports",
-            subtitle: "Review your previous contributions",
-            icon: Icons.fact_check_outlined,
-            iconColor: AppTheme.success,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SelfReportHistoryPage()),
             ),
           ),
           QuickActionTile(

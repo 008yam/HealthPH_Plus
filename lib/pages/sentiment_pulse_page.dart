@@ -13,6 +13,7 @@ import '../widgets/sentiment_report_sections.dart';
 import '../services/sentiment_reporting_service.dart';
 import '../services/sentiment_reporting_controller.dart';
 import '../login_page.dart';
+import '../theme/responsive.dart';
 
 class SentimentPulsePage extends StatefulWidget {
   final int initialTabIndex;
@@ -223,79 +224,165 @@ class _SentimentPulsePageState extends State<SentimentPulsePage>
   @override
   Widget build(BuildContext context) {
     final safeInitialIndex = widget.initialTabIndex.clamp(0, 3).toInt();
+    final pagePadding = Responsive.pagePadding(context);
+    final headerRadius = Responsive.isLandscapePhone(context) ? 24.0 : 35.0;
+    final contentMargin = Responsive.isLandscapePhone(context)
+        ? EdgeInsets.fromLTRB(pagePadding, 8, pagePadding, 8)
+        : EdgeInsets.all(pagePadding * 0.8);
+
     return Theme(
       data: AppTheme.lightTheme,
       child: DefaultTabController(
         length: 4,
         initialIndex: safeInitialIndex,
         child: Scaffold(
-          backgroundColor: const Color(0xFFF7F9FC),
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.transparent,
-            leading: IconButton(
-              tooltip: context.tr('Back'),
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                } else {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MainPage()),
-                  );
-                }
-              },
-            ),
-            title: Text(
-              context.tr('Sentiment Pulse'),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(56),
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          backgroundColor: Colors.transparent,
+          body: Column(
+            children: [
+              Container(
+                width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2F7),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: TabBar(
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  dividerColor: Colors.transparent,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicatorPadding: const EdgeInsets.all(4),
-                  indicator: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFE0E6EF)),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(headerRadius),
+                    bottomRight: Radius.circular(headerRadius),
                   ),
-                  labelColor: AppTheme.text,
-                  unselectedLabelColor: AppTheme.mutedText,
-                  tabs: [
-                    Tab(text: context.tr('Overview')),
-                    Tab(text: context.tr('Trends')),
-                    Tab(text: context.tr('Regional')),
-                    Tab(text: context.tr('Survey')),
-                  ],
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      pagePadding,
+                      10,
+                      pagePadding,
+                      Responsive.verticalGap(context, 16, compact: 10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            } else {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const MainPage(),
+                                ),
+                              );
+                            }
+                          },
+                          child: Text(context.tr('Back')),
+                        ),
+                        SizedBox(
+                          height: Responsive.verticalGap(context, 8),
+                        ),
+                        Image.asset(
+                          'assets/images/healthphplusbarlogo.png',
+                          height: Responsive.logoHeight(context),
+                        ),
+                        SizedBox(
+                          height: Responsive.verticalGap(context, 8),
+                        ),
+                        Text(
+                          context.tr('Sentiment Pulse'),
+                          style: TextStyle(
+                            color: AppTheme.navy,
+                            fontSize: Responsive.isLandscapePhone(context)
+                                ? 19
+                                : 21,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          context.tr(
+                            'Understand public concern, misinformation, '
+                            'and health behavior trends.',
+                          ),
+                          style: const TextStyle(
+                            color: AppTheme.navy,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(
+                          height: Responsive.verticalGap(
+                            context,
+                            12,
+                            compact: 8,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: AppTheme.border),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: TabBar(
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            dividerColor: Colors.transparent,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            indicator: BoxDecoration(
+                              color: AppTheme.surfaceSoft,
+                              borderRadius: BorderRadius.circular(6),
+                              border: const Border(
+                                bottom: BorderSide(
+                                  color: AppTheme.primary,
+                                  width: 3,
+                                ),
+                              ),
+                            ),
+                            labelColor: AppTheme.text,
+                            unselectedLabelColor: AppTheme.mutedText,
+                            tabs: [
+                              Tab(text: context.tr('Overview')),
+                              Tab(text: context.tr('Trends')),
+                              Tab(text: context.tr('Regional')),
+                              Tab(text: context.tr('Survey')),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TabBarView(
-              children: [
-                _reportTab(context, OverviewTab(report: _report)),
-                _reportTab(context, TrendsTab(report: _report)),
-                _reportTab(
-                  context,
-                  RegionalTab(report: _report, onChooseRegion: _chooseFilters),
-                  regional: true,
+              Expanded(
+                child: Container(
+                  margin: contentMargin,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: AppTheme.border),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: TabBarView(
+                    children: [
+                      _reportTab(
+                        context,
+                        OverviewTab(report: _report),
+                      ),
+                      _reportTab(
+                        context,
+                        TrendsTab(report: _report),
+                      ),
+                      _reportTab(
+                        context,
+                        RegionalTab(
+                          report: _report,
+                          onChooseRegion: _chooseFilters,
+                        ),
+                        regional: true,
+                      ),
+                      const SurveyTab(),
+                    ],
+                  ),
                 ),
-                const SurveyTab(),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

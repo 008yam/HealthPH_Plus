@@ -12,7 +12,13 @@ import '../widgets/app_skeleton.dart';
 
 class SelfReportHistoryPage extends StatefulWidget {
   final HealthPhApiService? service;
-  const SelfReportHistoryPage({super.key, this.service});
+  final bool embedded;
+
+  const SelfReportHistoryPage({
+    super.key,
+    this.service,
+    this.embedded = false,
+  });
 
   @override
   State<SelfReportHistoryPage> createState() => _SelfReportHistoryPageState();
@@ -75,98 +81,108 @@ class _SelfReportHistoryPageState extends State<SelfReportHistoryPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final isTablet = Responsive.isTablet(context);
-    final visualMode = AppSettingsStore.instance.visualMode;
+    Widget build(BuildContext context) {
+      final isTablet = Responsive.isTablet(context);
+      final visualMode = AppSettingsStore.instance.visualMode;
 
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          child: FutureBuilder<_ContributionLoadResult>(
-            future: reportsFuture,
-            builder: (context, snapshot) {
-              final result = snapshot.data;
-              final reports = result?.reports ?? [];
+      final historyContent = RefreshIndicator(
+        onRefresh: _refresh,
+        child: FutureBuilder<_ContributionLoadResult>(
+          future: reportsFuture,
+          builder: (context, snapshot) {
+            final result = snapshot.data;
+            final reports = result?.reports ?? [];
 
-              return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(
-                  Responsive.pagePadding(context),
-                  16,
-                  Responsive.pagePadding(context),
-                  28,
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: isTablet
-                          ? 680
-                          : Responsive.formMaxWidth(context),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(
+                widget.embedded ? 0 : Responsive.pagePadding(context),
+                widget.embedded ? 0 : 16,
+                widget.embedded ? 0 : Responsive.pagePadding(context),
+                widget.embedded ? 88 : 28,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isTablet
+                        ? 680
+                        : Responsive.formMaxWidth(context),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (!widget.embedded) ...[
                         _HistoryHeader(
                           isTablet: isTablet,
                           titleColor: visualMode.onBackground,
                           subtitleColor: visualMode.onBackgroundMuted,
                         ),
                         const SizedBox(height: 18),
-                        if (snapshot.connectionState == ConnectionState.waiting)
-                          const _LoadingCard()
-                        else if (snapshot.hasError || result?.error != null)
-                          _ErrorCard(
-                            message:
-                                result?.error ??
-                                "Unable to load self-reports. Check your backend connection.",
-                            onRetry: _refresh,
-                          )
-                        else if (result?.authenticationRequired == true) ...[
+                      ],
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting)
+                        const _LoadingCard()
+                      else if (snapshot.hasError || result?.error != null)
+                        _ErrorCard(
+                          message:
+                              result?.error ??
+                              'Unable to load self-reports. '
+                                  'Check your backend connection.',
+                          onRetry: _refresh,
+                        )
+                      else if (result?.authenticationRequired == true) ...[
+                        _NoticeCard(message: result!.warning!),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/login',
+                              (route) => false,
+                            );
+                          },
+                          icon: const Icon(Icons.login),
+                          label: Text(context.tr('Login')),
+                        ),
+                      ] else ...[
+                        if (result?.warning != null) ...[
                           _NoticeCard(message: result!.warning!),
                           const SizedBox(height: 12),
-                          FilledButton.icon(
-                            onPressed: () =>
-                                Navigator.of(context).pushNamedAndRemoveUntil(
-                                  '/login',
-                                  (route) => false,
-                                ),
-                            icon: const Icon(Icons.login),
-                            label: Text(context.tr('Login')),
-                          ),
-                        ] else ...[
-                          if (result?.warning != null) ...[
-                            _NoticeCard(message: result!.warning!),
-                            const SizedBox(height: 12),
-                          ],
-                          _ContributionSummary(
-                            reports: reports,
-                            isLocalFallback: result?.isLocalFallback ?? false,
-                          ),
-                          const SizedBox(height: 14),
-                          if (reports.isEmpty)
-                            const _EmptyContributionCard()
-                          else
-                            ...reports.map(
-                              (report) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _ContributionCard(report: report),
-                              ),
-                            ),
                         ],
+                        _ContributionSummary(
+                          reports: reports,
+                          isLocalFallback:
+                              result?.isLocalFallback ?? false,
+                        ),
+                        const SizedBox(height: 14),
+                        if (reports.isEmpty)
+                          const _EmptyContributionCard()
+                        else
+                          ...reports.map(
+                            (report) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ContributionCard(report: report),
+                            ),
+                          ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
-      ),
-    );
-  }
+      );
+
+      if (widget.embedded) {
+        return historyContent;
+      }
+
+      return Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: SafeArea(child: historyContent),
+      );
+    }
 }
 
 class _HistoryHeader extends StatelessWidget {
