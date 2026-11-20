@@ -76,6 +76,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/animations/
     - assets/data/locations/
     - assets/data/locations/barangays_by_region/
     - assets/data/boundaries/

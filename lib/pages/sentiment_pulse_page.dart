@@ -14,6 +14,7 @@ import '../services/sentiment_reporting_service.dart';
 import '../services/sentiment_reporting_controller.dart';
 import '../login_page.dart';
 import '../theme/responsive.dart';
+import '../widgets/animated_state_view.dart';
 
 class SentimentPulsePage extends StatefulWidget {
   final int initialTabIndex;
@@ -177,6 +178,20 @@ class _SentimentPulsePageState extends State<SentimentPulsePage>
         ),
       );
     }
+
+    if (!_external && _controller?.authenticationRequired == true) {
+      return AnimatedStateView(
+        animation: StateAnimationKind.login,
+        title: context.tr('Sign in to view reporting data.'),
+        actionLabel: context.tr('Login'),
+        onAction: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const LoginPage()));
+        },
+      );
+    }
+
     if (_error != null) {
       return Center(
         child: SingleChildScrollView(
@@ -190,14 +205,7 @@ class _SentimentPulsePageState extends State<SentimentPulsePage>
               ),
               const SizedBox(height: 12),
               Text(context.tr(_error!), textAlign: TextAlign.center),
-              if (!_external && _controller?.authenticationRequired == true)
-                FilledButton(
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).push(MaterialPageRoute(builder: (_) => const LoginPage())),
-                  child: Text(context.tr('Login')),
-                )
-              else if (_retry != null) ...[
+              if (_retry != null) ...[
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: _retry,
@@ -210,6 +218,7 @@ class _SentimentPulsePageState extends State<SentimentPulsePage>
         ),
       );
     }
+
     if (_report != null && !_filters.matches(_report!.filters)) {
       return Center(
         child: Text(
@@ -218,6 +227,7 @@ class _SentimentPulsePageState extends State<SentimentPulsePage>
         ),
       );
     }
+
     return content;
   }
 
@@ -275,16 +285,12 @@ class _SentimentPulsePageState extends State<SentimentPulsePage>
                           },
                           child: Text(context.tr('Back')),
                         ),
-                        SizedBox(
-                          height: Responsive.verticalGap(context, 8),
-                        ),
+                        SizedBox(height: Responsive.verticalGap(context, 8)),
                         Image.asset(
                           'assets/images/healthphplusbarlogo.png',
                           height: Responsive.logoHeight(context),
                         ),
-                        SizedBox(
-                          height: Responsive.verticalGap(context, 8),
-                        ),
+                        SizedBox(height: Responsive.verticalGap(context, 8)),
                         Text(
                           context.tr('Sentiment Pulse'),
                           style: TextStyle(
@@ -361,14 +367,8 @@ class _SentimentPulsePageState extends State<SentimentPulsePage>
                   ),
                   child: TabBarView(
                     children: [
-                      _reportTab(
-                        context,
-                        OverviewTab(report: _report),
-                      ),
-                      _reportTab(
-                        context,
-                        TrendsTab(report: _report),
-                      ),
+                      _reportTab(context, OverviewTab(report: _report)),
+                      _reportTab(context, TrendsTab(report: _report)),
                       _reportTab(
                         context,
                         RegionalTab(
@@ -475,26 +475,20 @@ class _SurveyTabState extends State<SurveyTab> {
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              context.tr("Unable to load surveys."),
-              style: TextStyle(
-                color: AppTheme.text,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          return AnimatedStateView(
+            animation: StateAnimationKind.empty,
+            title: context.tr('Unable to load surveys.'),
+            actionLabel: context.tr('Retry'),
+            onAction: _refreshSurveys,
           );
         }
 
         final surveys = snapshot.data ?? [];
 
         if (surveys.isEmpty) {
-          return Center(
-            child: Text(
-              context.tr("No active mobile surveys currently available."),
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+          return AnimatedStateView(
+            animation: StateAnimationKind.empty,
+            title: context.tr('No active mobile surveys currently available.'),
           );
         }
 

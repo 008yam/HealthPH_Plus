@@ -367,11 +367,13 @@ class HealthPhApiService {
       "source": "mobile_registration",
     };
 
-    final response = await http.post(
-      Uri.parse("$baseUrl/api/mobile/users"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(payload),
-    );
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/api/mobile/users"),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 45));
 
     if (response.statusCode != 201) {
       throw Exception(
@@ -386,11 +388,13 @@ class HealthPhApiService {
     required String email,
     required String password,
   }) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/api/mobile/users/login"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email, "password": password}),
-    );
+    final response = await http
+        .post(
+          Uri.parse("$baseUrl/api/mobile/users/login"),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({"email": email, "password": password}),
+        )
+        .timeout(const Duration(seconds: 45));
 
     if (response.statusCode != 200) {
       throw Exception("Failed to login: ${response.body}");
@@ -433,9 +437,9 @@ class HealthPhApiService {
     );
 
     if (kDebugMode) {
-    debugPrint('PIN SETUP HOST: ${Uri.parse(baseUrl).origin}');
-    debugPrint('PIN SETUP STATUS: ${response.statusCode}');
-  }
+      debugPrint('PIN SETUP HOST: ${Uri.parse(baseUrl).origin}');
+      debugPrint('PIN SETUP STATUS: ${response.statusCode}');
+    }
 
     if (response.statusCode != 200) {
       throw Exception("Failed to set Pin: ${response.body}");

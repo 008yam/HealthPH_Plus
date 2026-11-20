@@ -1,6 +1,5 @@
 import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
-
 import '../data/app_taxonomy.dart';
 import '../services/api_config.dart';
 import '../services/app_settings_store.dart';
@@ -9,16 +8,13 @@ import '../services/profile_store.dart';
 import '../theme/app_theme.dart';
 import '../theme/responsive.dart';
 import '../widgets/app_skeleton.dart';
+import '../widgets/animated_state_view.dart';
 
 class SelfReportHistoryPage extends StatefulWidget {
   final HealthPhApiService? service;
   final bool embedded;
 
-  const SelfReportHistoryPage({
-    super.key,
-    this.service,
-    this.embedded = false,
-  });
+  const SelfReportHistoryPage({super.key, this.service, this.embedded = false});
 
   @override
   State<SelfReportHistoryPage> createState() => _SelfReportHistoryPageState();
@@ -81,108 +77,113 @@ class _SelfReportHistoryPageState extends State<SelfReportHistoryPage> {
   }
 
   @override
-    Widget build(BuildContext context) {
-      final isTablet = Responsive.isTablet(context);
-      final visualMode = AppSettingsStore.instance.visualMode;
+  Widget build(BuildContext context) {
+    final isTablet = Responsive.isTablet(context);
+    final visualMode = AppSettingsStore.instance.visualMode;
 
-      final historyContent = RefreshIndicator(
-        onRefresh: _refresh,
-        child: FutureBuilder<_ContributionLoadResult>(
-          future: reportsFuture,
-          builder: (context, snapshot) {
-            final result = snapshot.data;
-            final reports = result?.reports ?? [];
+    final animationViewportHeight = widget.embedded
+        ? (MediaQuery.sizeOf(context).height *
+                  (Responsive.isLandscapePhone(context) ? 0.55 : 0.52))
+              .clamp(260.0, 520.0)
+              .toDouble()
+        : 420.0;
 
-            return SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(
-                widget.embedded ? 0 : Responsive.pagePadding(context),
-                widget.embedded ? 0 : 16,
-                widget.embedded ? 0 : Responsive.pagePadding(context),
-                widget.embedded ? 88 : 28,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: isTablet
-                        ? 680
-                        : Responsive.formMaxWidth(context),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (!widget.embedded) ...[
-                        _HistoryHeader(
-                          isTablet: isTablet,
-                          titleColor: visualMode.onBackground,
-                          subtitleColor: visualMode.onBackgroundMuted,
-                        ),
-                        const SizedBox(height: 18),
-                      ],
-                      if (snapshot.connectionState ==
-                          ConnectionState.waiting)
-                        const _LoadingCard()
-                      else if (snapshot.hasError || result?.error != null)
-                        _ErrorCard(
-                          message:
-                              result?.error ??
-                              'Unable to load self-reports. '
-                                  'Check your backend connection.',
-                          onRetry: _refresh,
-                        )
-                      else if (result?.authenticationRequired == true) ...[
-                        _NoticeCard(message: result!.warning!),
-                        const SizedBox(height: 12),
-                        FilledButton.icon(
-                          onPressed: () {
+    final historyContent = RefreshIndicator(
+      onRefresh: _refresh,
+      child: FutureBuilder<_ContributionLoadResult>(
+        future: reportsFuture,
+        builder: (context, snapshot) {
+          final result = snapshot.data;
+          final reports = result?.reports ?? [];
+
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              widget.embedded ? 0 : Responsive.pagePadding(context),
+              widget.embedded ? 0 : 16,
+              widget.embedded ? 0 : Responsive.pagePadding(context),
+              widget.embedded ? 88 : 28,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: isTablet ? 680 : Responsive.formMaxWidth(context),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (!widget.embedded) ...[
+                      _HistoryHeader(
+                        isTablet: isTablet,
+                        titleColor: visualMode.onBackground,
+                        subtitleColor: visualMode.onBackgroundMuted,
+                      ),
+                      const SizedBox(height: 18),
+                    ],
+                    if (snapshot.connectionState == ConnectionState.waiting)
+                      const _LoadingCard()
+                    else if (snapshot.hasError || result?.error != null)
+                      _ErrorCard(
+                        message:
+                            result?.error ??
+                            'Unable to load self-reports. '
+                                'Check your backend connection.',
+                        onRetry: _refresh,
+                      )
+                    else if (result?.authenticationRequired == true)
+                      SizedBox(
+                        height: animationViewportHeight,
+                        child: AnimatedStateView(
+                          animation: StateAnimationKind.login,
+                          title: context.tr(result!.warning!),
+                          actionLabel: context.tr('Login'),
+                          onAction: () {
                             Navigator.of(context).pushNamedAndRemoveUntil(
                               '/login',
                               (route) => false,
                             );
                           },
-                          icon: const Icon(Icons.login),
-                          label: Text(context.tr('Login')),
                         ),
-                      ] else ...[
-                        if (result?.warning != null) ...[
-                          _NoticeCard(message: result!.warning!),
-                          const SizedBox(height: 12),
-                        ],
-                        _ContributionSummary(
-                          reports: reports,
-                          isLocalFallback:
-                              result?.isLocalFallback ?? false,
-                        ),
-                        const SizedBox(height: 14),
-                        if (reports.isEmpty)
-                          const _EmptyContributionCard()
-                        else
-                          ...reports.map(
-                            (report) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _ContributionCard(report: report),
-                            ),
-                          ),
+                      )
+                    else ...[
+                      if (result?.warning != null) ...[
+                        _NoticeCard(message: result!.warning!),
+                        const SizedBox(height: 12),
                       ],
+                      _ContributionSummary(
+                        reports: reports,
+                        isLocalFallback: result?.isLocalFallback ?? false,
+                      ),
+                      const SizedBox(height: 14),
+                      if (reports.isEmpty)
+                        const _EmptyContributionCard()
+                      else
+                        ...reports.map(
+                          (report) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _ContributionCard(report: report),
+                          ),
+                        ),
                     ],
-                  ),
+                  ],
                 ),
               ),
-            );
-          },
-        ),
-      );
+            ),
+          );
+        },
+      ),
+    );
 
-      if (widget.embedded) {
-        return historyContent;
-      }
-
-      return Scaffold(
-        extendBody: true,
-        backgroundColor: Colors.transparent,
-        body: SafeArea(child: historyContent),
-      );
+    if (widget.embedded) {
+      return historyContent;
     }
+
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.transparent,
+      body: SafeArea(child: historyContent),
+    );
+  }
 }
 
 class _HistoryHeader extends StatelessWidget {

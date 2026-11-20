@@ -1,5 +1,18 @@
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://healthph.onrender.com',
+  );
+
+  static const String sentimentBaseUrl = baseUrl;
+
+  static const String environmentalBaseUrl = baseUrl;
+
+  static final String healthLiteracyBaseUrl = Uri.parse(baseUrl).origin;
+}
+
+/*class ApiConfig {
+  static const String baseUrl = String.fromEnvironment(
     "API_BASE_URL",
     defaultValue: "http://127.0.0.1:8000",
   );
@@ -21,4 +34,4 @@ class ApiConfig {
       defaultValue: "https://healthph.onrender.com/api",
     ),
   ).origin;
-}
+}*/

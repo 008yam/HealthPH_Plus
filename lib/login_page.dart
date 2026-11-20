@@ -14,6 +14,9 @@ import 'services/app_settings_store.dart';
 import 'services/biometric_auth_service.dart';
 import 'widgets/six_digit_field.dart';
 import 'services/api_config.dart';
+import 'widgets/app_notice.dart';
+import 'widgets/shake_field.dart';
+import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {
   final bool startAsRegistering;
@@ -27,6 +30,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
 
+  final fullNameShakeKey = GlobalKey<ShakeFieldState>();
+  final emailShakeKey = GlobalKey<ShakeFieldState>();
+  final passwordShakeKey = GlobalKey<ShakeFieldState>();
+  final confirmPasswordShakeKey = GlobalKey<ShakeFieldState>();
   final fullNameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -151,8 +158,84 @@ class _LoginPageState extends State<LoginPage> {
     _goToLanguageSelection();
   }
 
+  void _shakeInvalidFields() {
+    if (isRegistering &&
+        _requiredValidator(fullNameController.text, 'your full name') != null) {
+      fullNameShakeKey.currentState?.shake();
+    }
+    if (_emailValidator(emailController.text) != null) {
+      emailShakeKey.currentState?.shake();
+    }
+    if (_passwordValidator(passwordController.text) != null) {
+      passwordShakeKey.currentState?.shake();
+    }
+    if (isRegistering &&
+        _confirmPasswordValidator(confirmPasswordController.text) != null) {
+      confirmPasswordShakeKey.currentState?.shake();
+    }
+  }
+
+  String _friendlyAuthenticationError(Object error) {
+    final raw = error.toString().toLowerCase();
+
+    if (raw.contains('invalid email or password') ||
+        raw.contains('incorrect password') ||
+        raw.contains('401')) {
+      return "The email or password is incorrect.";
+    }
+
+    if (raw.contains('already registered') ||
+        raw.contains('already exists') ||
+        raw.contains('duplicate') ||
+        raw.contains('409')) {
+      return "An account already exists for this email address.";
+    }
+
+    if (raw.contains('422') || raw.contains('validation')) {
+      return "Some account details were not accepted. Please review them.";
+    }
+
+    if (raw.contains('timed out') ||
+        raw.contains('timeoutexception') ||
+        raw.contains('timeout')) {
+      return "The server is taking too long to respond. Please try again.";
+    }
+
+    if (raw.contains('socketexception') ||
+        raw.contains('clientexception') ||
+        raw.contains('failed host lookup') ||
+        raw.contains('connection refused') ||
+        raw.contains('network is unreachable') ||
+        raw.contains('no route to host')) {
+      return "Unable to connect to HealthPH+. Check your internet connection.";
+    }
+
+    if (raw.contains('500') ||
+        raw.contains('502') ||
+        raw.contains('503') ||
+        raw.contains('504') ||
+        raw.contains('service unavailable')) {
+      return "HealthPH+ is temporarily unavailable. Please try again later.";
+    }
+
+    if (raw.contains('404') || raw.contains('not found')) {
+      return "The account service is currently unavailable.";
+    }
+
+    return "Something went wrong. Please try again.";
+  }
+
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formValid = _formKey.currentState?.validate() ?? false;
+
+    if (!formValid) {
+      _shakeInvalidFields();
+      AppNotice.error(
+        context,
+        context.tr('Please correct the highlighted fields.'),
+      );
+      return;
+    }
 
     final wasRegistering = isRegistering;
 
@@ -161,9 +244,7 @@ class _LoginPageState extends State<LoginPage> {
             (!isNcrSelected && selectedProvince == null) ||
             selectedCity == null ||
             selectedBarangay == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr("Complete your address."))),
-      );
+      AppNotice.warning(context, context.tr("Complete your address."));
       return;
     }
 
@@ -228,14 +309,11 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            wasRegistering
-                ? context.tr("Account Created.")
-                : context.tr("Logged in."),
-          ),
-        ),
+      AppNotice.success(
+        context,
+        wasRegistering
+            ? context.tr("Account Created.")
+            : context.tr("Logged in."),
       );
 
       Navigator.pushReplacement(
@@ -245,14 +323,13 @@ class _LoginPageState extends State<LoginPage> {
               wasRegistering ? const IntroTutorialPage() : const MainPage(),
         ),
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('AUTHENTICATION ERROR: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst("Exception: ", "")),
-        ),
-      );
+      AppNotice.error(context, context.tr(_friendlyAuthenticationError(error)));
     }
   }
 
@@ -262,13 +339,10 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (profile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.tr(
-              "Biometric login is unavailable. Please use password login.",
-            ),
-          ),
+      AppNotice.warning(
+        context,
+        context.tr(
+          "Biometric login is unavailable. Please use password login.",
         ),
       );
       return;
@@ -295,7 +369,7 @@ class _LoginPageState extends State<LoginPage> {
 
     showDialog<void>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: Text(context.tr("Reset Password")),
           content: TextField(
@@ -308,14 +382,16 @@ class _LoginPageState extends State<LoginPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text(context.tr("Cancel")),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.tr("Pass reset link sent."))),
+                Navigator.pop(dialogContext);
+
+                AppNotice.success(
+                  context,
+                  context.tr("Password reset link sent."),
                 );
               },
               child: Text(context.tr("Send Link")),
@@ -354,8 +430,33 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     if (value.length < 6) {
-      return context.tr("Password must be at least 6 characters");
+      return context.tr("Password must contain at least 6 characters");
     }
+
+    if (!RegExp(r'^[A-Za-z0-9@!%()#]+$').hasMatch(value)) {
+      return context.tr(
+        "Only letters, numbers, and these symbols are allowed: @ ! % ( ) #",
+      );
+    }
+
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return context.tr("Password must contain at least one capital letter");
+    }
+
+    if (!RegExp(r'[a-z]').hasMatch(value)) {
+      return context.tr("Password must contain at least one lowercase letter");
+    }
+
+    if (!RegExp(r'[0-9]').hasMatch(value)) {
+      return context.tr("Password must contain at least one number");
+    }
+
+    if (!RegExp(r'[@!%()#]').hasMatch(value)) {
+      return context.tr(
+        "Password must contain at least one symbol: @ ! % ( ) #",
+      );
+    }
+
     return null;
   }
 
@@ -363,10 +464,45 @@ class _LoginPageState extends State<LoginPage> {
     if (!isRegistering) return null;
 
     if (value != passwordController.text) {
-      return context.tr("Passowrd do not match");
+      return context.tr("Passwords do not match");
     }
 
     return null;
+  }
+
+  Widget _buildPasswordRequirement({
+    required String text,
+    required bool isMet,
+  }) {
+    final color = isMet ? AppTheme.success : AppTheme.highRisk;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.cancel_outlined,
+            color: color,
+            size: 16,
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              context.tr(text),
+              softWrap: true,
+              overflow: TextOverflow.visible,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -394,6 +530,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Theme(
                     data: AppTheme.lightTheme,
                     child: Form(
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,67 +578,148 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 18),
 
                           if (isRegistering) ...[
-                            TextFormField(
-                              controller: fullNameController,
-                              textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
-                                labelText: context.tr("Full Name"),
-                                prefixIcon: Icon(Icons.person_outlined),
+                            ShakeField(
+                              key: fullNameShakeKey,
+                              child: TextFormField(
+                                controller: fullNameController,
+                                textInputAction: TextInputAction.next,
+                                decoration: InputDecoration(
+                                  labelText: context.tr("Full Name"),
+                                  prefixIcon: Icon(Icons.person_outlined),
+                                ),
+                                validator: (value) =>
+                                    _requiredValidator(value, "your full name"),
                               ),
-                              validator: (value) =>
-                                  _requiredValidator(value, "your full name"),
                             ),
-                            const SizedBox(height: 12),
                           ],
 
-                          TextFormField(
-                            controller: emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: context.tr("Email"),
-                              prefixIcon: Icon(Icons.email_outlined),
-                            ),
-                            validator: _emailValidator,
-                          ),
                           const SizedBox(height: 13),
 
-                          TextFormField(
-                            controller: passwordController,
-                            obscureText: obscurePassword,
-                            textInputAction: isRegistering
-                                ? TextInputAction.next
-                                : TextInputAction.done,
-                            decoration: InputDecoration(
-                              labelText: context.tr("Password"),
-                              prefixIcon: const Icon(Icons.lock_outline),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    obscurePassword = !obscurePassword;
-                                  });
-                                },
+                          ShakeField(
+                            key: emailShakeKey,
+                            child: TextFormField(
+                              controller: emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: context.tr("Email"),
+                                prefixIcon: Icon(Icons.email_outlined),
                               ),
+                              validator: _emailValidator,
                             ),
-                            validator: _passwordValidator,
+                          ),
+
+                          const SizedBox(height: 13),
+
+                          ShakeField(
+                            key: passwordShakeKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: passwordController,
+                                  obscureText: obscurePassword,
+                                  keyboardType: TextInputType.visiblePassword,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[A-Za-z0-9@!%()#]'),
+                                    ),
+                                  ],
+                                  onChanged: (_) {
+                                    if (isRegistering) {
+                                      setState(() {});
+                                    }
+                                  },
+                                  textInputAction: isRegistering
+                                      ? TextInputAction.next
+                                      : TextInputAction.done,
+                                  decoration: InputDecoration(
+                                    errorStyle: const TextStyle(
+                                      height: 0,
+                                      fontSize: 0,
+                                    ),
+                                    labelText: context.tr("Password"),
+                                    prefixIcon: const Icon(Icons.lock_outline),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        obscurePassword
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          obscurePassword = !obscurePassword;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  validator: _passwordValidator,
+                                ),
+                                if (isRegistering) ...[
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _buildPasswordRequirement(
+                                          text:
+                                              "Password must contain at least 6 characters",
+                                          isMet:
+                                              passwordController.text.length >=
+                                              6,
+                                        ),
+                                        _buildPasswordRequirement(
+                                          text:
+                                              "Password must contain at least 1 capital letter",
+                                          isMet: RegExp(
+                                            r'[A-Z]',
+                                          ).hasMatch(passwordController.text),
+                                        ),
+                                        _buildPasswordRequirement(
+                                          text:
+                                              "Password must contain at least 1 small letter",
+                                          isMet: RegExp(
+                                            r'[a-z]',
+                                          ).hasMatch(passwordController.text),
+                                        ),
+                                        _buildPasswordRequirement(
+                                          text:
+                                              "Password must contain at least 1 numerical character",
+                                          isMet: RegExp(
+                                            r'[0-9]',
+                                          ).hasMatch(passwordController.text),
+                                        ),
+                                        _buildPasswordRequirement(
+                                          text:
+                                              "Password must contain at least 1 symbol: @ ! % ( ) #",
+                                          isMet: RegExp(
+                                            r'[@!%()#]',
+                                          ).hasMatch(passwordController.text),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
 
                           if (isRegistering) ...[
                             const SizedBox(height: 12),
-                            TextFormField(
-                              controller: confirmPasswordController,
-                              obscureText: obscurePassword,
-                              textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
-                                labelText: context.tr("Confirm Password"),
-                                prefixIcon: Icon(Icons.lock_reset),
+                            ShakeField(
+                              key: confirmPasswordShakeKey,
+                              child: TextFormField(
+                                controller: confirmPasswordController,
+                                obscureText: obscurePassword,
+                                textInputAction: TextInputAction.next,
+                                decoration: InputDecoration(
+                                  labelText: context.tr("Confirm Password"),
+                                  prefixIcon: Icon(Icons.lock_reset),
+                                ),
+                                validator: _confirmPasswordValidator,
                               ),
-                              validator: _confirmPasswordValidator,
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<AppOption>(
@@ -805,7 +1023,8 @@ class _PinLoginDialogState extends State<_PinLoginDialog> {
 
       setState(() {
         isVerifying = false;
-        errorMessage = "PIN verification failed. Check your connection or sign in again.";
+        errorMessage =
+            "PIN verification failed. Check your connection or sign in again.";
         pinController.clear();
       });
 

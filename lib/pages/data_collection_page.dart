@@ -16,6 +16,7 @@ import '../services/api_config.dart';
 import '../services/healthph_api_services.dart';
 import '../models/surveillance_pin.dart';
 import 'self_report_history_page.dart';
+import '../widgets/animated_state_view.dart';
 
 class DataCollectionPage extends StatefulWidget {
   const DataCollectionPage({super.key});
@@ -320,34 +321,32 @@ class _MyReportsTab extends StatelessWidget {
   }
 
   @override
-    Widget build(BuildContext context) {
-      return Column(
-        children: [
-          if (_canExportReports)
-            AnimatedBuilder(
-              animation: SelfReportStore.instance,
-              builder: (context, _) {
-                final localReports = SelfReportStore.instance.reports;
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (_canExportReports)
+          AnimatedBuilder(
+            animation: SelfReportStore.instance,
+            builder: (context, _) {
+              final localReports = SelfReportStore.instance.reports;
 
-                return Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    tooltip: context.tr('Export CSV'),
-                    onPressed: localReports.isEmpty
-                        ? null
-                        : () => _exportReports(context, localReports),
-                    icon: const Icon(Icons.ios_share),
-                    color: AppTheme.primary,
-                  ),
-                );
-              },
-            ),
-          const Expanded(
-            child: SelfReportHistoryPage(embedded: true),
+              return Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  tooltip: context.tr('Export CSV'),
+                  onPressed: localReports.isEmpty
+                      ? null
+                      : () => _exportReports(context, localReports),
+                  icon: const Icon(Icons.ios_share),
+                  color: AppTheme.primary,
+                ),
+              );
+            },
           ),
-        ],
-      );
-    }
+        const Expanded(child: SelfReportHistoryPage(embedded: true)),
+      ],
+    );
+  }
 }
 
 class _CommunityTab extends StatefulWidget {
@@ -447,40 +446,21 @@ class _CommunityTabState extends State<_CommunityTab> {
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.cloud_off_outlined,
-                  size: 42,
-                  color: AppTheme.mutedText,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  context.tr('Unable to load community trends.'),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _retry,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(context.tr('Retry')),
-                ),
-              ],
-            ),
+          return AnimatedStateView(
+            animation: StateAnimationKind.empty,
+            title: context.tr('Unable to load community trends.'),
+            actionLabel: context.tr('Retry'),
+            onAction: _retry,
           );
         }
 
         final pins = snapshot.data ?? const <SurveillancePin>[];
 
         if (pins.isEmpty) {
-          return Center(
-            child: Text(
-              context.tr(
-                'No processed community signals are available for the last 30 days.',
-              ),
-              textAlign: TextAlign.center,
+          return AnimatedStateView(
+            animation: StateAnimationKind.empty,
+            title: context.tr(
+              'No processed community signals are available for the last 30 days.',
             ),
           );
         }

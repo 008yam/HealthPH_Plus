@@ -257,70 +257,73 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: _ProfileCard(profile: profile, isTablet: isTablet),
                   ),
                   const SizedBox(height: 24),
-
+                  // START OF PREFERENCES
                   _SettingsSectionCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _SettingsSectionTitle(
-                    title: "Preferences",
-                    isTablet: isTablet,
-                  ),
+                          title: "Preferences",
+                          isTablet: isTablet,
+                        ),
 
-                  KeyedSubtree(
-                    key: appearanceKey,
-                    child: _SettingsTile(
-                      icon: Icons.palette_outlined,
-                      title: "Appearance",
-                      subtitle: context.tr(
-                        'Current theme: {theme}',
-                        parameters: {
-                          'theme': context.tr(appSettings.visualMode.label),
-                        },
-                      ),
-                      isTablet: isTablet,
-                      accentColor: appSettings.visualMode.accentColor,
-                      borderColor: appSettings.visualMode.accentColor
-                          .withValues(alpha: 0.45),
-                      onTap: _showAppearancePicker,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  KeyedSubtree(
-                    key: languageKey,
-                    child: _SettingsTile(
-                      icon: Icons.language_rounded,
-                      title: "Language Selection",
-                      subtitle: "Choose your preferred application language",
-                      isTablet: isTablet,
-                      accentColor: AppTheme.info,
-                      borderColor: AppTheme.info.withValues(alpha: 0.45),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const LanguageSelectionPage(
-                              returnToSettings: true,
+                        KeyedSubtree(
+                          key: appearanceKey,
+                          child: _SettingsTile(
+                            icon: Icons.palette_outlined,
+                            title: "Appearance",
+                            subtitle: context.tr(
+                              'Current theme: {theme}',
+                              parameters: {
+                                'theme': context.tr(
+                                  appSettings.visualMode.label,
+                                ),
+                              },
                             ),
+                            isTablet: isTablet,
+                            accentColor: appSettings.visualMode.accentColor,
+                            borderColor: appSettings.visualMode.accentColor
+                                .withValues(alpha: 0.45),
+                            onTap: _showAppearancePicker,
                           ),
-                        );
-                      },
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        KeyedSubtree(
+                          key: languageKey,
+                          child: _SettingsTile(
+                            icon: Icons.language_rounded,
+                            title: "Language Selection",
+                            subtitle:
+                                "Choose your preferred application language",
+                            isTablet: isTablet,
+                            accentColor: AppTheme.info,
+                            borderColor: AppTheme.info.withValues(alpha: 0.45),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LanguageSelectionPage(
+                                    returnToSettings: true,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        _SettingsTile(
+                          icon: Icons.tips_and_updates_outlined,
+                          title: "Replay Coach Marks",
+                          subtitle: "Show your guide highlights again",
+                          isTablet: isTablet,
+                          onTap: _replayCoachMarks,
+                        ),
+                      ],
                     ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  _SettingsTile(
-                    icon: Icons.tips_and_updates_outlined,
-                    title: "Replay Coach Marks",
-                    subtitle: "Show your guide highlights again",
-                    isTablet: isTablet,
-                    onTap: _replayCoachMarks,
-                  ),
-                      ]
-                    )
                   ),
 
                   const SizedBox(height: 24),
@@ -328,25 +331,34 @@ class _SettingsPageState extends State<SettingsPage> {
                   KeyedSubtree(
                     key: authenticationKey,
                     child: _SettingsSectionCard(
-                    child: _AuthenticationSection(
-                      isTablet: isTablet,
-                      settings: appSettings,
-                      onSetPin: _setPin,
+                      child: _AuthenticationSection(
+                        isTablet: isTablet,
+                        settings: appSettings,
+                        onSetPin: _setPin,
+                      ),
                     ),
-                  ),
                   ),
                   const SizedBox(height: 24),
 
-                  _SettingsSectionTitle(title: "Account", isTablet: isTablet),
-
-                  _SettingsTile(
-                    icon: Icons.logout_rounded,
-                    title: "Logout",
-                    subtitle: "Clear this session and return to login.",
-                    isTablet: isTablet,
-                    accentColor: AppTheme.highRisk,
-                    surfaceColor: const Color(0xFFFFF1F2),
-                    onTap: _logout,
+                  _SettingsSectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _SettingsSectionTitle(
+                          title: "Account",
+                          isTablet: isTablet,
+                        ),
+                        _SettingsTile(
+                          icon: Icons.logout_rounded,
+                          title: "Logout",
+                          subtitle: "Clear this session and return to login.",
+                          isTablet: isTablet,
+                          accentColor: AppTheme.highRisk,
+                          surfaceColor: const Color(0xFFFFF1F2),
+                          onTap: _logout,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -731,7 +743,9 @@ class _SurveyButton extends StatefulWidget {
 class _SurveyButtonState extends State<_SurveyButton> {
   late Future<List<MobileSurvey>> surveyFuture;
 
-  final surveyService = SentimentSurveyService(baseUrl: ApiConfig.sentimentBaseUrl);
+  final surveyService = SentimentSurveyService(
+    baseUrl: ApiConfig.sentimentBaseUrl,
+  );
 
   @override
   void initState() {
@@ -890,7 +904,6 @@ class _SettingsSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(

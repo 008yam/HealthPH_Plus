@@ -8,6 +8,7 @@ import '../widgets/coach_mark.dart';
 import '../services/healthph_api_services.dart';
 import '../services/api_config.dart';
 import '../theme/responsive.dart';
+import '../widgets/animated_state_view.dart';
 
 class HealthLiteracyPage extends StatefulWidget {
   const HealthLiteracyPage({super.key});
@@ -149,6 +150,40 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
         : "";
   }
 
+  String _resolveThumbnailUrl(Map<String, dynamic> item) {
+    // First priority: the content's explicitly assigned image.
+    final primaryImageUrl = _resolveImageUrl(item);
+    if (primaryImageUrl.isNotEmpty) {
+      return primaryImageUrl;
+    }
+
+    // Second priority: the first valid image from the article gallery.
+    final galleryImages = item["galleryImages"];
+    if (galleryImages is! List) {
+      return "";
+    }
+
+    for (final galleryItem in galleryImages) {
+      if (galleryItem is! Map) continue;
+
+      final galleryMedia = galleryItem["media"];
+      if (galleryMedia is! Map) continue;
+
+      final contentType = (galleryMedia["contentType"] ?? "")
+          .toString()
+          .toLowerCase();
+
+      if (!contentType.startsWith("image/")) continue;
+
+      final galleryImageUrl = _resolveUrl(galleryMedia["url"]);
+      if (galleryImageUrl.isNotEmpty) {
+        return galleryImageUrl;
+      }
+    }
+
+    return "";
+  }
+
   String _resolveMediaContentType(Map<String, dynamic> item) {
     final media = item["media"];
     return media is Map
@@ -176,24 +211,12 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  context.tr("Unable to load content."),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: _refreshHealthLiteracy,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(context.tr("Retry")),
-                ),
-              ],
-            ),
+          return AnimatedStateView(
+            animation: StateAnimationKind.empty,
+            title: context.tr('Unable to load content.'),
+            actionLabel: context.tr('Retry'),
+            onAction: _refreshHealthLiteracy,
+            backgroundColor: Colors.white,
           );
         }
 
@@ -217,14 +240,10 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
         }).toList();
 
         if (filtered.isEmpty) {
-          return Center(
-            child: Text(
-              context.tr(emptyMessage),
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          return AnimatedStateView(
+            animation: StateAnimationKind.empty,
+            title: context.tr(emptyMessage),
+            backgroundColor: Colors.white,
           );
         }
 
@@ -244,7 +263,7 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
                 previewOwner: _previewOwner,
                 contentType: type,
                 mediaUrl: mediaUrl,
-                imageUrl: _resolveImageUrl(item),
+                imageUrl: _resolveThumbnailUrl(item),
                 mediaContentType: _resolveMediaContentType(item),
                 title: (item["title"] ?? "Untitled content").toString(),
                 source: (item["source"] ?? "HealthPH+").toString(),
@@ -636,7 +655,7 @@ class HealthArticleCard extends StatelessWidget {
   Widget _buildMediaPreview(BuildContext context) {
     Widget buildFallback() {
       return Image.asset(
-        "assets/images/lunghealtharticle.png",
+        'assets/images/Health Literacy Picture Thumbnaik.jpeg',
         height: 230,
         width: double.infinity,
         fit: BoxFit.cover,
