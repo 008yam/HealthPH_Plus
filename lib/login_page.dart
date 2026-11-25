@@ -12,11 +12,12 @@ import 'data/app_taxonomy.dart';
 import 'pages/intro_tutorial_page.dart';
 import 'services/app_settings_store.dart';
 import 'services/biometric_auth_service.dart';
-import 'widgets/six_digit_field.dart';
 import 'services/api_config.dart';
 import 'widgets/app_notice.dart';
 import 'widgets/shake_field.dart';
 import 'package:flutter/services.dart';
+import 'widgets/auth/pin_login_dialog.dart';
+import 'widgets/auth/password_requirements.dart';
 
 class LoginPage extends StatefulWidget {
   final bool startAsRegistering;
@@ -118,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
     return showDialog<UserProfile>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _PinLoginDialog(api: api, profile: profile),
+      builder: (_) => PinLoginDialog(api: api, profile: profile),
     );
   }
 
@@ -470,41 +471,6 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
-  Widget _buildPasswordRequirement({
-    required String text,
-    required bool isMet,
-  }) {
-    final color = isMet ? AppTheme.success : AppTheme.highRisk;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            isMet ? Icons.check_circle : Icons.cancel_outlined,
-            color: color,
-            size: 16,
-          ),
-          const SizedBox(width: 7),
-          Expanded(
-            child: Text(
-              context.tr(text),
-              softWrap: true,
-              overflow: TextOverflow.visible,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                height: 1.35,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -663,41 +629,12 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                     child: Column(
                                       children: [
-                                        _buildPasswordRequirement(
-                                          text:
-                                              "Password must contain at least 6 characters",
-                                          isMet:
-                                              passwordController.text.length >=
-                                              6,
-                                        ),
-                                        _buildPasswordRequirement(
-                                          text:
-                                              "Password must contain at least 1 capital letter",
-                                          isMet: RegExp(
-                                            r'[A-Z]',
-                                          ).hasMatch(passwordController.text),
-                                        ),
-                                        _buildPasswordRequirement(
-                                          text:
-                                              "Password must contain at least 1 small letter",
-                                          isMet: RegExp(
-                                            r'[a-z]',
-                                          ).hasMatch(passwordController.text),
-                                        ),
-                                        _buildPasswordRequirement(
-                                          text:
-                                              "Password must contain at least 1 numerical character",
-                                          isMet: RegExp(
-                                            r'[0-9]',
-                                          ).hasMatch(passwordController.text),
-                                        ),
-                                        _buildPasswordRequirement(
-                                          text:
-                                              "Password must contain at least 1 symbol: @ ! % ( ) #",
-                                          isMet: RegExp(
-                                            r'[@!%()#]',
-                                          ).hasMatch(passwordController.text),
-                                        ),
+                                        if (isRegistering) ...[
+                                          const SizedBox(height: 8),
+                                          PasswordRequirements(
+                                            password: passwordController.text,
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -957,140 +894,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _PinLoginDialog extends StatefulWidget {
-  final HealthPhApiService api;
-  final UserProfile profile;
-
-  const _PinLoginDialog({required this.api, required this.profile});
-
-  @override
-  State<_PinLoginDialog> createState() => _PinLoginDialogState();
-}
-
-class _PinLoginDialogState extends State<_PinLoginDialog> {
-  final pinController = TextEditingController();
-  final pinFocusNode = FocusNode();
-
-  bool isVerifying = false;
-  String? errorMessage;
-
-  @override
-  void dispose() {
-    pinController.dispose();
-    pinFocusNode.dispose();
-    super.dispose();
-  }
-
-  Future<void> _verifyPin() async {
-    final pin = pinController.text.trim();
-    final userId = widget.profile.id;
-
-    if (userId == null || userId.isEmpty) {
-      setState(() {
-        errorMessage = "Account ID is missing. Please login again.";
-      });
-      return;
-    }
-
-    if (!RegExp(r"^\d{6}$").hasMatch(pin)) {
-      setState(() {
-        errorMessage = "Enter your complete six-digit PIN.";
-      });
-      pinFocusNode.requestFocus();
-      return;
-    }
-
-    setState(() {
-      isVerifying = true;
-      errorMessage = null;
-    });
-
-    try {
-      final verifiedProfile = await widget.api.verifyMobileUserPin(
-        userId: userId,
-        pin: pin,
-        accessToken: widget.profile.accessToken,
-      );
-
-      if (!mounted) return;
-      Navigator.pop(context, verifiedProfile);
-    } catch (error) {
-      if (!mounted) return;
-
-      setState(() {
-        isVerifying = false;
-        errorMessage =
-            "PIN verification failed. Check your connection or sign in again.";
-        pinController.clear();
-      });
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          pinFocusNode.requestFocus();
-        }
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(context.tr("Enter PIN")),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.tr(
-              "Enter the six-digit PIN for {widget.profile.email}.",
-              parameters: {"widget.profile.email": widget.profile.email},
-            ),
-            style: const TextStyle(fontSize: 13),
-          ),
-          const SizedBox(height: 18),
-          SixDigitPinField(
-            controller: pinController,
-            focusNode: pinFocusNode,
-            enabled: !isVerifying,
-            autofocus: true,
-            onChanged: (_) {
-              if (errorMessage != null) {
-                setState(() {
-                  errorMessage = null;
-                });
-              }
-            },
-            onCompleted: (_) => _verifyPin(),
-          ),
-          if (errorMessage != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              context.tr(errorMessage!),
-              style: const TextStyle(color: AppTheme.highRisk, fontSize: 12),
-            ),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: isVerifying ? null : () => Navigator.pop(context),
-          child: Text(context.tr("Cancel")),
-        ),
-        ElevatedButton(
-          onPressed: isVerifying ? null : _verifyPin,
-          child: isVerifying
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(context.tr("Verify")),
-        ),
-      ],
     );
   }
 }

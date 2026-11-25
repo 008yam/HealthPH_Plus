@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/mobile_survey.dart';
 import '../services/api_config.dart';
 import '../services/healthph_api_services.dart';
-import '../services/sentiment_survey_service.dart';
-import 'sentiment_pulse_page.dart';
 import '../widgets/coach_mark.dart';
 import '../login_page.dart';
 import '../services/profile_store.dart';
@@ -13,9 +10,12 @@ import '../widgets/floating_navbar.dart';
 import 'language_selection_page.dart';
 import '../services/app_settings_store.dart';
 import '../services/biometric_auth_service.dart';
-import '../widgets/six_digit_field.dart';
 import '../localization/app_translations.dart';
 import '../widgets/settings/profile_card.dart';
+import '../widgets/settings/settings_section.dart';
+import '../widgets/settings/set_pin_dialog.dart';
+import '../widgets/settings/settings_tile.dart';
+import '../widgets/settings/authentication_section.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -103,7 +103,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final result = await showDialog<({String pin, String currentPassword})>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const _SetPinDialog(),
+      builder: (_) => const SetPinDialog(),
     );
 
     if (result == null || !mounted) return;
@@ -270,18 +270,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 24),
                   // START OF PREFERENCES
-                  _SettingsSectionCard(
+                  SettingsSectionCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _SettingsSectionTitle(
+                        SettingsSectionTitle(
                           title: "Preferences",
                           isTablet: isTablet,
                         ),
 
                         KeyedSubtree(
                           key: appearanceKey,
-                          child: _SettingsTile(
+                          child: SettingsTile(
                             icon: Icons.palette_outlined,
                             title: "Appearance",
                             subtitle: context.tr(
@@ -304,7 +304,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                         KeyedSubtree(
                           key: languageKey,
-                          child: _SettingsTile(
+                          child: SettingsTile(
                             icon: Icons.language_rounded,
                             title: "Language Selection",
                             subtitle:
@@ -327,7 +327,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                         const SizedBox(height: 12),
 
-                        _SettingsTile(
+                        SettingsTile(
                           icon: Icons.tips_and_updates_outlined,
                           title: "Replay Coach Marks",
                           subtitle: "Show your guide highlights again",
@@ -342,8 +342,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
                   KeyedSubtree(
                     key: authenticationKey,
-                    child: _SettingsSectionCard(
-                      child: _AuthenticationSection(
+                    child: SettingsSectionCard(
+                      child: AuthenticationSection(
                         isTablet: isTablet,
                         settings: appSettings,
                         onSetPin: _setPin,
@@ -352,15 +352,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  _SettingsSectionCard(
+                  SettingsSectionCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _SettingsSectionTitle(
+                        SettingsSectionTitle(
                           title: "Account",
                           isTablet: isTablet,
                         ),
-                        _SettingsTile(
+                        SettingsTile(
                           icon: Icons.logout_rounded,
                           title: "Logout",
                           subtitle: "Clear this session and return to login.",
@@ -379,499 +379,6 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
       bottomNavigationBar: const FloatingNavBar(selectedIndex: 2),
-    );
-  }
-}
-
-class _SurveyButton extends StatefulWidget {
-  final bool isTablet;
-
-  const _SurveyButton({required this.isTablet});
-
-  @override
-  State<_SurveyButton> createState() => _SurveyButtonState();
-}
-
-class _SurveyButtonState extends State<_SurveyButton> {
-  late Future<List<MobileSurvey>> surveyFuture;
-
-  final surveyService = SentimentSurveyService(
-    baseUrl: ApiConfig.sentimentBaseUrl,
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    surveyFuture = surveyService.fetchPublicSurveys();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<MobileSurvey>>(
-      future: surveyFuture,
-      builder: (context, snapshot) {
-        final count = snapshot.data?.length ?? 0;
-        final hasSurvey = count > 0;
-
-        return Material(
-          color: hasSurvey ? const Color(0xFFEAF6FF) : const Color(0xFFF4F7FB),
-          borderRadius: BorderRadius.circular(16),
-          elevation: hasSurvey ? 5 : 2,
-          shadowColor: Colors.black26,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const SentimentPulsePage(initialTabIndex: 3),
-                ),
-              );
-            },
-            child: Container(
-              height: widget.isTablet ? 155 : 125,
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.isTablet ? 28 : 20,
-              ),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: hasSurvey ? AppTheme.info : AppTheme.border,
-                  width: 1.4,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: widget.isTablet ? 68 : 56,
-                        height: widget.isTablet ? 68 : 56,
-                        decoration: BoxDecoration(
-                          color: AppTheme.info.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Icon(
-                          Icons.poll_outlined,
-                          color: AppTheme.info,
-                          size: widget.isTablet ? 36 : 30,
-                        ),
-                      ),
-                      if (hasSurvey)
-                        Positioned(
-                          right: -4,
-                          top: -4,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: AppTheme.warning,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              "$count",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.tr("Mobile Surveys"),
-                          style: TextStyle(
-                            color: AppTheme.text,
-                            fontSize: widget.isTablet ? 28 : 23,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          hasSurvey
-                              ? context.tr(
-                                  "{count} survey ready to answer",
-                                  parameters: {"count": count},
-                                )
-                              : context.tr("Check available surveys"),
-                          style: TextStyle(
-                            color: hasSurvey
-                                ? AppTheme.info
-                                : AppTheme.mutedText,
-                            fontSize: widget.isTablet ? 15 : 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: hasSurvey ? AppTheme.info : AppTheme.mutedText,
-                    size: widget.isTablet ? 32 : 28,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SettingsSectionCard extends StatelessWidget {
-  final Widget child;
-
-  const _SettingsSectionCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceSoft,
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _SettingsSectionTitle extends StatelessWidget {
-  final String title;
-  final bool isTablet;
-
-  const _SettingsSectionTitle({required this.title, required this.isTablet});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        context.tr(title),
-        style: TextStyle(
-          color: AppTheme.text,
-          fontSize: isTablet ? 18 : 15,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _SetPinDialog extends StatefulWidget {
-  const _SetPinDialog();
-
-  @override
-  State<_SetPinDialog> createState() => _SetPinDialogState();
-}
-
-class _SetPinDialogState extends State<_SetPinDialog> {
-  final pinController = TextEditingController();
-  final passwordController = TextEditingController();
-
-  final pinFocusNode = FocusNode();
-  final passwordFocusNode = FocusNode();
-
-  String? errorMessage;
-
-  String get enteredPin => pinController.text.trim();
-
-  void submit() {
-    final pin = enteredPin;
-    final currentPassword = passwordController.text;
-
-    if (!RegExp(r"^\d{6}$").hasMatch(pin)) {
-      setState(() {
-        errorMessage = "Enter all six PIN digits.";
-      });
-      pinFocusNode.requestFocus();
-      return;
-    }
-
-    if (currentPassword.isEmpty) {
-      setState(() {
-        errorMessage = "Enter your current account password.";
-      });
-      passwordFocusNode.requestFocus();
-      return;
-    }
-
-    Navigator.pop(context, (pin: pin, currentPassword: currentPassword));
-  }
-
-  @override
-  void dispose() {
-    pinController.dispose();
-    passwordController.dispose();
-    pinFocusNode.dispose();
-    passwordFocusNode.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(context.tr("Set six-digit PIN")),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              context.tr(
-                "Enter a six-digit numeric PIN. Each digit uses a separate box.",
-              ),
-            ),
-            const SizedBox(height: 18),
-            SixDigitPinField(
-              controller: pinController,
-              focusNode: pinFocusNode,
-              autofocus: true,
-              onChanged: (_) {
-                if (errorMessage != null) {
-                  setState(() {
-                    errorMessage = null;
-                  });
-                }
-              },
-              onCompleted: (_) {
-                passwordFocusNode.requestFocus();
-              },
-            ),
-            const SizedBox(height: 18),
-            TextField(
-              controller: passwordController,
-              focusNode: passwordFocusNode,
-              obscureText: true,
-              textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: context.tr("Current password"),
-                prefixIcon: Icon(Icons.lock_outline),
-              ),
-              onSubmitted: (_) => submit(),
-            ),
-            if (errorMessage != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                context.tr(errorMessage!),
-                style: const TextStyle(color: AppTheme.highRisk, fontSize: 12),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.tr("Cancel")),
-        ),
-        ElevatedButton(onPressed: submit, child: Text(context.tr("Save PIN"))),
-      ],
-    );
-  }
-}
-
-class _AuthenticationSection extends StatelessWidget {
-  final bool isTablet;
-  final AppSettingsStore settings;
-  final VoidCallback onSetPin;
-
-  const _AuthenticationSection({
-    required this.isTablet,
-    required this.settings,
-    required this.onSetPin,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _SettingsSectionTitle(title: "Authentication", isTablet: isTablet),
-        _SettingsTile(
-          icon: Icons.pin_outlined,
-          title: "PIN Login",
-          subtitle: !settings.hasPin
-              ? "Set PIN first"
-              : settings.pinLoginEnabled
-              ? "Enabled"
-              : "Disabled",
-          isTablet: isTablet,
-          onTap: () {
-            if (!settings.hasPin) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    context.tr(
-                      "You need to set a six-digit PIN before enabling PIN login.",
-                    ),
-                  ),
-                ),
-              );
-
-              onSetPin();
-              return;
-            }
-
-            AppSettingsStore.instance.setPinLoginEnabled(
-              !settings.pinLoginEnabled,
-            );
-          },
-        ),
-        const SizedBox(height: 12),
-        _SettingsTile(
-          icon: Icons.edit_outlined,
-          title: "Set PIN",
-          subtitle: settings.hasPin ? "Update PIN" : "Open",
-          isTablet: isTablet,
-          onTap: onSetPin,
-        ),
-        const SizedBox(height: 12),
-        _SettingsTile(
-          icon: Icons.fingerprint,
-          title: "Fingerprint Login",
-          subtitle: settings.fingerprintLoginEnabled ? "Enabled" : "Available",
-          isTablet: isTablet,
-          onTap: () async {
-            if (settings.fingerprintLoginEnabled) {
-              await BiometricAuthService.instance.clearSavedProfile();
-              await AppSettingsStore.instance.setFingerprintLoginEnabled(false);
-
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(context.tr("Biometric login disabled.")),
-                ),
-              );
-              return;
-            }
-
-            final profile = ProfileStore.instance.profile;
-            if (profile == null || profile.id == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    context.tr("Login first before enabling biometrics."),
-                  ),
-                ),
-              );
-              return;
-            }
-
-            final unlocked = await BiometricAuthService.instance.authenticate();
-
-            if (!context.mounted) return;
-
-            if (!unlocked) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    context.tr(
-                      "Biometrics authentication is unavailable or cancelled.",
-                    ),
-                  ),
-                ),
-              );
-              return;
-            }
-
-            await BiometricAuthService.instance.saveProfileForBiometricLogin(
-              profile,
-            );
-            await AppSettingsStore.instance.setFingerprintLoginEnabled(true);
-
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.tr("Biometric login enabled"))),
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool isTablet;
-  final Color borderColor;
-  final Color accentColor;
-  final Color surfaceColor;
-  final VoidCallback onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.isTablet,
-    this.borderColor = AppTheme.border,
-    this.accentColor = AppTheme.primary,
-    this.surfaceColor = AppTheme.surface,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: surfaceColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: borderColor, width: 1.2),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 20 : 14,
-            vertical: isTablet ? 16 : 12,
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: accentColor),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr(title),
-                      style: TextStyle(
-                        color: AppTheme.text,
-                        fontSize: isTablet ? 17 : 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      context.tr(subtitle),
-                      style: TextStyle(
-                        color: AppTheme.mutedText,
-                        fontSize: isTablet ? 16 : 14,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: AppTheme.mutedText),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

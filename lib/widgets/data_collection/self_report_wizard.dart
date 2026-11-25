@@ -10,6 +10,7 @@ import 'self_report_address_step.dart';
 import 'self_report_review_step.dart';
 import 'self_report_wizard_scaffold.dart';
 import '../../services/self_report_submission_service.dart';
+import '../app_notice.dart';
 
 class SelfReportWizard extends StatefulWidget {
   final VoidCallback onSubmitted;
@@ -161,9 +162,7 @@ class _SelfReportWizardState extends State<SelfReportWizard> {
   }
 
   void _showStepError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.tr(message))));
+    AppNotice.warning(context, context.tr(message));
   }
 
   Future<void> _moveToStep(int targetStep) async {
@@ -206,11 +205,10 @@ class _SelfReportWizardState extends State<SelfReportWizard> {
         selectedCity == null ||
         selectedBarangay == null ||
         selectedSymptomIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.tr('Complete address and add at least one symptom.'),
-          ),
+      AppNotice.warning(
+        context,
+        context.tr(
+          'Please complete your symptoms and address before submitting.',
         ),
       );
       return;
@@ -235,10 +233,9 @@ class _SelfReportWizardState extends State<SelfReportWizard> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('Self-report submitted successfully.')),
-        ),
+      AppNotice.success(
+        context,
+        context.tr('Self-report submitted successfully.'),
       );
 
       await showDialog<void>(
@@ -281,22 +278,17 @@ class _SelfReportWizardState extends State<SelfReportWizard> {
     } on SelfReportSubmissionException catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.tr(error.message))));
+      AppNotice.error(context, context.tr(error.message));
     } catch (error, stackTrace) {
       debugPrint('SELF REPORT SUBMISSION ERROR: $error');
       debugPrintStack(stackTrace: stackTrace);
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.tr(
-              'Could not confirm submission. Check My Self Reports before trying again.',
-            ),
-          ),
+      AppNotice.error(
+        context,
+        context.tr(
+          'Could not confirm submission. Check My Self Reports before trying again.',
         ),
       );
     } finally {

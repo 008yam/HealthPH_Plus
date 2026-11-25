@@ -14,9 +14,13 @@ import 'models/mobile_alert.dart';
 import 'services/sentiment_survey_service.dart';
 import 'services/mobile_alert_service.dart';
 import 'services/profile_store.dart';
-import 'widgets/app_skeleton.dart';
 import 'localization/app_translations.dart';
-import 'package:marquee/marquee.dart';
+import 'widgets/home/home_surface.dart';
+import 'widgets/home/home_health_tips.dart';
+import 'widgets/home/home_recent_alerts.dart';
+import 'widgets/home/home_quick_actions.dart';
+import 'widgets/home/home_contribution_actions.dart';
+import 'widgets/home/home_stats_carousel.dart';
 
 //import 'pages/map_page.dart';
 //import 'widgets/floating_navbar.dart';
@@ -254,7 +258,7 @@ class _MainPageState extends State<MainPage> {
                 Responsive.pagePadding(context),
                 Responsive.bottomNavClearance(context),
               ),
-              child: _HomeContentSurface(
+              child: HomeContentSurface(
                 child: Column(
                   children: [
                     // ====================================================
@@ -277,15 +281,61 @@ class _MainPageState extends State<MainPage> {
                     // ====================================================
                     KeyedSubtree(
                       key: statsCarouselKey,
-                      child: _buildStatsCarousel(),
+                      child: HomeStatsCarousel(
+                        activeUserCountFuture: mobileUserCountFuture,
+                        surveyCountFuture: mobileSurveyCountFuture,
+                        alertCountFuture: mobileAlertCountFuture,
+                        controller: _statsCarouselController,
+                        selectedIndex: _statsCarouselIndex,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _statsCarouselIndex = index;
+                          });
+                        },
+                        onHealthAlerts: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DiseaseWatchPage(),
+                            ),
+                          );
+                        },
+                        onSurveys: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const SentimentPulsePage(initialTabIndex: 3),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(height: 14),
                     // ====================================================
-                    // 3. WEATHER WIDGET
+                    // 3. HEALTH CONTRIBUTION ACTIONS
                     // ====================================================
                     KeyedSubtree(
                       key: contributionActionsKey,
-                      child: _buildContributionActions(),
+                      child: HomeContributionActions(
+                        onDataCollection: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DataCollectionPage(),
+                            ),
+                          );
+                        },
+                        onSentimentPulse: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const SentimentPulsePage(initialTabIndex: 3),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(height: 16),
                     // ====================================================
@@ -293,56 +343,26 @@ class _MainPageState extends State<MainPage> {
                     // ====================================================
                     KeyedSubtree(
                       key: quickActionKey,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                        decoration: cardDecoration(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.tr("Quick Actions ⓘ"),
-                              style: const TextStyle(
-                                color: AppTheme.text,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
+                      child: HomeQuickActions(
+                        onDiseaseWatch: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DiseaseWatchPage(),
                             ),
-
-                            const SizedBox(height: 8),
-
-                            QuickActionTile(
-                              title: "Disease Watch",
-                              subtitle: "Track outbreaks and alerts",
-                              icon: Icons.coronavirus,
-                              iconColor: Colors.redAccent,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const DiseaseWatchPage(),
-                                  ),
-                                );
-                              },
+                          );
+                        },
+                        onHealthLiteracy: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const HealthLiteracyPage(),
                             ),
-                            QuickActionTile(
-                              title: "Health Literacy",
-                              subtitle: "Public attitude insights",
-                              icon: Icons.article_outlined,
-                              iconColor: Colors.green,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const HealthLiteracyPage(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
+
                     const SizedBox(height: 8),
 
                     // ====================================================
@@ -350,151 +370,24 @@ class _MainPageState extends State<MainPage> {
                     // ====================================================
                     KeyedSubtree(
                       key: recentAlertKey,
-                      child: FutureBuilder<MobileAlertsPage>(
-                        future: mobileAlertsFuture,
-                        builder: (context, snapshot) {
-                          final alerts = snapshot.data?.items ?? [];
-
-                          return Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                            decoration: cardDecoration(),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  context.tr("Recent Alerts ⓘ"),
-                                  style: const TextStyle(
-                                    color: AppTheme.text,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting)
-                                  const _RecentAlertsSkeleton()
-                                else if (snapshot.hasError)
-                                  Text(
-                                    snapshot.error
-                                            is MobileAlertAuthenticationException
-                                        ? context.tr(snapshot.error.toString())
-                                        : context.tr("Unable to load alerts."),
-                                    style: const TextStyle(
-                                      color: AppTheme.mutedText,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  )
-                                else if (alerts.isEmpty)
-                                  Text(
-                                    context.tr("No recent alerts right now."),
-                                    style: const TextStyle(
-                                      color: AppTheme.text,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  )
-                                else
-                                  ...alerts
-                                      .take(3)
-                                      .map(
-                                        (alert) => AlertCard(
-                                          title: alert.title,
-                                          location: alert.locationLabel,
-                                          percent: "${alert.reportCount}",
-                                          metricLabel: alert.countLabel,
-                                          progress: alert.progress,
-                                          onTap: () => _openMobileAlert(alert),
-                                        ),
-                                      ),
-                              ],
-                            ),
-                          );
-                        },
+                      child: HomeRecentAlerts(
+                        alertsFuture: mobileAlertsFuture,
+                        onOpenAlert: _openMobileAlert,
                       ),
                     ),
                     const SizedBox(height: 8),
-
                     // ====================================================
-                    // 6. HEALTH TIP SECTIONS
+                    // 6. HEALTH TIP SECTION
                     // ====================================================
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                      decoration: cardDecoration(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.tr("Health Tips 📖"),
-                            style: TextStyle(
-                              color: AppTheme.text,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
+                    HomeHealthTips(
+                      onViewMore: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const HealthLiteracyPage(),
                           ),
-
-                          const SizedBox(height: 8),
-
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD9F8D8),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  context.tr("Stay Protected"),
-                                  style: TextStyle(
-                                    color: AppTheme.text,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 4),
-
-                                Text(
-                                  context.tr(
-                                    "Remember to wash your hands frequently, weak mask in crowded places, and keep your living spaces well-ventilated",
-                                  ),
-                                  style: TextStyle(
-                                    color: AppTheme.text,
-                                    fontSize: 10,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: SizedBox(
-                                    height: 36,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                HealthLiteracyPage(),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        context.tr("More Health Tips"),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -505,788 +398,6 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
       bottomNavigationBar: const FloatingNavBar(selectedIndex: 0),
-    );
-  }
-
-  Widget _buildContributionActions() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          //
-          Text(
-            context.tr("Your Health Contribution"),
-            style: const TextStyle(
-              color: AppTheme.text,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            context.tr(
-              "Report symptoms, review contribution, or answer surveys",
-            ),
-            style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-          QuickActionTile(
-            title: "Data Collection and Self-Report",
-            subtitle: "Submit symptoms and health information",
-            icon: Icons.assignment_add,
-            iconColor: AppTheme.warning,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const DataCollectionPage()),
-            ),
-          ),
-          QuickActionTile(
-            title: "Sentiment Pulse and Mobile Survey",
-            subtitle: "View surveys available for mobile users",
-            icon: Icons.poll_outlined,
-            iconColor: AppTheme.info,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const SentimentPulsePage(initialTabIndex: 3),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsCarousel() {
-    final isLandscapePhone = Responsive.isLandscapePhone(context);
-    final carouselHeight = isLandscapePhone ? 92.0 : 112.0;
-
-    return FutureBuilder<int>(
-      future: mobileUserCountFuture,
-      builder: (context, userSnapshot) {
-        return FutureBuilder<int>(
-          future: mobileSurveyCountFuture,
-          builder: (context, surveySnapshot) {
-            return FutureBuilder<int>(
-              future: mobileAlertCountFuture,
-              builder: (context, alertSnapshot) {
-                final activeUsers = userSnapshot.hasData
-                    ? userSnapshot.data.toString()
-                    : userSnapshot.hasError
-                    ? "0"
-                    : "...";
-
-                final alertCount = alertSnapshot.hasData
-                    ? alertSnapshot.data.toString()
-                    : alertSnapshot.hasError
-                    ? "0"
-                    : "...";
-
-                final surveyCount = surveySnapshot.hasData
-                    ? surveySnapshot.data.toString()
-                    : surveySnapshot.hasError
-                    ? "0"
-                    : "...";
-
-                final cards = [
-                  _CarouselStatCard(
-                    number: alertCount,
-                    label: "Health Alerts",
-                    subtitle: "Recent inbox alerts",
-                    icon: Icons.local_hospital,
-                    accentColor: AppTheme.warning,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DiseaseWatchPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  _CarouselStatCard(
-                    number: activeUsers,
-                    label: "Active Users",
-                    subtitle: "Registered mobile users",
-                    icon: Icons.groups,
-                    accentColor: AppTheme.success,
-                  ),
-                  _CarouselStatCard(
-                    number: surveyCount,
-                    label: "Mobile Surveys",
-                    subtitle: "Available public surveys",
-                    icon: Icons.poll_outlined,
-                    accentColor: AppTheme.info,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const SentimentPulsePage(initialTabIndex: 3),
-                        ),
-                      );
-                    },
-                  ),
-                ];
-
-                return Column(
-                  children: [
-                    SizedBox(
-                      height: carouselHeight,
-                      child: PageView.builder(
-                        controller: _statsCarouselController,
-                        itemCount: cards.length,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _statsCarouselIndex = index;
-                          });
-                        },
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: cards[index],
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(cards.length, (index) {
-                        final selected = index == _statsCarouselIndex;
-
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 220),
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: selected ? 18 : 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? AppTheme.primary
-                                : AppTheme.border,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _RecentAlertsSkeleton extends StatelessWidget {
-  const _RecentAlertsSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: List.generate(
-        3,
-        (index) => Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.88),
-            border: Border.all(color: AppTheme.border),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppSkeleton(height: 15, width: 210),
-              SizedBox(height: 8),
-              AppSkeleton(height: 12, width: 145),
-              SizedBox(height: 14),
-              AppSkeleton(height: 10, width: double.infinity),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeContentSurface extends StatelessWidget {
-  final Widget child;
-
-  const _HomeContentSurface({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: Responsive.contentMaxWidth(context),
-        ),
-        child: DefaultTextStyle.merge(
-          style: const TextStyle(color: AppTheme.text),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-// =======================================================
-// REUSABLE CARD DECORATION
-// =======================================================
-
-BoxDecoration cardDecoration() {
-  return BoxDecoration(
-    color: AppTheme.surfaceSoft,
-    border: Border.all(color: AppTheme.border),
-    borderRadius: BorderRadius.circular(12),
-  );
-}
-
-// =======================================================
-// CAROUSEL STAT CARDS WIDGET
-// =======================================================
-class _CarouselStatCard extends StatelessWidget {
-  final String number;
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  final Color accentColor;
-  final VoidCallback? onTap;
-
-  const _CarouselStatCard({
-    required this.number,
-    required this.label,
-    required this.subtitle,
-    required this.icon,
-    required this.accentColor,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isLandscapePhone = Responsive.isLandscapePhone(context);
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          padding: EdgeInsets.all(isLandscapePhone ? 12 : 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [accentColor, AppTheme.primary],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: accentColor.withValues(alpha: 0.22),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -10,
-                bottom: -22,
-                child: Icon(
-                  icon,
-                  size: isLandscapePhone ? 76 : 96,
-                  color: Colors.white.withValues(alpha: 0.12),
-                ),
-              ),
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: isLandscapePhone ? 20 : 24,
-                    backgroundColor: Colors.white.withValues(alpha: 0.18),
-                    child: Icon(
-                      icon,
-                      color: Colors.white,
-                      size: isLandscapePhone ? 22 : 26,
-                    ),
-                  ),
-                  SizedBox(width: isLandscapePhone ? 10 : 14),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          number,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isLandscapePhone ? 24 : 30,
-                            fontWeight: FontWeight.w900,
-                            height: 1,
-                          ),
-                        ),
-                        SizedBox(height: isLandscapePhone ? 3 : 5),
-                        Text(
-                          context.tr(label),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isLandscapePhone ? 13 : 15,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          context.tr(subtitle),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.82),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-// =======================================================
-// TOP STATUS CARD WIDGET
-// =======================================================
-
-class TopStatCard extends StatelessWidget {
-  final String number;
-  final String label;
-  final IconData icon;
-
-  const TopStatCard({
-    super.key,
-    required this.number,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cardHeight = Responsive.isLandscapePhone(context)
-        ? 64.0
-        : (Responsive.isSmallPhone(context) ? 72.0 : 78.0);
-
-    return Container(
-      height: cardHeight,
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: AppTheme.primary,
-        borderRadius: BorderRadius.circular(6),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/Backdrop1.png'),
-          fit: BoxFit.cover,
-          opacity: 0.18,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.white, size: 17),
-
-          Text(
-            number,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              height: 1,
-            ),
-          ),
-
-          Text(
-            label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =======================================================
-// WEATHER SMALL INFO WIDGET
-// =======================================================
-
-class WeatherSmallInfo extends StatelessWidget {
-  final String value;
-  final String label;
-  final IconData icon;
-
-  const WeatherSmallInfo({
-    super.key,
-    required this.value,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 16, color: Colors.black87),
-
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-
-        Text(label, style: const TextStyle(fontSize: 10)),
-      ],
-    );
-  }
-}
-
-// =======================================================
-// QUICK ACTION TILE WIDGET
-// =======================================================
-
-class QuickActionTile extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color iconColor;
-  final VoidCallback onTap;
-
-  const QuickActionTile({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.iconColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isTablet = Responsive.isTablet(context);
-    final titleSize = isTablet ? 17.0 : 15.0;
-    final subtitleSize = isTablet ? 16.0 : 14.0;
-    final scaler = MediaQuery.textScalerOf(context);
-    final titleHeight = scaler.scale(titleSize) * 1.3;
-    final subtitleHeight = scaler.scale(subtitleSize) * 1.3;
-    final iconExtent = titleHeight + 3 + subtitleHeight;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 20 : 14,
-            vertical: isTablet ? 16 : 12,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: AppTheme.border),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: iconExtent,
-                height: iconExtent,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: iconExtent * 0.60, color: iconColor),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(
-                      height: titleHeight,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          context.tr(title),
-                          maxLines: 1,
-                          softWrap: false,
-                          style: TextStyle(
-                            color: AppTheme.text,
-                            fontWeight: FontWeight.bold,
-                            fontSize: titleSize,
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    SizedBox(
-                      height: subtitleHeight,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final text = context.tr(subtitle);
-                          final direction = Directionality.of(context);
-                          final style = DefaultTextStyle.of(context).style
-                              .copyWith(
-                                color: AppTheme.mutedText,
-                                fontSize: subtitleSize,
-                                height: 1.3,
-                              );
-                          final painter = TextPainter(
-                            text: TextSpan(text: text, style: style),
-                            textDirection: direction,
-                            textScaler: scaler,
-                            maxLines: 1,
-                          )..layout();
-                          final overflows =
-                              painter.width > constraints.maxWidth;
-                          painter.dispose();
-                          final reduceMotion = MediaQuery.of(
-                            context,
-                          ).disableAnimations;
-
-                          return Tooltip(
-                            message: text,
-                            child: !overflows || reduceMotion
-                                ? Text(
-                                    text,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: style,
-                                  )
-                                : Semantics(
-                                    label: text,
-                                    excludeSemantics: true,
-                                    child: Marquee(
-                                      // Restart measurements when locale, width or text scale changes.
-                                      key: ValueKey((
-                                        text,
-                                        constraints.maxWidth,
-                                        scaler.scale(subtitleSize),
-                                        direction,
-                                      )),
-                                      text: text,
-                                      style: style,
-                                      textDirection: direction,
-                                      textScaleFactor:
-                                          scaler.scale(subtitleSize) /
-                                          subtitleSize,
-                                      velocity: 25,
-                                      blankSpace: 40,
-                                      startAfter: const Duration(seconds: 1),
-                                      pauseAfterRound: Duration.zero,
-                                    ),
-                                  ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// =======================================================
-// ALERT CARD WIDGET
-// =======================================================
-class AlertCard extends StatelessWidget {
-  final String title;
-  final String location;
-  final String percent;
-  final String? metricLabel;
-  final double progress;
-  final VoidCallback? onTap;
-
-  const AlertCard({
-    super.key,
-    required this.title,
-    required this.location,
-    required this.percent,
-    this.metricLabel,
-    required this.progress,
-    this.onTap,
-  });
-
-  String get _percentLabel {
-    final metric = metricLabel?.trim();
-    if (metric != null && metric.isNotEmpty) return metric;
-
-    final value = percent.trim();
-    if (value.isEmpty) return "${(progress * 100).round()}%";
-    return value;
-  }
-
-  Color get _severityColor {
-    final cleaned = percent.replaceAll('%', '').trim();
-    final value = double.tryParse(cleaned) ?? (progress * 100);
-    if (value >= 20) return AppTheme.warning;
-    if (value >= 10) return AppTheme.pageBlue;
-    return AppTheme.success;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final severityColor = _severityColor;
-    final progressValue = progress.clamp(0.0, 1.0).toDouble();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: Colors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(12),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppTheme.border),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: severityColor.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.warning_amber_rounded,
-                        color: severityColor,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppTheme.text,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            location,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppTheme.mutedText,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: severityColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        _percentLabel,
-                        style: TextStyle(
-                          color: severityColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: Stack(
-                    children: [
-                      Container(height: 8, color: AppTheme.progressTrack),
-                      FractionallySizedBox(
-                        widthFactor: progressValue,
-                        child: Container(height: 8, color: severityColor),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 9),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.insights_outlined,
-                      size: 15,
-                      color: severityColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      context.tr("Severity level"),
-                      style: TextStyle(
-                        color: AppTheme.mutedText,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      context.tr("View Details"),
-                      style: TextStyle(
-                        color: AppTheme.info,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
