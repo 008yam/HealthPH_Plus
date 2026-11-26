@@ -307,23 +307,26 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog>
     final old = _controller;
     _controller = null;
 
-    if (old != null) {
-      try {
-        await old.dispose();
-      } catch (error) {
-        debugPrint('Video reload cleanup: $error');
-      }
-    }
-
     if (!mounted) return;
+
     setState(() {
       _ready = false;
       _failed = false;
     });
+
+    if (old != null) {
+      unawaited(
+        old.dispose().catchError((Object error) {
+          debugPrint('Video reload cleanup: $error');
+        }),
+      );
+    }
+
     final controller = VideoPlayerController.networkUrl(
       Uri.parse(widget.videoUrl),
     );
     _controller = controller;
+
     controller.addListener(() {
       if (mounted &&
           _controller == controller &&
@@ -332,13 +335,21 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog>
         setState(() => _failed = true);
       }
     });
+
     try {
       await controller.initialize().timeout(const Duration(seconds: 20));
+
       if (!mounted || _controller != controller) return;
+
       setState(() => _ready = true);
-      if (_foreground) await controller.play();
+
+      if (_foreground) {
+        await controller.play();
+      }
     } catch (_) {
-      if (mounted && _controller == controller) setState(() => _failed = true);
+      if (mounted && _controller == controller) {
+        setState(() => _failed = true);
+      }
     }
   }
 
