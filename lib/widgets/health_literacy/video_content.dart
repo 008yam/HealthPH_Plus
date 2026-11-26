@@ -305,7 +305,16 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog>
 
   Future<void> _load() async {
     final old = _controller;
-    if (old != null) await old.dispose();
+    _controller = null;
+
+    if (old != null) {
+      try {
+        await old.dispose();
+      } catch (error) {
+        debugPrint('Video reload cleanup: $error');
+      }
+    }
+
     if (!mounted) return;
     setState(() {
       _ready = false;

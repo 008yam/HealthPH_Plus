@@ -15,12 +15,15 @@ class FakeVideos extends VideoPlayerPlatform {
   final playing = <int>{};
   final volumes = <int, double>{};
   final disposed = <int>{};
+
   bool fail = false;
+  int _nextId = 0;
+
   @override
   Future<void> init() async {}
   @override
   Future<int> createWithOptions(VideoCreationOptions options) async {
-    final id = streams.length;
+    final id = _nextId++;
     urls.add(options.dataSource.uri!);
     final stream = streams[id] = StreamController<VideoEvent>();
     if (fail) {
