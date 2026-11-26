@@ -8,6 +8,7 @@ import 'package:healthphplus/models/sentiment_report_filters.dart';
 import 'package:healthphplus/pages/sentiment_pulse_page.dart';
 import 'package:healthphplus/widgets/satisfaction_trend_chart.dart';
 import 'package:healthphplus/widgets/sentiment_report_filter_sheet.dart';
+import 'package:healthphplus/widgets/sentiment_report_tabs.dart';
 
 // Synthetic handoff data only. Never imported by application code.
 Map<String, dynamic> legacyFixture() =>

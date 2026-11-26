@@ -11,6 +11,7 @@ import 'package:healthphplus/services/sentiment_reporting_service.dart';
 import 'package:healthphplus/services/sentiment_reporting_controller.dart';
 import 'package:healthphplus/pages/sentiment_pulse_page.dart';
 import 'package:healthphplus/widgets/sentiment_report_sections.dart';
+import 'package:healthphplus/widgets/sentiment_report_tabs.dart';
 import 'sentiment_reporting_test.dart' show fixture, legacyFixture;
 
 UserProfile account({

@@ -4,7 +4,6 @@ import 'main_page.dart';
 import 'theme/app_theme.dart';
 import 'services/location_data_services.dart';
 import 'services/healthph_api_services.dart';
-import 'widgets/location_autocomplete_field.dart';
 import 'services/profile_store.dart';
 import 'pages/language_selection_page.dart';
 import 'theme/responsive.dart';
@@ -15,9 +14,12 @@ import 'services/biometric_auth_service.dart';
 import 'services/api_config.dart';
 import 'widgets/app_notice.dart';
 import 'widgets/shake_field.dart';
-import 'package:flutter/services.dart';
 import 'widgets/auth/pin_login_dialog.dart';
-import 'widgets/auth/password_requirements.dart';
+import 'widgets/auth/password_reset_dialog.dart';
+import 'widgets/auth/registration_preferences_fields.dart';
+import 'widgets/auth/registration_location_fields.dart';
+import 'widgets/auth/auth_action_controls.dart';
+import 'widgets/auth/auth_credential_fields.dart';
 
 class LoginPage extends StatefulWidget {
   final bool startAsRegistering;
@@ -363,44 +365,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _showPasswordResetDialog() {
-    final resetEmailController = TextEditingController(
-      text: emailController.text,
+  Future<void> _showPasswordResetDialog() async {
+    final sent = await showPasswordResetDialog(
+      context,
+      initialEmail: emailController.text,
     );
 
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(context.tr("Reset Password")),
-          content: TextField(
-            controller: resetEmailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              labelText: context.tr("Email Address"),
-              prefixIcon: Icon(Icons.email_outlined),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(context.tr("Cancel")),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
+    if (!mounted || !sent) return;
 
-                AppNotice.success(
-                  context,
-                  context.tr("Password reset link sent."),
-                );
-              },
-              child: Text(context.tr("Send Link")),
-            ),
-          ],
-        );
-      },
-    );
+    AppNotice.success(context, context.tr('Password reset link sent.'));
   }
 
   String? _requiredValidator(String? value, String label) {
@@ -543,346 +516,111 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 18),
 
-                          if (isRegistering) ...[
-                            ShakeField(
-                              key: fullNameShakeKey,
-                              child: TextFormField(
-                                controller: fullNameController,
-                                textInputAction: TextInputAction.next,
-                                decoration: InputDecoration(
-                                  labelText: context.tr("Full Name"),
-                                  prefixIcon: Icon(Icons.person_outlined),
-                                ),
-                                validator: (value) =>
-                                    _requiredValidator(value, "your full name"),
-                              ),
-                            ),
-                          ],
-
-                          const SizedBox(height: 13),
-
-                          ShakeField(
-                            key: emailShakeKey,
-                            child: TextFormField(
-                              controller: emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
-                                labelText: context.tr("Email"),
-                                prefixIcon: Icon(Icons.email_outlined),
-                              ),
-                              validator: _emailValidator,
-                            ),
-                          ),
-
-                          const SizedBox(height: 13),
-
-                          ShakeField(
-                            key: passwordShakeKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextFormField(
-                                  controller: passwordController,
-                                  obscureText: obscurePassword,
-                                  keyboardType: TextInputType.visiblePassword,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(
-                                      RegExp(r'[A-Za-z0-9@!%()#]'),
-                                    ),
-                                  ],
-                                  onChanged: (_) {
-                                    if (isRegistering) {
-                                      setState(() {});
-                                    }
-                                  },
-                                  textInputAction: isRegistering
-                                      ? TextInputAction.next
-                                      : TextInputAction.done,
-                                  decoration: InputDecoration(
-                                    errorStyle: const TextStyle(
-                                      height: 0,
-                                      fontSize: 0,
-                                    ),
-                                    labelText: context.tr("Password"),
-                                    prefixIcon: const Icon(Icons.lock_outline),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        obscurePassword
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          obscurePassword = !obscurePassword;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  validator: _passwordValidator,
-                                ),
-                                if (isRegistering) ...[
-                                  const SizedBox(height: 8),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        if (isRegistering) ...[
-                                          const SizedBox(height: 8),
-                                          PasswordRequirements(
-                                            password: passwordController.text,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
+                          AuthCredentialFields(
+                            isRegistering: isRegistering,
+                            obscurePassword: obscurePassword,
+                            fullNameShakeKey: fullNameShakeKey,
+                            emailShakeKey: emailShakeKey,
+                            passwordShakeKey: passwordShakeKey,
+                            confirmPasswordShakeKey: confirmPasswordShakeKey,
+                            fullNameController: fullNameController,
+                            emailController: emailController,
+                            passwordController: passwordController,
+                            confirmPasswordController:
+                                confirmPasswordController,
+                            fullNameValidator: (value) {
+                              return _requiredValidator(
+                                value,
+                                'your full name',
+                              );
+                            },
+                            emailValidator: _emailValidator,
+                            passwordValidator: _passwordValidator,
+                            confirmPasswordValidator: _confirmPasswordValidator,
+                            onPasswordChanged: (_) {
+                              if (isRegistering) {
+                                setState(() {});
+                              }
+                            },
+                            onTogglePasswordVisibility: () {
+                              setState(() {
+                                obscurePassword = !obscurePassword;
+                              });
+                            },
                           ),
 
                           if (isRegistering) ...[
-                            const SizedBox(height: 12),
-                            ShakeField(
-                              key: confirmPasswordShakeKey,
-                              child: TextFormField(
-                                controller: confirmPasswordController,
-                                obscureText: obscurePassword,
-                                textInputAction: TextInputAction.next,
-                                decoration: InputDecoration(
-                                  labelText: context.tr("Confirm Password"),
-                                  prefixIcon: Icon(Icons.lock_reset),
-                                ),
-                                validator: _confirmPasswordValidator,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            DropdownButtonFormField<AppOption>(
-                              initialValue: selectedRole,
-                              decoration: InputDecoration(
-                                labelText: context.tr("Role"),
-                                prefixIcon: Icon(Icons.badge_outlined),
-                              ),
-                              items: AppTaxonomy.roles.map((role) {
-                                return DropdownMenuItem<AppOption>(
-                                  value: role,
-                                  child: Text(context.tr(role.label)),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
+                            RegistrationPreferencesFields(
+                              selectedRole: selectedRole,
+                              selectedLanguage: selectedLanguage,
+                              languages: languages,
+                              onRoleChanged: (value) {
                                 setState(() {
                                   selectedRole =
                                       value ?? AppTaxonomy.roles.first;
                                 });
                               },
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            DropdownButtonFormField<String>(
-                              initialValue: selectedLanguage,
-                              decoration: InputDecoration(
-                                labelText: context.tr("Preferred Language"),
-                                prefixIcon: Icon(Icons.language),
-                              ),
-                              items: languages.map((language) {
-                                return DropdownMenuItem<String>(
-                                  value: language,
-                                  child: Text(language),
-                                );
-                              }).toList(),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return context.tr(
-                                    "Select your preferred language",
-                                  );
-                                }
-                                return null;
-                              },
-                              onChanged: (value) {
+                              onLanguageChanged: (value) {
                                 setState(() {
                                   selectedLanguage = value;
                                 });
                               },
                             ),
-                            const SizedBox(height: 12),
 
-                            //DROPDOWN
-                            if (!locationsLoaded)
-                              const Center(child: CircularProgressIndicator())
-                            else ...[
-                              LocationAutocompleteField(
-                                label: "Region",
-                                icon: Icons.map_outlined,
-                                enabled: true,
-                                value: selectedRegion,
-                                options: locationService.regions,
-                                onSelected: (value) {
-                                  setState(() {
-                                    selectedRegion = value;
-                                    selectedProvince = null;
-                                    selectedCity = null;
-                                    selectedBarangay = null;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 12),
-
-                              if (isNcrSelected) ...[
-                                TextFormField(
-                                  initialValue: "NCR",
-                                  enabled: false,
-                                  decoration: InputDecoration(
-                                    labelText: context.tr("Province"),
-                                    prefixIcon: Icon(
-                                      Icons.location_city_outlined,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                              ] else ...[
-                                LocationAutocompleteField(
-                                  label: "Province",
-                                  icon: Icons.location_city_outlined,
-                                  enabled: selectedRegion != null,
-                                  value: selectedProvince,
-                                  options: provinceOptions,
-                                  onSelected: (value) {
-                                    setState(() {
-                                      selectedProvince = value;
-                                      selectedCity = null;
-                                      selectedBarangay = null;
-                                    });
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-                              LocationAutocompleteField(
-                                key: ValueKey(
-                                  "login_city_${selectedRegion?.code}_${selectedProvince?.code}",
-                                ),
-                                label: "City / Municipality",
-                                icon: Icons.apartment_outlined,
-                                enabled: isNcrSelected
-                                    ? selectedRegion != null
-                                    : selectedProvince != null,
-                                value: selectedCity,
-                                options: cityOptions,
-                                onSelected: (value) {
-                                  setState(() {
-                                    selectedCity = value;
-                                    selectedBarangay = null;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              LocationAutocompleteField(
-                                key: ValueKey(
-                                  "login_barangay_${selectedRegion?.code}_${selectedProvince?.code}_${selectedCity?.code}",
-                                ),
-                                label: "Barangay",
-                                icon: Icons.home_work_outlined,
-                                enabled: selectedCity != null,
-                                value: selectedBarangay,
-                                options: barangayOptions,
-                                onSelected: (value) {
-                                  setState(() {
-                                    selectedBarangay = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ],
-
-                          const SizedBox(height: 12),
-
-                          if (!isRegistering) ...[
-                            const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: _showPasswordResetDialog,
-                                child: Text(context.tr("Forgot password?")),
-                              ),
-                            ),
-                          ],
-
-                          const SizedBox(height: 14),
-                          SizedBox(
-                            width: double.infinity,
-                            height: Responsive.buttonHeight(context),
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primary,
-                                foregroundColor: Colors.white,
-                              ),
-                              onPressed: _submit,
-                              child: Text(
-                                isRegistering
-                                    ? context.tr("Register")
-                                    : context.tr("Login"),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          if (!isRegistering &&
-                              AppSettingsStore
-                                  .instance
-                                  .fingerprintLoginEnabled) ...[
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              height: Responsive.buttonHeight(context),
-                              child: OutlinedButton.icon(
-                                onPressed: _loginWithBiometrics,
-                                icon: const Icon(Icons.fingerprint),
-                                label: Text(
-                                  context.tr("Login with Biometrics"),
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ),
-                          ],
-
-                          const SizedBox(height: 12),
-
-                          if (!isRegistering) ...[
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: double.infinity,
-                              height: Responsive.buttonHeight(context),
-                              child: OutlinedButton.icon(
-                                onPressed: _continueAsGuest,
-                                icon: const Icon(Icons.person_outline),
-                                label: Text(
-                                  context.tr("Continue as Guest"),
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ),
-                          ],
-
-                          Center(
-                            child: TextButton(
-                              onPressed: () {
+                            RegistrationLocationFields(
+                              loading: !locationsLoaded,
+                              isNcrSelected: isNcrSelected,
+                              region: selectedRegion,
+                              province: selectedProvince,
+                              city: selectedCity,
+                              barangay: selectedBarangay,
+                              regions: locationService.regions,
+                              provinces: provinceOptions,
+                              cities: cityOptions,
+                              barangays: barangayOptions,
+                              onRegionSelected: (value) {
                                 setState(() {
-                                  isRegistering = !isRegistering;
+                                  selectedRegion = value;
+                                  selectedProvince = null;
+                                  selectedCity = null;
+                                  selectedBarangay = null;
                                 });
                               },
-                              child: Text(
-                                isRegistering
-                                    ? context.tr(
-                                        "Already have an account? Login",
-                                      )
-                                    : context.tr("New User? Create an account"),
-                              ),
+                              onProvinceSelected: (value) {
+                                setState(() {
+                                  selectedProvince = value;
+                                  selectedCity = null;
+                                  selectedBarangay = null;
+                                });
+                              },
+                              onCitySelected: (value) {
+                                setState(() {
+                                  selectedCity = value;
+                                  selectedBarangay = null;
+                                });
+                              },
+                              onBarangaySelected: (value) {
+                                setState(() {
+                                  selectedBarangay = value;
+                                });
+                              },
                             ),
+                          ],
+
+                          AuthActionControls(
+                            isRegistering: isRegistering,
+                            biometricEnabled: AppSettingsStore
+                                .instance
+                                .fingerprintLoginEnabled,
+                            onForgotPassword: _showPasswordResetDialog,
+                            onSubmit: _submit,
+                            onBiometricLogin: _loginWithBiometrics,
+                            onContinueAsGuest: _continueAsGuest,
+                            onToggleMode: () {
+                              setState(() {
+                                isRegistering = !isRegistering;
+                              });
+                            },
                           ),
                         ],
                       ),

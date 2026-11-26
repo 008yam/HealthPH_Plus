@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:healthphplus/models/mobile_survey.dart';
 import 'package:healthphplus/pages/language_selection_page.dart';
-import 'package:healthphplus/pages/sentiment_pulse_page.dart';
+import 'package:healthphplus/widgets/sentiment_survey/survey_response_sheet.dart';
 import 'package:healthphplus/services/app_settings_store.dart';
 import 'package:healthphplus/services/profile_store.dart';
 import 'package:healthphplus/services/sentiment_survey_service.dart';

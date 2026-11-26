@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:marquee/marquee.dart';
-import 'package:healthphplus/main_page.dart';
+import 'package:healthphplus/widgets/home/quick_action_tile.dart';
 
 const longSubtitle =
     'Review your previous contributions and all your submitted health reports';
