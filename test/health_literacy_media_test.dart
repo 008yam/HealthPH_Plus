@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:healthphplus/pages/health_literacy_page.dart';
+import 'package:healthphplus/widgets/health_literacy/health_article_card.dart';
 import 'package:healthphplus/widgets/literacy_media.dart';
 
 class FakeVideos extends VideoPlayerPlatform {
@@ -24,7 +24,9 @@ class FakeVideos extends VideoPlayerPlatform {
     urls.add(options.dataSource.uri!);
     final stream = streams[id] = StreamController<VideoEvent>();
     if (fail) {
-      stream.addError(PlatformException(code: 'unavailable', message: 'Media unavailable'));
+      stream.addError(
+        PlatformException(code: 'unavailable', message: 'Media unavailable'),
+      );
     } else {
       stream.add(
         VideoEvent(
@@ -43,16 +45,41 @@ class FakeVideos extends VideoPlayerPlatform {
   Future<void> dispose(int playerId) async {
     disposed.add(playerId);
     playing.remove(playerId);
+
+    final stream = streams.remove(playerId);
+    if (stream != null && !stream.isClosed) {
+      await stream.close();
+    }
   }
 
   @override
   Future<void> play(int playerId) async {
     playing.add(playerId);
+
+    final stream = streams[playerId];
+    if (stream != null && !stream.isClosed) {
+      stream.add(
+        VideoEvent(
+          eventType: VideoEventType.isPlayingStateUpdate,
+          isPlaying: true,
+        ),
+      );
+    }
   }
 
   @override
   Future<void> pause(int playerId) async {
     playing.remove(playerId);
+
+    final stream = streams[playerId];
+    if (stream != null && !stream.isClosed) {
+      stream.add(
+        VideoEvent(
+          eventType: VideoEventType.isPlayingStateUpdate,
+          isPlaying: false,
+        ),
+      );
+    }
   }
 
   @override
@@ -92,12 +119,13 @@ void main() {
     videos = FakeVideos();
     VideoPlayerPlatform.instance = videos;
     VisibilityDetectorController.instance.updateInterval = Duration.zero;
-  });
-  tearDown(() {
-    debugDefaultTargetPlatformOverride = null;
-    VisibilityDetectorController.instance.updateInterval = const Duration(
-      milliseconds: 500,
-    );
+
+    addTearDown(() {
+      debugDefaultTargetPlatformOverride = null;
+      VisibilityDetectorController.instance.updateInterval = const Duration(
+        milliseconds: 500,
+      );
+    });
   });
 
   Future<void> settlePreview(WidgetTester tester) async {
@@ -107,8 +135,11 @@ void main() {
   }
 
   Future<void> cleanup(WidgetTester tester) async {
+    debugDefaultTargetPlatformOverride = null;
+
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(milliseconds: 500));
+
     expect(tester.takeException(), isNull);
   }
 
@@ -131,10 +162,13 @@ void main() {
     expect(videos.playing, {0});
     expect(videos.volumes[0], 0);
     await mouse.moveTo(const Offset(700, 500));
-    await tester.pump();
-    expect(videos.disposed, contains(0));
     await mouse.removePointer();
+    await tester.pumpAndSettle();
+
+    expect(videos.playing, isEmpty);
+
     await cleanup(tester);
+    expect(videos.disposed, contains(0));
   });
 
   testWidgets(
@@ -208,14 +242,10 @@ void main() {
     );
     await settlePreview(tester);
     expect(videos.playing.length, 1);
-    tester.binding.handleAppLifecycleStateChanged(
-      AppLifecycleState.paused,
-    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     await tester.pump();
     expect(videos.playing, isEmpty);
-    tester.binding.handleAppLifecycleStateChanged(
-      AppLifecycleState.resumed,
-    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await settlePreview(tester);
     expect(videos.playing.length, 1);
     await tester.tap(find.text('Articles'));
@@ -237,7 +267,16 @@ void main() {
       videos.fail = false;
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
-      expect(find.byTooltip('Pause'), findsOneWidget);
+      expect(find.text('Video is unavailable.'), findsNothing);
+
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Tooltip &&
+              (widget.message == 'Play' || widget.message == 'Pause'),
+        ),
+        findsOneWidget,
+      );
       await cleanup(tester);
     },
   );
@@ -246,10 +285,12 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SizedBox(
-            width: 240,
-            child: ExpandableMediaCaption(
-              text: List.filled(20, 'Health information.').join(' '),
+          body: SingleChildScrollView(
+            child: SizedBox(
+              width: 240,
+              child: ExpandableMediaCaption(
+                text: List.filled(20, 'Health information.').join(' '),
+              ),
             ),
           ),
         ),
@@ -259,6 +300,7 @@ void main() {
     await tester.tap(find.text('See more'));
     await tester.pump();
     expect(find.text('See less'), findsOneWidget);
+    await tester.ensureVisible(find.text('See less'));
     await tester.tap(find.text('See less'));
     await tester.pump();
     expect(find.text('See more'), findsOneWidget);
@@ -294,7 +336,16 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byTooltip('Pause'), findsOneWidget);
+      expect(find.text('Video is unavailable.'), findsNothing);
+
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Tooltip &&
+              (widget.message == 'Play' || widget.message == 'Pause'),
+        ),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(
         app(

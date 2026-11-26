@@ -1,7 +1,6 @@
 import '../localization/app_translations.dart';
 import 'package:flutter/material.dart';
 import '../widgets/literacy_media.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import 'package:healthphplus/main_page.dart';
 import '../widgets/coach_mark.dart';
@@ -9,6 +8,8 @@ import '../services/healthph_api_services.dart';
 import '../services/api_config.dart';
 import '../theme/responsive.dart';
 import '../widgets/animated_state_view.dart';
+import '../services/health_literacy_content_resolver.dart';
+import '../widgets/health_literacy/health_article_card.dart';
 
 class HealthLiteracyPage extends StatefulWidget {
   const HealthLiteracyPage({super.key});
@@ -20,6 +21,8 @@ class HealthLiteracyPage extends StatefulWidget {
 class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
   final TextEditingController _searchController = TextEditingController();
   final LiteracyPreviewGroup _previewOwner = LiteracyPreviewGroup();
+  final HealthLiteracyContentResolver _contentResolver =
+      HealthLiteracyContentResolver(baseUrl: ApiConfig.healthLiteracyBaseUrl);
   final literacyHeaderKey = GlobalKey();
   final literacySearchKey = GlobalKey();
   final literacyTabsKey = GlobalKey();
@@ -114,94 +117,6 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
     }
   }
 
-  String _joinList(dynamic value) {
-    if (value is List) return value.join(" ");
-    return "";
-  }
-
-  String _resolveUrl(dynamic rawValue) {
-    final value = rawValue?.toString().trim() ?? "";
-    if (value.isEmpty || value == "null") return "";
-    if (value.startsWith("/")) {
-      return "${ApiConfig.healthLiteracyBaseUrl}$value";
-    }
-    return value;
-  }
-
-  String _resolveMediaUrl(Map<String, dynamic> item) {
-    final media = item["media"];
-    final nestedUrl = media is Map ? media["url"] : null;
-    final resolvedNestedUrl = _resolveUrl(nestedUrl);
-    return resolvedNestedUrl.isNotEmpty
-        ? resolvedNestedUrl
-        : _resolveUrl(item["mediaUrl"]);
-  }
-
-  String _resolveImageUrl(Map<String, dynamic> item) {
-    final directImageUrl = _resolveUrl(item["imageUrl"]);
-    if (directImageUrl.isNotEmpty) return directImageUrl;
-
-    final media = item["media"];
-    final mediaType = media is Map
-        ? (media["contentType"] ?? "").toString().toLowerCase()
-        : "";
-    return mediaType.startsWith("image/")
-        ? _resolveUrl(media is Map ? media["url"] : null)
-        : "";
-  }
-
-  String _resolveThumbnailUrl(Map<String, dynamic> item) {
-    // First priority: the content's explicitly assigned image.
-    final primaryImageUrl = _resolveImageUrl(item);
-    if (primaryImageUrl.isNotEmpty) {
-      return primaryImageUrl;
-    }
-
-    // Second priority: the first valid image from the article gallery.
-    final galleryImages = item["galleryImages"];
-    if (galleryImages is! List) {
-      return "";
-    }
-
-    for (final galleryItem in galleryImages) {
-      if (galleryItem is! Map) continue;
-
-      final galleryMedia = galleryItem["media"];
-      if (galleryMedia is! Map) continue;
-
-      final contentType = (galleryMedia["contentType"] ?? "")
-          .toString()
-          .toLowerCase();
-
-      if (!contentType.startsWith("image/")) continue;
-
-      final galleryImageUrl = _resolveUrl(galleryMedia["url"]);
-      if (galleryImageUrl.isNotEmpty) {
-        return galleryImageUrl;
-      }
-    }
-
-    return "";
-  }
-
-  String _resolveMediaContentType(Map<String, dynamic> item) {
-    final media = item["media"];
-    return media is Map
-        ? (media["contentType"] ?? "").toString().toLowerCase()
-        : "";
-  }
-
-  String _resolveOpenUrl(Map<String, dynamic> item) {
-    final externalUrl = (item["externalUrl"] ?? "").toString();
-    if (externalUrl.isNotEmpty && externalUrl != "null") {
-      return externalUrl;
-    }
-
-    final mediaUrl = _resolveMediaUrl(item);
-    if (mediaUrl.isNotEmpty) return mediaUrl;
-    return _resolveImageUrl(item);
-  }
-
   Widget _buildContentList(List<String> allowedTypes, String emptyMessage) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: healthLiteracyFuture,
@@ -230,9 +145,9 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
             item["description"],
             item["source"],
             item["author"],
-            _joinList(item["tags"]),
-            _joinList(item["topics"]),
-            _joinList(item["diseases"]),
+            _contentResolver.joinList(item["tags"]),
+            _contentResolver.joinList(item["topics"]),
+            _contentResolver.joinList(item["diseases"]),
           ].join(" ").toLowerCase();
 
           return allowedTypes.contains(type) &&
@@ -256,19 +171,19 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
             itemBuilder: (context, index) {
               final item = filtered[index];
               final type = item["contentType"].toString().toLowerCase();
-              final mediaUrl = _resolveMediaUrl(item);
+              final mediaUrl = _contentResolver.mediaUrl(item);
 
               return HealthArticleCard(
                 key: ValueKey(item['id'] ?? '$type:$mediaUrl:${item['title']}'),
                 previewOwner: _previewOwner,
                 contentType: type,
                 mediaUrl: mediaUrl,
-                imageUrl: _resolveThumbnailUrl(item),
-                mediaContentType: _resolveMediaContentType(item),
+                imageUrl: _contentResolver.thumbnailUrl(item),
+                mediaContentType: _contentResolver.mediaContentType(item),
                 title: (item["title"] ?? "Untitled content").toString(),
                 source: (item["source"] ?? "HealthPH+").toString(),
                 description: (item["description"] ?? "").toString(),
-                articleUrl: _resolveOpenUrl(item),
+                articleUrl: _contentResolver.openUrl(item),
                 tags: List<String>.from(item["tags"] ?? []),
               );
             },
@@ -506,473 +421,6 @@ class _HealthLiteracyPageState extends State<HealthLiteracyPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class HealthArticleCard extends StatelessWidget {
-  final String contentType;
-  final String mediaUrl;
-  final String imageUrl;
-  final String mediaContentType;
-  final String title;
-  final String source;
-  final String description;
-  final String articleUrl;
-  final List<String> tags;
-  final LiteracyPreviewGroup? previewOwner;
-
-  const HealthArticleCard({
-    super.key,
-    this.previewOwner,
-    required this.contentType,
-    required this.mediaUrl,
-    required this.imageUrl,
-    required this.mediaContentType,
-    required this.title,
-    required this.source,
-    required this.description,
-    required this.articleUrl,
-    required this.tags,
-  });
-
-  bool get _isVideo =>
-      mediaContentType.startsWith("video/") ||
-      (mediaContentType.isEmpty &&
-          (contentType == "video" || contentType == "videos"));
-
-  bool get _isPdf => mediaContentType == "application/pdf";
-  bool get _isInfographic =>
-      contentType == 'infographic' || contentType == 'infographics';
-
-  Future<void> _openContent(BuildContext context) async {
-    if (_isInfographic && !_isPdf && imageUrl.isNotEmpty) {
-      await showDialog<void>(
-        context: context,
-        builder: (_) => InfographicViewer(
-          imageUrl: mediaContentType.startsWith('image/') && mediaUrl.isNotEmpty
-              ? mediaUrl
-              : imageUrl,
-          title: title,
-          caption: description,
-        ),
-      );
-      return;
-    }
-    if (_isVideo) {
-      if (mediaUrl.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr("Video is unavailable."))),
-        );
-        return;
-      }
-
-      await showDialog(
-        context: context,
-        builder: (_) {
-          return VideoPlayerDialog(videoUrl: mediaUrl, title: title);
-        },
-      );
-      return;
-    }
-
-    if (articleUrl.isEmpty || articleUrl == "null") {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.white,
-        showDragHandle: true,
-        builder: (sheetContext) {
-          return Theme(
-            data: AppTheme.lightTheme,
-            child: SafeArea(
-              child: DraggableScrollableSheet(
-                expand: false,
-                initialChildSize: 0.82,
-                minChildSize: 0.50,
-                maxChildSize: 0.95,
-                builder: (context, scrollController) {
-                  return SingleChildScrollView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            color: AppTheme.text,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            height: 1.25,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          source,
-                          style: const TextStyle(
-                            color: AppTheme.mutedText,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          description,
-                          style: const TextStyle(
-                            color: AppTheme.text,
-                            fontSize: 15,
-                            height: 1.55,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        },
-      );
-      return;
-    }
-
-    final Uri url = Uri.parse(articleUrl);
-
-    try {
-      if (await launchUrl(url, mode: LaunchMode.externalApplication)) return;
-    } catch (_) {
-      // Leave the card available when the device cannot open the external link.
-    }
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('Unable to open content.'))),
-      );
-    }
-  }
-
-  Widget _buildMediaPreview(BuildContext context) {
-    Widget buildFallback() {
-      return Image.asset(
-        'assets/images/Health Literacy Picture Thumbnaik.jpeg',
-        height: 230,
-        width: double.infinity,
-        fit: BoxFit.cover,
-      );
-    }
-
-    Widget buildThumbnail() {
-      if (imageUrl.isEmpty) {
-        return buildFallback();
-      }
-
-      return Image.network(
-        imageUrl,
-        height: 230,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-
-          return const SizedBox(
-            height: 230,
-            child: Center(child: CircularProgressIndicator()),
-          );
-        },
-        errorBuilder: (_, _, _) => buildFallback(),
-      );
-    }
-
-    final thumbnail = buildThumbnail();
-
-    if (_isVideo) {
-      return LiteracyVideoPreview(
-        url: mediaUrl,
-        title: title,
-        thumbnail: thumbnail,
-        previewOwner: previewOwner,
-      );
-    }
-
-    return Semantics(
-      button: true,
-      label: '${context.tr('View')}: $title',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(onTap: () => _openContent(context), child: thumbnail),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.black, width: 1.3),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(13),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildMediaPreview(context),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppTheme.text,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      height: 1.25,
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  Text(
-                    source,
-                    style: const TextStyle(
-                      color: AppTheme.mutedText,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  if (_isInfographic)
-                    ExpandableMediaCaption(text: description)
-                  else
-                    Text(
-                      description,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppTheme.text,
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Wrap(
-                          spacing: 5,
-                          runSpacing: 4,
-                          children: tags.map((tag) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                tag,
-                                style: const TextStyle(
-                                  fontSize: 8,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6DA7F2),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        onPressed: () => _openContent(context),
-                        child: Text(
-                          context.tr(
-                            _isVideo
-                                ? "Watch video"
-                                : _isPdf
-                                ? "Open PDF"
-                                : contentType == "infographic" ||
-                                      contentType == "infographics"
-                                ? "View"
-                                : "Read more",
-                          ),
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class FactCheckCard extends StatelessWidget {
-  final String claim;
-  final String result;
-  final String explanation;
-
-  const FactCheckCard({
-    super.key,
-    required this.claim,
-    required this.result,
-    required this.explanation,
-  });
-
-  Color getResultColor() {
-    switch (result.toLowerCase()) {
-      case "false":
-        return Colors.redAccent;
-      case "mostly true":
-        return Colors.green;
-      case "needs context":
-        return Colors.orange;
-      default:
-        return Colors.blueGrey;
-    }
-  }
-
-  IconData getResultIcon() {
-    switch (result.toLowerCase()) {
-      case "false":
-        return Icons.cancel;
-      case "mostly true":
-        return Icons.verified;
-      case "needs context":
-        return Icons.info;
-      default:
-        return Icons.fact_check;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final Color resultColor = getResultColor();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.black, width: 1.2),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: resultColor.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(getResultIcon(), color: resultColor, size: 24),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      claim,
-                      style: const TextStyle(
-                        color: AppTheme.text,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Text(
-                      explanation,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.black87,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: resultColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: resultColor.withValues(alpha: 0.35)),
-            ),
-            child: Row(
-              children: [
-                Icon(getResultIcon(), color: resultColor, size: 18),
-
-                const SizedBox(width: 8),
-
-                Text(
-                  context.tr("Verdict:"),
-                  style: TextStyle(
-                    color: AppTheme.text,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                ),
-
-                const SizedBox(width: 6),
-
-                Text(
-                  result,
-                  style: TextStyle(
-                    color: resultColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
