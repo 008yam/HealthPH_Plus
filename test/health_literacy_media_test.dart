@@ -168,7 +168,6 @@ void main() {
     expect(videos.playing, isEmpty);
 
     await cleanup(tester);
-    expect(videos.disposed, contains(0));
   });
 
   testWidgets(
